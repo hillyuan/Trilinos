@@ -136,11 +136,14 @@ evalModelImpl(const Thyra::ModelEvaluatorBase::InArgs<Scalar> &inArgs,
       *out_ << "\n*** a_bef ***\n";
 #endif
 
-      Scalar c = 1.0 / (beta_ *delta_t_ *delta_t_);
-
+      if( delta_t_ == 0.0 ) TEUCHOS_TEST_FOR_EXCEPTION(
+          delta_t_ == 0.0, std::logic_error,
+          "\nError in 'Newmark Implicit d-Form' stepper: delta_t_ == 0.0 \n");
+			  
+      Scalar c = 1.0 / (beta_ * delta_t_ * delta_t_);
       // compute acceleration
-      // a_{n+1} = (d_{n+1} - d_pred) / dt / dt / beta
-      Thyra::V_StVpStV(Teuchos::ptrFromRef(*a), c, *d, -c, *d_pred_);
+      // a_{n+1} = v_pred +  d(n+1)/ (dt *dt * beta)
+      Thyra::V_StVpStV(Teuchos::ptrFromRef(*a), 1.0, *a_pred_, c, *d);
 
       // compute velocity
       // v_{n+1} = v_pred + \gamma dt a_{n+1}

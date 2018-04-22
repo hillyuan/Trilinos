@@ -114,7 +114,7 @@ class StepperNewmarkImplicitDForm : virtual public Tempus::StepperImplicit<Scala
 
   void
   predictAcceleration(
-      Thyra::VectorBase<Scalar>& dPred, const Thyra::VectorBase<Scalar>& d,
+      Thyra::VectorBase<Scalar>& aPred, const Thyra::VectorBase<Scalar>& d,
       const Thyra::VectorBase<Scalar>& v, const Thyra::VectorBase<Scalar>& a,
       const Scalar dt) const;
 

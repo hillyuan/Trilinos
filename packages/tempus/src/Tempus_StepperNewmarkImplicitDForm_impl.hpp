@@ -37,20 +37,20 @@ StepperNewmarkImplicitDForm<Scalar>::predictVelocity(
 
 template <class Scalar>
 void
-StepperNewmarkImplicitDForm<Scalar>::predictDisplacement(
-    Thyra::VectorBase<Scalar>& dPred, const Thyra::VectorBase<Scalar>& d,
-    const Thyra::VectorBase<Scalar>& v, const Thyra::VectorBase<Scalar>& a,
+StepperNewmarkImplicitDForm<Scalar>::predictAcceleration(
+    Thyra::VectorBase<Scalar>& aPred, const Thyra::VectorBase<Scalar>& a,
+    const Thyra::VectorBase<Scalar>& v, const Thyra::VectorBase<Scalar>& d,
     const Scalar dt) const {
 #ifdef VERBOSE_DEBUG_OUTPUT
   *out_ << "DEBUG: " << __PRETTY_FUNCTION__ << "\n";
 #endif
-  Teuchos::RCP<const Thyra::VectorBase<Scalar>> tmp =
-      Thyra::createMember<Scalar>(dPred.space());
-  // dPred = dt*v + dt*dt/2.0*(1.0-2.0*beta_)*a
-  Scalar aConst = dt * dt / 2.0 * (1.0 - 2.0 * beta_);
-  Thyra::V_StVpStV(Teuchos::ptrFromRef(dPred), dt, v, aConst, a);
-  // dPred += d;
-  Thyra::Vp_V(Teuchos::ptrFromRef(dPred), d, 1.0);
+  Teuchos::RCP<Thyra::VectorBase<Scalar>> tmp =
+      Thyra::createMember<Scalar>(aPred.space());
+  // aPred = -1/(beta*dt*dt)*d - 1/(beta*dt)*v +(1-1/(2*beta))*a
+  Scalar c = - 1.0 / (beta_ * dt);
+  Thyra::V_StVpStV(tmp.ptr(), c/dt, d, c, v);
+  c = 1.0 -1.0/(2.0*beta_);
+  Thyra::V_StVpStV(Teuchos::ptrFromRef(aPred), c, a, 1.0, *tmp);
 }
 
 template <class Scalar>
@@ -68,14 +68,14 @@ StepperNewmarkImplicitDForm<Scalar>::correctVelocity(
 template <class Scalar>
 void
 StepperNewmarkImplicitDForm<Scalar>::correctAcceleration(
-    Thyra::VectorBase<Scalar>& a, const Thyra::VectorBase<Scalar>& dPred,
+    Thyra::VectorBase<Scalar>& a, const Thyra::VectorBase<Scalar>& aPred,
     const Thyra::VectorBase<Scalar>& d, const Scalar dt) const {
 #ifdef VERBOSE_DEBUG_OUTPUT
   *out_ << "DEBUG: " << __PRETTY_FUNCTION__ << "\n";
 #endif
-  // a = (d - dPred) / (beta_*dt*dt)
-  Scalar const c = 1.0 / beta_ / dt / dt;
-  Thyra::V_StVpStV(Teuchos::ptrFromRef(a), c, d, -c, dPred);
+  // a = vPred +  d/ (beta_*dt*dt)
+  Scalar c = 1.0 / (beta_ * dt * dt);
+  Thyra::V_StVpStV(Teuchos::ptrFromRef(a), 1.0, aPred, c, d);
 }
 
 // StepperNewmarkImplicitDForm definitions:
@@ -249,7 +249,7 @@ StepperNewmarkImplicitDForm<Scalar>::takeStep(
 #endif
 
     // allocate d and v predictors
-    RCP<Thyra::VectorBase<Scalar>> d_pred = Thyra::createMember(d_old->space());
+    RCP<Thyra::VectorBase<Scalar>> a_pred = Thyra::createMember(a_old->space());
     RCP<Thyra::VectorBase<Scalar>> v_pred = Thyra::createMember(v_old->space());
 
     // create copies of d_old, so as not to modify d_old in working state
@@ -257,28 +257,12 @@ StepperNewmarkImplicitDForm<Scalar>::takeStep(
     Thyra::copy(*d_old, d_old_copy.ptr());
 
     // compute displacement and velocity predictors
-    predictDisplacement(*d_pred, *d_old_copy, *v_old, *a_old, dt);
+    predictAcceleration(*a_pred, *a_old, *v_old, *d_old, dt);
     predictVelocity(*v_pred, *v_old, *a_old, dt);
 
-#ifdef DEBUG_OUTPUT
-    *out_ << "\n*** d_pred ***\n";
-    RTOpPack::ConstSubVectorView<Scalar> dpv;
-    d_pred->acquireDetachedView(range, &dpv);
-    auto dpa = dpv.values();
-    for (auto i = 0; i < dpa.size(); ++i) *out_ << dpa[i] << " ";
-    *out_ << "\n*** d_pred ***\n";
-
-    *out_ << "\n*** v_pred ***\n";
-    RTOpPack::ConstSubVectorView<Scalar> vpv;
-    v_pred->acquireDetachedView(range, &vpv);
-    auto vpa = vpv.values();
-    for (auto i = 0; i < vpa.size(); ++i) *out_ << vpa[i] << " ";
-    *out_ << "\n*** v_pred ***\n";
-
-#endif
     // inject d_pred, v_pred, a and other relevant data into wrapperModel
     wrapperModel->initializeNewmark(
-        a_old, v_pred, d_pred, dt, t, beta_, gamma_);
+        a_pred, v_pred, d_old_copy, dt, t, beta_, gamma_);
 
     const Thyra::SolveStatus<Scalar> status =
       this->solveImplicitODE(d_old_copy);
@@ -289,7 +273,7 @@ StepperNewmarkImplicitDForm<Scalar>::takeStep(
       workingState->getStepperState()->stepperStatus_ = Status::FAILED;
 
     Thyra::copy(*d_old_copy, d_new.ptr());
-    correctAcceleration(*a_new, *d_pred, *d_new, dt);
+    correctAcceleration(*a_new, *a_pred, *d_new, dt);
     correctVelocity(*v_new, *v_pred, *a_new, dt);
 
 #ifdef DEBUG_OUTPUT
