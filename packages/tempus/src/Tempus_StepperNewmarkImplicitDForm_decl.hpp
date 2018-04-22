@@ -113,7 +113,7 @@ class StepperNewmarkImplicitDForm : virtual public Tempus::StepperImplicit<Scala
       const Thyra::VectorBase<Scalar>& a, const Scalar dt) const;
 
   void
-  predictDisplacement(
+  predictAcceleration(
       Thyra::VectorBase<Scalar>& dPred, const Thyra::VectorBase<Scalar>& d,
       const Thyra::VectorBase<Scalar>& v, const Thyra::VectorBase<Scalar>& a,
       const Scalar dt) const;
@@ -121,11 +121,6 @@ class StepperNewmarkImplicitDForm : virtual public Tempus::StepperImplicit<Scala
   void
   correctVelocity(
       Thyra::VectorBase<Scalar>& v, const Thyra::VectorBase<Scalar>& vPred,
-      const Thyra::VectorBase<Scalar>& a, const Scalar dt) const;
-
-  void
-  correctDisplacement(
-      Thyra::VectorBase<Scalar>& d, const Thyra::VectorBase<Scalar>& dPred,
       const Thyra::VectorBase<Scalar>& a, const Scalar dt) const;
 
   void

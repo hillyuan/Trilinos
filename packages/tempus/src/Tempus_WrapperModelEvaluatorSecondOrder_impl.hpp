@@ -107,16 +107,9 @@ evalModelImpl(const Thyra::ModelEvaluatorBase::InArgs<Scalar> &inArgs,
     case NEWMARK_IMPLICIT_DFORM: {
       // Setup initial condition
       // Create and populate inArgs
-      MEB::InArgs<Scalar> appInArgs = appModel_->createInArgs();
-
-      RCP<Thyra::VectorBase<Scalar> const>
-      d = inArgs.get_x();
-
-      RCP<Thyra::VectorBase<Scalar>>
-      v = Thyra::createMember(inArgs.get_x()->space());
-
-      RCP<Thyra::VectorBase<Scalar>>
-      a = Thyra::createMember(inArgs.get_x()->space());
+      RCP<Thyra::VectorBase<Scalar> const> d = inArgs.get_x();
+      RCP<Thyra::VectorBase<Scalar>> v = Thyra::createMember(inArgs.get_x()->space());
+      RCP<Thyra::VectorBase<Scalar>> a = Thyra::createMember(inArgs.get_x()->space());
 
 #ifdef DEBUG_OUTPUT
       Teuchos::Range1D range;
@@ -143,8 +136,7 @@ evalModelImpl(const Thyra::ModelEvaluatorBase::InArgs<Scalar> &inArgs,
       *out_ << "\n*** a_bef ***\n";
 #endif
 
-      Scalar const
-      c = 1.0 / beta_ / delta_t_ / delta_t_;
+      Scalar c = 1.0 / (beta_ *delta_t_ *delta_t_);
 
       // compute acceleration
       // a_{n+1} = (d_{n+1} - d_pred) / dt / dt / beta
@@ -160,7 +152,7 @@ evalModelImpl(const Thyra::ModelEvaluatorBase::InArgs<Scalar> &inArgs,
       appInArgs.set_x_dot_dot(a);
 
       appInArgs.set_W_x_dot_dot_coeff(c);               // da/dd
-      appInArgs.set_alpha(gamma_ / delta_t_ / beta_);   // dv/dd
+      appInArgs.set_alpha(gamma_ / (delta_t_ *beta_) );   // dv/dd
       appInArgs.set_beta(1.0);                          // dd/dd
 
       appInArgs.set_t(t_);
@@ -176,19 +168,6 @@ evalModelImpl(const Thyra::ModelEvaluatorBase::InArgs<Scalar> &inArgs,
 
       // build residual and jacobian
       appModel_->evalModel(appInArgs, appOutArgs);
-
-      // compute acceleration
-      // a_{n+1} = (d_{n+1} - d_pred) / dt / dt / beta
-      Thyra::V_StVpStV(Teuchos::ptrFromRef(*a), c, *d, -c, *d_pred_);
-
-      // compute velocity
-      // v_{n+1} = v_pred + \gamma dt a_{n+1}
-      Thyra::V_StVpStV(
-          Teuchos::ptrFromRef(*v), 1.0, *v_pred_, delta_t_ * gamma_, *a);
-
-      appInArgs.set_x(d);
-      appInArgs.set_x_dot(v);
-      appInArgs.set_x_dot_dot(a);
 
 #ifdef DEBUG_OUTPUT
       *out_ << "\n*** d_aft ***\n";

@@ -67,18 +67,6 @@ StepperNewmarkImplicitDForm<Scalar>::correctVelocity(
 
 template <class Scalar>
 void
-StepperNewmarkImplicitDForm<Scalar>::correctDisplacement(
-    Thyra::VectorBase<Scalar>& d, const Thyra::VectorBase<Scalar>& dPred,
-    const Thyra::VectorBase<Scalar>& a, const Scalar dt) const {
-#ifdef VERBOSE_DEBUG_OUTPUT
-  *out_ << "DEBUG: " << __PRETTY_FUNCTION__ << "\n";
-#endif
-  // d = dPred + beta_*dt*dt*a
-  Thyra::V_StVpStV(Teuchos::ptrFromRef(d), 1.0, dPred, beta_ * dt * dt, a);
-}
-
-template <class Scalar>
-void
 StepperNewmarkImplicitDForm<Scalar>::correctAcceleration(
     Thyra::VectorBase<Scalar>& a, const Thyra::VectorBase<Scalar>& dPred,
     const Thyra::VectorBase<Scalar>& d, const Scalar dt) const {

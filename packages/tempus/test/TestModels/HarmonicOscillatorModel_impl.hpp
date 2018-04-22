@@ -51,10 +51,13 @@ HarmonicOscillatorModel(Teuchos::RCP<Teuchos::ParameterList> pList_):
   //Commenting this out to check that IC for acceleration
   //is computed correctly using displacement and velocity ICs
   //inside 2nd order steppers.
-  //Thyra::put_scalar(f_-c_, x_dot_dot_vec_.ptr());
-  //Instead of real IC, putting arbitrary, incorrect IC to check correctness
-  //in stepper involving calculation of a IC.
-  Thyra::put_scalar(7.0, x_dot_dot_vec_.ptr());
+  Thyra::put_scalar(f_-c_, x_dot_dot_vec_.ptr());
+  //Instead of above real IC, initial condition for the acceleration
+  //can be computed correctly using displacement and velocity ICs
+  //inside 2nd order steppers. You can put arbitrary, incorrect IC to check correctness
+  //in stepper involving calculation of a IC, like follows
+  //Thyra::put_scalar(7.0, x_dot_dot_vec_.ptr());
+  //But in D-form type formulation, it is not available currently.
 
   //Set up responses
   numResponses_ = 1;
