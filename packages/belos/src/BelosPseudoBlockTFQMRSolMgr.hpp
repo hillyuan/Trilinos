@@ -280,7 +280,7 @@ namespace Belos {
     static constexpr const char * impResScale_default_ = "Norm of Preconditioned Initial Residual";
     static constexpr const char * expResScale_default_ = "Norm of Initial Residual";
     static constexpr const char * label_default_ = "Belos";
-    static constexpr std::ostream * outputStream_default_ = &std::cout;
+    static constexpr std::ostream * outputStream_default_ = nullptr;
 
     // Current solver values.
     MagnitudeType convtol_, impTolScale_, achievedTol_;
@@ -301,7 +301,7 @@ namespace Belos {
 // Empty Constructor
 template<class ScalarType, class MV, class OP>
 PseudoBlockTFQMRSolMgr<ScalarType,MV,OP>::PseudoBlockTFQMRSolMgr() :
-  outputStream_(Teuchos::rcp(outputStream_default_,false)),
+  outputStream_((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout)),
   convtol_(DefaultSolverParameters::convTol),
   impTolScale_(DefaultSolverParameters::impTolScale),
   achievedTol_(Teuchos::ScalarTraits<typename Teuchos::ScalarTraits<ScalarType>::magnitudeType>::zero()),
@@ -326,7 +326,7 @@ PseudoBlockTFQMRSolMgr<ScalarType,MV,OP>::PseudoBlockTFQMRSolMgr(
                                              const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
                                              const Teuchos::RCP<Teuchos::ParameterList> &pl ) :
   problem_(problem),
-  outputStream_(Teuchos::rcp(outputStream_default_,false)),
+  outputStream_((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout)),
   convtol_(DefaultSolverParameters::convTol),
   impTolScale_(DefaultSolverParameters::impTolScale),
   achievedTol_(Teuchos::ScalarTraits<typename Teuchos::ScalarTraits<ScalarType>::magnitudeType>::zero()),

@@ -323,7 +323,7 @@ private:
 
 template<class ScalarType, class MV, class OP>
 GmresPolySolMgr<ScalarType,MV,OP>::GmresPolySolMgr () :
-  outputStream_ (Teuchos::rcp(outputStream_default_,false)),
+  outputStream_((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout)),
   polyTol_ (DefaultSolverParameters::polyTol),
   maxDegree_ (maxDegree_default_),
   numIters_ (0),
@@ -345,7 +345,7 @@ GmresPolySolMgr<ScalarType,MV,OP>::
 GmresPolySolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
                  const Teuchos::RCP<Teuchos::ParameterList> &pl) :
   problem_ (problem),
-  outputStream_ (Teuchos::rcp(outputStream_default_,false)),
+  outputStream_((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout)),
   polyTol_ (DefaultSolverParameters::polyTol),
   maxDegree_ (maxDegree_default_),
   numIters_ (0),
@@ -394,9 +394,9 @@ GmresPolySolMgr<ScalarType,MV,OP>::getValidParameters() const
     pl->set("Verbosity", static_cast<int>(verbosity_default_),
       "What type(s) of solver information should be outputted\n"
       "to the output stream.");
-    pl->set("Output Stream", Teuchos::rcp(outputStream_default_,false),
-      "A reference-counted pointer to the output stream where all\n"
-      "solver output is sent.");
+//    pl->set("Output Stream", Teuchos::rcp(outputStream_default_,false),
+//      "A reference-counted pointer to the output stream where all\n"
+//      "solver output is sent.");
     pl->set("Timer Label", static_cast<const char *>(label_default_),
       "The string to use as a prefix for the timer labels.");
     pl->set("Orthogonalization", static_cast<const char *>(orthoType_default_),
@@ -493,10 +493,9 @@ setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params)
   // output stream
   if (params->isParameter("Output Stream")) {
     outputStream_ = Teuchos::getParameter<Teuchos::RCP<std::ostream> >(*params,"Output Stream");
+    // Update parameter in our list.
+    params_->set("Output Stream", outputStream_);
   }
-
-  // Update parameter in our list.
-  params_->set("Output Stream", outputStream_);
 
   // Convergence
   // Check for polynomial convergence tolerance

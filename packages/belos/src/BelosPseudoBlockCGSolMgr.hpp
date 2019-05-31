@@ -339,7 +339,7 @@ namespace Belos {
     static constexpr int defQuorum_default_ = 1;
     static constexpr const char * resScale_default_ = "Norm of Initial Residual";
     static constexpr const char * label_default_ = "Belos";
-    static constexpr std::ostream * outputStream_default_ = &std::cout;
+    static constexpr std::ostream * outputStream_default_ = nullptr;
     static constexpr bool genCondEst_default_ = false;
 
     // Current solver values.
@@ -363,7 +363,7 @@ namespace Belos {
 // Empty Constructor
 template<class ScalarType, class MV, class OP>
 PseudoBlockCGSolMgr<ScalarType,MV,OP,true>::PseudoBlockCGSolMgr() :
-  outputStream_(Teuchos::rcp(outputStream_default_,false)),
+  outputStream_((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout)),
   convtol_(DefaultSolverParameters::convTol),
   maxIters_(maxIters_default_),
   numIters_(0),
@@ -386,7 +386,7 @@ PseudoBlockCGSolMgr<ScalarType,MV,OP,true>::
 PseudoBlockCGSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
                      const Teuchos::RCP<Teuchos::ParameterList> &pl ) :
   problem_(problem),
-  outputStream_(Teuchos::rcp(outputStream_default_,false)),
+  outputStream_((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout)),
   convtol_(DefaultSolverParameters::convTol),
   maxIters_(maxIters_default_),
   numIters_(0),

@@ -287,7 +287,7 @@ namespace Belos {
     static constexpr int outputStyle_default_ = Belos::General;
     static constexpr int outputFreq_default_ = -1;
     static constexpr const char * label_default_ = "Belos";
-    static constexpr std::ostream * outputStream_default_ = &std::cout;
+    static constexpr std::ostream * outputStream_default_ = nullptr;
 
     //
     // Current solver parameters and other values.
@@ -326,7 +326,7 @@ namespace Belos {
 // Empty Constructor
 template<class ScalarType, class MV, class OP>
 FixedPointSolMgr<ScalarType,MV,OP>::FixedPointSolMgr() :
-  outputStream_(Teuchos::rcp(outputStream_default_,false)),
+  outputStream_((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout)),
   convtol_(DefaultSolverParameters::convTol),
   achievedTol_(Teuchos::ScalarTraits<MagnitudeType>::zero()),
   maxIters_(maxIters_default_),
@@ -347,7 +347,7 @@ FixedPointSolMgr<ScalarType,MV,OP>::
 FixedPointSolMgr(const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
               const Teuchos::RCP<Teuchos::ParameterList> &pl) :
   problem_(problem),
-  outputStream_(Teuchos::rcp(outputStream_default_,false)),
+  outputStream_((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout)),
   convtol_(DefaultSolverParameters::convTol),
   achievedTol_(Teuchos::ScalarTraits<MagnitudeType>::zero()),
   maxIters_(maxIters_default_),

@@ -376,7 +376,7 @@ namespace Belos {
     static constexpr int outputStyle_default_ = Belos::General;
     static constexpr int outputFreq_default_ = -1;
     static constexpr const char * label_default_ = "Belos";
-    static constexpr std::ostream * outputStream_default_ = &std::cout;
+    static constexpr std::ostream * outputStream_default_ = nullptr;
 
     //
     // Current solver values.
@@ -504,7 +504,7 @@ RCGSolMgr<ScalarType,MV,OP,true>::RCGSolMgr(
 template<class ScalarType, class MV, class OP>
 void RCGSolMgr<ScalarType,MV,OP,true>::init()
 {
-  outputStream_ = Teuchos::rcp(outputStream_default_,false);
+  outputStream_ = ((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout));
   convtol_ = DefaultSolverParameters::convTol;
   maxIters_ = maxIters_default_;
   numBlocks_ = numBlocks_default_;

@@ -335,7 +335,7 @@ private:
   static constexpr const char * expResScale_default_ = "Norm of Initial Residual";
   static constexpr const char * label_default_ = "Belos";
   static constexpr const char * orthoType_default_ = "DGKS";
-  static constexpr std::ostream * outputStream_default_ = &std::cout;
+  static constexpr std::ostream * outputStream_default_ = nullptr;
 
   // Current solver values.
   MagnitudeType convtol_, orthoKappa_, achievedTol_;
@@ -358,7 +358,7 @@ private:
 // Empty Constructor
 template<class ScalarType, class MV, class OP>
 BlockGmresSolMgr<ScalarType,MV,OP>::BlockGmresSolMgr() :
-  outputStream_(Teuchos::rcp(outputStream_default_,false)),
+  outputStream_((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout)),
   convtol_(DefaultSolverParameters::convTol),
   orthoKappa_(DefaultSolverParameters::orthoKappa),
   achievedTol_(Teuchos::ScalarTraits<typename Teuchos::ScalarTraits<ScalarType>::magnitudeType>::zero()),
@@ -390,7 +390,7 @@ BlockGmresSolMgr<ScalarType,MV,OP>::
 BlockGmresSolMgr (const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
                   const Teuchos::RCP<Teuchos::ParameterList> &pl) :
   problem_(problem),
-  outputStream_(Teuchos::rcp(outputStream_default_,false)),
+  outputStream_((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout)),
   convtol_(DefaultSolverParameters::convTol),
   orthoKappa_(DefaultSolverParameters::orthoKappa),
   achievedTol_(Teuchos::ScalarTraits<typename Teuchos::ScalarTraits<ScalarType>::magnitudeType>::zero()),

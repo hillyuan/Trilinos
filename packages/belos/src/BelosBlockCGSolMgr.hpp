@@ -375,7 +375,7 @@ namespace Belos {
     static constexpr const char * resScale_default_ = "Norm of Initial Residual";
     static constexpr const char * label_default_ = "Belos";
     static constexpr const char * orthoType_default_ = "DGKS";
-    static constexpr std::ostream * outputStream_default_ = &std::cout;
+    static constexpr std::ostream * outputStream_default_ = nullptr;
 
     //
     // Current solver parameters and other values.
@@ -420,7 +420,7 @@ namespace Belos {
 // Empty Constructor
 template<class ScalarType, class MV, class OP>
 BlockCGSolMgr<ScalarType,MV,OP,true>::BlockCGSolMgr() :
-  outputStream_(Teuchos::rcp(outputStream_default_,false)),
+  outputStream_((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout)),
   convtol_(DefaultSolverParameters::convTol),
   orthoKappa_(DefaultSolverParameters::orthoKappa),
   achievedTol_(Teuchos::ScalarTraits<MagnitudeType>::zero()),
@@ -447,7 +447,7 @@ BlockCGSolMgr<ScalarType,MV,OP,true>::
 BlockCGSolMgr(const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
               const Teuchos::RCP<Teuchos::ParameterList> &pl) :
   problem_(problem),
-    outputStream_(Teuchos::rcp(outputStream_default_,false)),
+  outputStream_((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout)),
   convtol_(DefaultSolverParameters::convTol),
   orthoKappa_(DefaultSolverParameters::orthoKappa),
   achievedTol_(Teuchos::ScalarTraits<MagnitudeType>::zero()),

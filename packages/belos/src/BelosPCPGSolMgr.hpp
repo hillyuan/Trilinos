@@ -380,7 +380,7 @@ namespace Belos {
     static constexpr int outputFreq_default_ = -1;
     static constexpr const char * label_default_ = "Belos";
     static constexpr const char * orthoType_default_ = "DGKS";
-    static constexpr std::ostream * outputStream_default_ = &std::cout;
+    static constexpr std::ostream * outputStream_default_ = nullptr;
 
     //
     // Current solver values.
@@ -422,7 +422,7 @@ namespace Belos {
 // Empty Constructor
 template<class ScalarType, class MV, class OP>
 PCPGSolMgr<ScalarType,MV,OP,true>::PCPGSolMgr() :
-  outputStream_(Teuchos::rcp(outputStream_default_,false)),
+  outputStream_((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout)),
   convtol_(DefaultSolverParameters::convTol),
   orthoKappa_(DefaultSolverParameters::orthoKappa),
   achievedTol_(Teuchos::ScalarTraits<MagnitudeType>::zero()),
@@ -446,8 +446,7 @@ PCPGSolMgr<ScalarType,MV,OP,true>::PCPGSolMgr(
                                              const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> > &problem,
                                              const Teuchos::RCP<Teuchos::ParameterList> &pl ) :
   problem_(problem),
-  outputStream_(Teuchos::rcp(outputStream_default_,false)),
-
+  outputStream_((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout)),
   convtol_(DefaultSolverParameters::convTol),
   orthoKappa_(DefaultSolverParameters::orthoKappa),
   achievedTol_(Teuchos::ScalarTraits<MagnitudeType>::zero()),

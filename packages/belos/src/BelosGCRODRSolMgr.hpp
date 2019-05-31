@@ -470,7 +470,7 @@ Systems," SIAM Journal on Scientific Computing, 28(5), pp. 1651-1674,
     static constexpr const char * expResScale_default_ = "Norm of Initial Residual";
     static constexpr const char * label_default_ = "Belos";
     static constexpr const char * orthoType_default_ = "DGKS";
-    static constexpr std::ostream * outputStream_default_ = &std::cout;
+    static constexpr std::ostream * outputStream_default_ = nullptr;
 
     // Current solver values.
     MagnitudeType convTol_, orthoKappa_, achievedTol_;
@@ -566,7 +566,7 @@ GCRODRSolMgr(const Teuchos::RCP<LinearProblem<ScalarType,MV,OP> >& problem,
 // Common instructions executed in all constructors
 template<class ScalarType, class MV, class OP>
 void GCRODRSolMgr<ScalarType,MV,OP,true>::init () {
-  outputStream_ = Teuchos::rcp(outputStream_default_,false);
+  outputStream_ = ((outputStream_default_) ? Teuchos::rcp(outputStream_default_,false): Teuchos::rcpFromRef(std::cout));
   convTol_ = DefaultSolverParameters::convTol;
   orthoKappa_ = orthoKappa_default_;
   maxRestarts_ = maxRestarts_default_;
