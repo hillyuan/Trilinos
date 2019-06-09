@@ -40,7 +40,7 @@ elif [[ "$ATDM_CONFIG_COMPILER" == "GNU"* ]]; then
   fi
 elif [[ "$ATDM_CONFIG_COMPILER" == "INTEL"* ]]; then
   if [[ "$ATDM_CONFIG_COMPILER" == "INTEL" ]] ; then
-    export ATDM_CONFIG_COMPILER=INTEL-17.0.1
+    export ATDM_CONFIG_COMPILER=INTEL-18.0.5
   elif [[ "$ATDM_CONFIG_COMPILER" != "INTEL-17.0.1" ]] ; then
     echo
     echo "***"
@@ -149,6 +149,20 @@ elif [[ "$ATDM_CONFIG_COMPILER" == "GNU-7.2.0" ]] ; then
   export ATDM_CONFIG_BLAS_LIBS="-L${BLAS_ROOT}/lib;-lblas"
 elif [[ "$ATDM_CONFIG_COMPILER" == "INTEL-17.0.1" ]] ; then
   module load sems-intel/17.0.1
+  module load atdm-env
+  module load atdm-mkl/18.0.5
+  export OMPI_CXX=`which icpc`
+  export OMPI_CC=`which icc`
+  export OMPI_FC=`which ifort`
+  export ATDM_CONFIG_LAPACK_LIBS="-mkl"
+  export ATDM_CONFIG_BLAS_LIBS="-mkl"
+  export LM_LICENSE_FILE=28518@cee-infra009.sandia.gov
+  if [[ "${ATDM_CONFIG_LM_LICENSE_FILE_OVERRIDE}" != "" ]] ; then
+    export LM_LICENSE_FILE=${ATDM_CONFIG_LM_LICENSE_FILE_OVERRIDE}
+  fi
+elif [[ "$ATDM_CONFIG_COMPILER" == "INTEL-18.0.5" ]] ; then
+  module load sems-gcc/7.2.0
+  module load sems-intel/18.0.5
   module load atdm-env
   module load atdm-mkl/18.0.5
   export OMPI_CXX=`which icpc`
