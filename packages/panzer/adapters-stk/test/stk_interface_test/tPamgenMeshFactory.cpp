@@ -243,6 +243,15 @@ TEUCHOS_UNIT_TEST(tPamgenFactory, basic)
     for (auto s : sideset_names)
       out << s << std::endl;
     out << "\n";
+	  
+    // Write nodeset names
+    std::vector<std::string> nodeset_names;
+    mesh->getNodesetNames(nodeset_names);
+    TEST_COMPARE(nodeset_names.size(),>,0)
+    out << "\nsideset names:\n";
+    for (auto s : nodeset_names)
+      out << s << std::endl;
+    out << "\n";
 
     // Get locally owned sidesets
     const stk::mesh::Part& lo_part = metaData->locally_owned_part();

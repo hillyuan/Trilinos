@@ -83,6 +83,7 @@ TEUCHOS_UNIT_TEST(tCubeHexMeshFactory, defaults)
    TEST_EQUALITY(mesh->getDimension(),3);
    TEST_EQUALITY(mesh->getNumElementBlocks(),1);
    TEST_EQUALITY(mesh->getNumSidesets(),6);
+   TEST_EQUALITY(mesh->getNumNodesets(),1);
    TEST_EQUALITY(mesh->getEntityCounts(mesh->getElementRank()),125);
    TEST_EQUALITY(mesh->getEntityCounts(mesh->getSideRank()),3*25*6);
    TEST_EQUALITY(mesh->getEntityCounts(mesh->getEdgeRank()),3*30*6);
@@ -142,6 +143,7 @@ TEUCHOS_UNIT_TEST(tCubeHexMeshFactory, element_counts)
    TEST_EQUALITY(mesh->getDimension(),3);
    TEST_EQUALITY(mesh->getNumElementBlocks(),1);
    TEST_EQUALITY(mesh->getNumSidesets(),6);
+   TEST_EQUALITY(mesh->getNumNodesets(),1);
    TEST_EQUALITY(mesh->getEntityCounts(mesh->getElementRank()),4*2*5);
    TEST_EQUALITY(mesh->getEntityCounts(mesh->getSideRank()),2*4*(5+1)+2*5*(4+1)+4*5*(2+1));
    TEST_EQUALITY(mesh->getEntityCounts(mesh->getEdgeRank()),2*(4+1)*(5+1)+4*(2+1)*(5+1)+5*(2+1)*(4+1));
@@ -183,6 +185,7 @@ TEUCHOS_UNIT_TEST(tCubeHexMeshFactory, allblock)
    TEST_EQUALITY(mesh->getDimension(),3);
    TEST_EQUALITY(mesh->getNumElementBlocks(),(std::size_t) bx*by*bz);
    TEST_EQUALITY(mesh->getNumSidesets(),6);
+   TEST_EQUALITY(mesh->getNumNodesets(),1);
    TEST_EQUALITY(mesh->getEntityCounts(mesh->getElementRank()),(std::size_t) xe*ye*ze);
    TEST_EQUALITY(mesh->getEntityCounts(mesh->getSideRank()),(std::size_t) xe*ye*(ze+1)+xe*(ye+1)*ze+(xe+1)*ye*ze);
    TEST_EQUALITY(mesh->getEntityCounts(mesh->getEdgeRank()),(std::size_t) xe*(ye+1)*(ze+1)+(xe+1)*(ye+1)*ze+(xe+1)*ye*(ze+1));
@@ -193,7 +196,7 @@ TEUCHOS_UNIT_TEST(tCubeHexMeshFactory, allblock)
    TEST_EQUALITY(nodesets.size(),1);
 
    std::vector<stk::mesh::Entity> nodes;
-   mesh->getMyNodes("origin","eblock-0_0_0",nodes); 
+   mesh->getMyNodes(nodesets[0],"eblock-0_0_0",nodes); 
    if(rank==0) {
       std::vector<std::size_t> localNodeIds;
       std::vector<stk::mesh::Entity> elements;
@@ -239,6 +242,7 @@ TEUCHOS_UNIT_TEST(tCubeHexMeshFactory, two_block)
    TEST_EQUALITY(mesh->getDimension(),3);
    TEST_EQUALITY(mesh->getNumElementBlocks(),2);
    TEST_EQUALITY(mesh->getNumSidesets(),6);
+   TEST_EQUALITY(mesh->getNumNodesets(),1);
    TEST_EQUALITY(mesh->getEntityCounts(mesh->getElementRank()),2*5*10*5);
    TEST_EQUALITY(mesh->getEntityCounts(mesh->getSideRank()),10*10*6+10*5*11+10*5*11);
    TEST_EQUALITY(mesh->getEntityCounts(mesh->getEdgeRank()),10*11*6+10*6*11+11*5*11);
@@ -284,6 +288,7 @@ TEUCHOS_UNIT_TEST(tCubeHexMeshFactory, sub_two_block)
    TEST_EQUALITY(mesh->getDimension(),3);
    TEST_EQUALITY(mesh->getNumElementBlocks(),2);
    TEST_EQUALITY(mesh->getNumSidesets(),6);
+   TEST_EQUALITY(mesh->getNumNodesets(),1);
    TEST_EQUALITY(mesh->getEntityCounts(mesh->getElementRank()),2*5*10*5);
    TEST_EQUALITY(mesh->getEntityCounts(mesh->getSideRank()),10*10*6+10*5*11+10*5*11);
    TEST_EQUALITY(mesh->getEntityCounts(mesh->getEdgeRank()),10*11*6+10*6*11+11*5*11);
