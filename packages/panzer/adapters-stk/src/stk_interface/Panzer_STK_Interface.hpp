@@ -302,12 +302,12 @@ public:
      * to be in a particular element block. The Entites in the vector should be of dimension
      * <code>0</code>.
      *
-     * \param[in] sideName Name of side set
+     * \param[in] nodesetName Name of node set
      * \param[in] blockName Name of block
      * \param[in,out] nodes Vector of entities containing the requested nodes.
      */
 
-   void getMyNodes(const std::string & sideName,const std::string & blockName,std::vector<stk::mesh::Entity> & nodes) const;
+   void getMyNodes(const std::string & nodesetName,const std::string & blockName,std::vector<stk::mesh::Entity> & nodes) const;
 
    /**
     * Searches for connected entity by rank and relation id. Returns
