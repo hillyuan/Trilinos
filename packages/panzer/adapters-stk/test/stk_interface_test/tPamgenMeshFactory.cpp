@@ -234,6 +234,8 @@ TEUCHOS_UNIT_TEST(tPamgenFactory, basic)
     auto mesh = pamgenFactory.buildMesh(MPI_COMM_WORLD);
     auto metaData = mesh->getMetaData();
     auto bulkData = mesh->getBulkData();
+	  
+	mesh->print( std::cout );
 
     // Write sideset names
     std::vector<std::string> sideset_names;

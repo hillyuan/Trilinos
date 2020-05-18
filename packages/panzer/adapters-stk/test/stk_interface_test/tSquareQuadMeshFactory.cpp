@@ -657,6 +657,12 @@ TEUCHOS_UNIT_TEST(tSquareQuadMeshFactory, sideset_nodeset)
    TEST_EQUALITY(sidesets.size(),7);
    TEST_EQUALITY(nodesets.size(),2);
 
+   std::vector<stk::mesh::EntityId> nodeIds;
+   mesh->getOwnedNodeSetsId(nodesets[0], nodeIds);
+   std::cout << "myrank= " << rank << "  with nodeset: " << nodeIds.size() << std::endl;
+   mesh->getAllNodeSetsId(nodesets[0], nodeIds);
+   std::cout << "myrank= " << rank << "  with nodeset: " << nodeIds.size() << std::endl;
+
    std::vector<stk::mesh::Entity> nodes;
    std::vector<stk::mesh::Entity> nodes_o;
    mesh->getMyNodes("lower_left","eblock-0_0",nodes); 
