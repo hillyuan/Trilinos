@@ -299,8 +299,17 @@ public:
      }
      
    };
+	
+   // Return node dof map of fieldnum provided
+   const std::vector<std::size_t> getNodemapOfField(int f) const
+   { return nodeDofMap_.at(f); }
+	
+   virtual void print_nodeInfo(std::ostream &os) const {};
 
 protected:
+	
+   // field ID -> nodal DOF position of 
+   std::map< int, std::vector<std::size_t> > nodeDofMap_;
 
    /** This method is used by derived classes to the construct the local IDs from 
      * the <code>getOwnedAndGhostedIndices</code> method.

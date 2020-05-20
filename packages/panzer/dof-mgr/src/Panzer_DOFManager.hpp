@@ -202,6 +202,8 @@ public:
 
   //! gets the number of fields
   int getNumFields() const;
+  void getFieldNumbers(std::vector<int> &) const;
+  void getFieldNames(std::vector<std::string> &) const;
 
   /** gets the field pattern so you can find a particular
     * field in the GIDs array.
@@ -311,6 +313,11 @@ public:
     * the aggregated field.
     */
   void printFieldInformation(std::ostream & os) const;
+	
+  /** Prints to an output stream the information about
+    * nodal gids.
+    */
+  void print_nodeInfo(std::ostream &os) const;
 
   /** Turn on/off the use of a tie break object in the
     * createOneToOne algorithm. Turning this one gives
@@ -335,7 +342,7 @@ public:
   // note that this will include ghosted elements!
   std::size_t getNumberElementGIDArrays() const
   { return elementGIDs_.size(); }
-
+	
 protected:
 
   /** Use Zoltan2 to locally reorder with RCM.
@@ -397,6 +404,11 @@ protected:
                                 const Tpetra::Map<panzer::LocalOrdinal,panzer::GlobalOrdinal,panzer::TpetraNodeType> & overlapmap,
                                 const Tpetra::MultiVector<panzer::GlobalOrdinal,panzer::LocalOrdinal,panzer::GlobalOrdinal,panzer::TpetraNodeType> & overlap_mv) const;
   void buildLocalIdsFromOwnedAndGhostedElements();
+	
+  // build map of <field ID -> dof position of each nodes>
+  void buildNodalInfo();
+  std::map< std::size_t, std::size_t > gid2lid_;
+  std::map< std::size_t, std::size_t > lid2gid_;
 
   Teuchos::RCP<ConnManager> connMngr_;
   Teuchos::RCP<Teuchos::Comm<int> > communicator_;

@@ -410,6 +410,7 @@ TEUCHOS_UNIT_TEST(tSquareQuadMeshDOFManager, multiple_dof_managers)
    dofManager_fluids->addField("uy",patternC2);
    dofManager_fluids->addField("p",patternC1);
    dofManager_fluids->buildGlobalUnknowns();
+   TEST_EQUALITY(dofManager_fluids->getNumFields(),3);
 
    RCP<panzer::DOFManager> dofManager_temp = rcp(new panzer::DOFManager());
    dofManager_temp->setConnManager(connManager,MPI_COMM_WORLD);
