@@ -405,7 +405,9 @@ protected:
                                 const Tpetra::MultiVector<panzer::GlobalOrdinal,panzer::LocalOrdinal,panzer::GlobalOrdinal,panzer::TpetraNodeType> & overlap_mv) const;
   void buildLocalIdsFromOwnedAndGhostedElements();
 	
-  // build map of <field ID -> dof position of each nodes>
+  /** build map of <field ID -> dof position of each nodes>
+    * P.A.: works for Lagrange type element H(grad) only. Do not call this function for H(div) and H(curl) elements
+	*/
   void buildNodalInfo();
   std::map< std::size_t, std::size_t > gid2lid_;
   std::map< std::size_t, std::size_t > lid2gid_;

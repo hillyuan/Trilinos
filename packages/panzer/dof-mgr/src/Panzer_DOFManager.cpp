@@ -451,7 +451,7 @@ void DOFManager::buildGlobalUnknowns()
   // using new geometric pattern, build global unknowns
   buildGlobalUnknowns(aggFieldPattern);
 	
-  buildNodalInfo();
+//  buildNodalInfo();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
