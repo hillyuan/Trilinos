@@ -52,6 +52,7 @@
 #include "Panzer_GeometricAggFieldPattern.hpp"
 #include "Panzer_DOFManager.hpp"
 #include "Panzer_STK_CubeHexMeshFactory.hpp"
+#include "Panzer_STK_ExodusReaderFactory.hpp"
 #include "Panzer_STKConnManager.hpp"
 
 #include "Intrepid2_HGRAD_HEX_C1_FEM.hpp"
@@ -75,14 +76,17 @@ Teuchos::RCP<panzer_stk::STK_Interface> buildHexMesh(stk::ParallelMachine comm,i
                                                                                     int xblocks,int yblocks,int zblocks)
 {
    Teuchos::ParameterList pl;
-   pl.set<int>("X Elements",xelmts);
+/*   pl.set<int>("X Elements",xelmts);
    pl.set<int>("Y Elements",yelmts);
    pl.set<int>("Z Elements",zelmts);
    pl.set<int>("X Blocks",xblocks);
    pl.set<int>("Y Blocks",yblocks);
    pl.set<int>("Z Blocks",zblocks);
 
-   panzer_stk::CubeHexMeshFactory meshFact;
+   panzer_stk::CubeHexMeshFactory meshFact;*/
+   pl.set("File Name","beamgen.gen");
+   pl.set("File Type","Pamgen");
+   panzer_stk::STK_ExodusReaderFactory meshFact;
    meshFact.setParameterList(Teuchos::rcpFromRef(pl));
 
    Teuchos::RCP<panzer_stk::STK_Interface> mesh = meshFact.buildMesh(comm);
@@ -98,8 +102,78 @@ RCP<const panzer::FieldPattern> buildFieldPattern()
    RCP<const panzer::FieldPattern> pattern = rcp(new panzer::Intrepid2FieldPattern(basis));
    return pattern;
 }
+/*	
+// Cube tests
+TEUCHOS_UNIT_TEST(tCubeHexMeshDOFManager, 1_blocks)
+{
+   using Teuchos::RCP;
 
-// quad tests
+   // build global (or serial communicator)
+   #ifdef HAVE_MPI
+      stk::ParallelMachine Comm = MPI_COMM_WORLD;
+   #else
+      stk::ParallelMachine Comm = WHAT_TO_DO_COMM;
+   #endif
+
+   int numProcs = stk::parallel_machine_size(Comm);
+   int myRank = stk::parallel_machine_rank(Comm);
+
+  // TEUCHOS_ASSERT(numProcs<=2);
+
+   RCP<STK_Interface> mesh = buildHexMesh(Comm,4,1,1,1,1,1);
+   TEST_ASSERT(mesh!=Teuchos::null);
+
+   RCP<const panzer::FieldPattern> fp 
+         = buildFieldPattern<Intrepid2::Basis_HGRAD_HEX_C1_FEM<PHX::exec_space,double,double> >();
+
+   STKConnManager connMngr(mesh);
+   connMngr.buildConnectivity(*fp);
+	
+   RCP<panzer::DOFManager> dofManager = rcp(new panzer::DOFManager());
+   TEST_EQUALITY(dofManager->getConnManager(),Teuchos::null);
+	
+   dofManager->setConnManager(rcpFromRef(connMngr),MPI_COMM_WORLD);
+//   TEST_EQUALITY(dofManager->getConnManager(),rcpFromRef(connMngr));
+   dofManager->addField("T",fp);
+   dofManager->buildGlobalUnknowns();
+   dofManager->buildNodalInfo();
+
+   // did we get the element block correct?
+   /////////////////////////////////////////////////////////////
+
+ //  TEST_EQUALITY(connMngr.numElementBlocks(),2);
+ //  TEST_EQUALITY(connMngr.getBlockId(0),"eblock-0_0");
+
+   // check that each element is correct size
+   std::vector<std::string> elementBlockIds;
+   connMngr.getElementBlockIds(elementBlockIds);
+   for(std::size_t blk=0;blk<connMngr.numElementBlocks();++blk) {
+      std::string blockId = elementBlockIds[blk];
+	   std::cout << "BlockID:= " << blockId << std::endl;
+      const std::vector<int> & elementBlock = connMngr.getElementBlock(blockId);
+      for(std::size_t elmt=0;elmt<elementBlock.size();++elmt) {
+         panzer::LocalOrdinal nc = connMngr.getConnectivitySize(elementBlock[elmt]); 
+	     panzer::GlobalOrdinal * conn = connMngr.getConnectivity(elementBlock[elmt]);
+		  std::cout << "  --Element:" << elementBlock[elmt] << std::endl;
+		  for( std::size_t nd=0; nd<nc; nd++ ) std::cout << " ," << conn[nd];
+		  std::cout << std::endl;
+	  }
+   }
+	
+   std::vector<std::string> nodesets;
+   connMngr.getSTKInterface()->getNodesetNames(nodesets);
+   for( auto ndset: nodesets ) {
+	   std::cout << "Nodeset name = " << ndset << std::endl;
+	   std::vector<stk::mesh::EntityId> nodeIds;
+	   connMngr.getSTKInterface()->getAllNodeSetsId(ndset, nodeIds);
+	   for( auto nid: nodeIds ) std::cout << " , " << nid;
+	   std::cout << std::endl;
+   }
+	
+   dofManager->print_nodeInfo(std::cout);
+}*/
+
+// Cube tests
 TEUCHOS_UNIT_TEST(tCubeHexMeshDOFManager, buildTest_hex)
 {
    // build global (or serial communicator)

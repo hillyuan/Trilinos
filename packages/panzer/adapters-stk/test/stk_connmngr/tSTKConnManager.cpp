@@ -107,6 +107,48 @@ RCP<const panzer::FieldPattern> buildConstantFieldPattern(const shards::CellTopo
    RCP<const panzer::FieldPattern> pattern = rcp(new panzer::Intrepid2FieldPattern(basis));
    return pattern;
 }
+	
+// triangle tests
+TEUCHOS_UNIT_TEST(tSTKConnManager, 1_blocks)
+{
+   using Teuchos::RCP;
+
+   int numProcs = stk::parallel_machine_size(MPI_COMM_WORLD);
+   int myRank = stk::parallel_machine_rank(MPI_COMM_WORLD);
+
+  // TEUCHOS_ASSERT(numProcs<=2);
+
+   RCP<STK_Interface> mesh = build2DMesh(4 ,1,1,1);
+   TEST_ASSERT(mesh!=Teuchos::null);
+
+   RCP<const panzer::FieldPattern> fp 
+         = buildFieldPattern<Intrepid2::Basis_HGRAD_QUAD_C1_FEM<PHX::exec_space,double,double> >();
+
+   STKConnManager connMngr(mesh);
+   connMngr.buildConnectivity(*fp);
+
+   // did we get the element block correct?
+   /////////////////////////////////////////////////////////////
+
+ //  TEST_EQUALITY(connMngr.numElementBlocks(),2);
+ //  TEST_EQUALITY(connMngr.getBlockId(0),"eblock-0_0");
+
+   // check that each element is correct size
+   std::vector<std::string> elementBlockIds;
+   connMngr.getElementBlockIds(elementBlockIds);
+   for(std::size_t blk=0;blk<connMngr.numElementBlocks();++blk) {
+      std::string blockId = elementBlockIds[blk];
+	   std::cout << "BlockID:= " << blockId << std::endl;
+      const std::vector<int> & elementBlock = connMngr.getElementBlock(blockId);
+      for(std::size_t elmt=0;elmt<elementBlock.size();++elmt) {
+         panzer::LocalOrdinal nc = connMngr.getConnectivitySize(elementBlock[elmt]); 
+	     panzer::GlobalOrdinal * conn = connMngr.getConnectivity(elementBlock[elmt]);
+		  std::cout << "  --Element:" << elementBlock[elmt] << std::endl;
+		  for( std::size_t nd=0; nd<nc; nd++ ) std::cout << " ," << conn[nd];
+		  std::cout << std::endl;
+	  }
+   }
+}
 
 // triangle tests
 TEUCHOS_UNIT_TEST(tSTKConnManager, 2_blocks)
