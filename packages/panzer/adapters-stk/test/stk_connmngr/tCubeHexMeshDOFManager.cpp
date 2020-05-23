@@ -76,14 +76,26 @@ Teuchos::RCP<panzer_stk::STK_Interface> buildHexMesh(stk::ParallelMachine comm,i
                                                                                     int xblocks,int yblocks,int zblocks)
 {
    Teuchos::ParameterList pl;
-/*   pl.set<int>("X Elements",xelmts);
+   pl.set<int>("X Elements",xelmts);
    pl.set<int>("Y Elements",yelmts);
    pl.set<int>("Z Elements",zelmts);
    pl.set<int>("X Blocks",xblocks);
    pl.set<int>("Y Blocks",yblocks);
    pl.set<int>("Z Blocks",zblocks);
 
-   panzer_stk::CubeHexMeshFactory meshFact;*/
+   panzer_stk::CubeHexMeshFactory meshFact;
+   meshFact.setParameterList(Teuchos::rcpFromRef(pl));
+
+   Teuchos::RCP<panzer_stk::STK_Interface> mesh = meshFact.buildMesh(comm);
+   mesh->writeToExodus("whatish.exo");
+   return mesh;
+}
+	
+Teuchos::RCP<panzer_stk::STK_Interface> buildPamgenHexMesh(stk::ParallelMachine comm,int xelmts,int yelmts,int zelmts,
+                                                                                    int xblocks,int yblocks,int zblocks)
+{
+   Teuchos::ParameterList pl;
+
    pl.set("File Name","beamgen.gen");
    pl.set("File Type","Pamgen");
    panzer_stk::STK_ExodusReaderFactory meshFact;
@@ -120,7 +132,7 @@ TEUCHOS_UNIT_TEST(tCubeHexMeshDOFManager, 1_blocks)
 
   // TEUCHOS_ASSERT(numProcs<=2);
 
-   RCP<STK_Interface> mesh = buildHexMesh(Comm,4,1,1,1,1,1);
+   RCP<STK_Interface> mesh = buildPamgenHexMesh(Comm,4,1,1,1,1,1);
    TEST_ASSERT(mesh!=Teuchos::null);
 
    RCP<const panzer::FieldPattern> fp 
