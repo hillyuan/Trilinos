@@ -304,12 +304,19 @@ public:
    const std::vector<std::size_t> getNodemapOfField(int f) const
    { return nodeDofMap_.at(f); }
 	
+   /** build map of <field ID -> dof position of each nodes>
+    * P.A.: works for Lagrange type element H(grad) only. Do not call this function for H(div) and H(curl) elements
+	*/
+   virtual void buildNodalInfo() {;}
+	
    virtual void print_nodeInfo(std::ostream &os) const {};
 
 protected:
 	
    // field ID -> nodal DOF position of 
    std::map< int, std::vector<std::size_t> > nodeDofMap_;
+	
+   
 
    /** This method is used by derived classes to the construct the local IDs from 
      * the <code>getOwnedAndGhostedIndices</code> method.

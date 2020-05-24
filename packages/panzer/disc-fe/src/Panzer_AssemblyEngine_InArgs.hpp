@@ -103,6 +103,7 @@ namespace panzer {
 
     bool apply_dirichlet_beta;
     double dirichlet_beta;
+	std::shared_ptr< std::map<panzer::GlobalOrdinal, double> > dirichlets_;   // (global dof, value) pairs with Dirichlet condition applied
 
     /** Add a global evaluation data object to be used in all FieldManager
       * evaluate calls.

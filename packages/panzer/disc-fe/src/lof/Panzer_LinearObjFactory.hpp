@@ -238,6 +238,21 @@ public:
      */
    virtual void applyDirichletBCs(const LinearObjContainer & counter,
                                   LinearObjContainer & result) const = 0;
+								  
+   /** Adjust a vector by replacing selected rows with the value of the evaluated
+     * dirichlet conditions. This is handled through the standard container mechanism.
+     *
+     * \param[in] gdof Contains a global index of dof of which Dirichlet constraint would be applied.
+	 *
+     * \param[in] val Containes the Dirichlet constraints' value.
+	 *
+	 * \param[out] Linear Object should be modified
+	 * SHOULD BE pure virtual!
+     */
+   virtual void applyDirichlets( LinearObjContainer & thGhostedContainer,
+          const std::map<panzer::GlobalOrdinal,double>&  val) const {;}
+		  
+   virtual void writeOutMatrix( const std::string & identifier,const LinearObjContainer & loc ) const {;}
 
    /** Acess to the MPI Comm used in constructing this LOF.
      */

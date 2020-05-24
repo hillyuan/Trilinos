@@ -51,6 +51,7 @@
 #include "Tpetra_CrsMatrix.hpp"
 #include "Tpetra_Import.hpp"
 #include "Tpetra_Export.hpp"
+#include "MatrixMarket_Tpetra.hpp"
 
 #include "PanzerDiscFE_config.hpp"
 #include "Panzer_GlobalIndexer.hpp"
@@ -131,6 +132,18 @@ public:
      */
    virtual void applyDirichletBCs(const LinearObjContainer & counter,
                                   LinearObjContainer & result) const;
+								  
+   /** Adjust a vector by replacing selected rows with the value of the evaluated
+     * dirichlet conditions. This is handled through the standard container mechanism.
+     *
+     * \param[in] gdof Contains a global index of dof of which Dirichlet constraint would be applied.
+	 *
+     * \param[in] val Containes the Dirichlet constraints' value.
+	 *
+	 * \param[out] Linear Object should be modified
+     */
+   void applyDirichlets( LinearObjContainer & thGhostedContainer,
+      const std::map<panzer::GlobalOrdinal, double>& val) const;
 
    /** Build a GlobalEvaluationDataContainer that handles all domain communication.
      * This is used primarily for gather operations and hides the allocation and usage
@@ -265,6 +278,8 @@ public:
 
    virtual void beginFill(LinearObjContainer & loc) const;
    virtual void endFill(LinearObjContainer & loc) const;
+   
+    void writeOutMatrix( const std::string & identifier,const LinearObjContainer & loc ) const;
 
 protected:
 

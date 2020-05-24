@@ -136,6 +136,10 @@ public:
   Thyra::ModelEvaluatorBase::InArgs<Scalar> createInArgs() const override;
 
   Thyra::ModelEvaluatorBase::InArgs<Scalar> getNominalValues() const override;
+  
+  // Dirichlet condition
+  void constructDirichlet( const std::shared_ptr< std::map<panzer::GlobalOrdinal, Scalar> >& in ) 
+  { if( !in->empty() ) dirichlets_ = in; }
 
   //@}
 
@@ -705,6 +709,7 @@ private: // data members
 
   mutable bool oneTimeDirichletBeta_on_;
   mutable Scalar oneTimeDirichletBeta_;
+  std::shared_ptr< std::map<panzer::GlobalOrdinal, Scalar> > dirichlets_;
 
   bool build_volume_field_managers_;
   bool build_bc_field_managers_;

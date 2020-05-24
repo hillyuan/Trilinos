@@ -301,6 +301,64 @@ applyDirichletBCs(const LinearObjContainer & /* counter */,
 {
   TEUCHOS_ASSERT(false); // not yet implemented
 }
+	
+template <typename Traits,typename ScalarT,typename LocalOrdinalT,typename GlobalOrdinalT,typename NodeT>
+void 
+TpetraLinearObjFactory<Traits,ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>::
+writeOutMatrix(const std::string & s,const LinearObjContainer & loc) const
+{
+  std::cout << "Dumping matrx:\n";
+  const ContainerType & tloc = Teuchos::dyn_cast<const ContainerType>(loc);
+  Teuchos::RCP<CrsMatrixType> A = tloc.get_A();
+  if(A != Teuchos::null)
+      Tpetra::MatrixMarket::Writer<CrsMatrixType>::writeSparseFile(s.c_str(),A);
+}
+
+/* 
+   Algorithm here is not general. It is specified for FEM as follows
+   1)  Input argument ldof provide owned dof, it is therefore implemented only once
+   2)  
+*/
+template <typename Traits,typename ScalarT,typename LocalOrdinalT,typename GlobalOrdinalT,typename NodeT>
+void 
+TpetraLinearObjFactory<Traits,ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>::
+applyDirichlets(LinearObjContainer & GhostedContainer,
+	const std::map<panzer::GlobalOrdinal,double> &  applys) const
+{
+  ContainerType & t_ghosted = Teuchos::dyn_cast<ContainerType>(GhostedContainer);
+  Teuchos::RCP<CrsMatrixType> A = t_ghosted.get_A();
+//	CrsMatrixType pB(*B);
+//  Teuchos::RCP<CrsMatrixType> A = Teuchos::rcpFromRef(pB);
+  VectorType f = *( t_ghosted.get_f() );
+  Teuchos::ArrayRCP<ScalarT> f_1dview = f.get1dViewNonConst();
+ // auto x = t_ghosted.get_x();
+ // Teuchos::RCP<MapType> cMap = getColMap();
+//  this->beginFill(GhostedContainer);
+
+//  for( auto cdof: ldofs )
+  for( auto itr: applys )
+  {
+	  std::size_t numEntries = 0;
+      std::size_t sz = A->getNumEntriesInLocalRow(itr.first);
+      Teuchos::Array<LocalOrdinalT> indices(sz);
+      Teuchos::Array<ScalarT> Entries(sz);
+      A->getLocalRowCopy(itr.first,indices,Entries,numEntries);
+	  for (std::size_t i=0; i<sz; i++) {
+		  if( indices[i]==itr.first )
+			Entries[i] = 1.0;
+		  else
+		  	Entries[i] = 0.0;
+	  }
+      A->replaceLocalValues(itr.first,indices,Entries);
+      f_1dview[itr.first] = itr.second; //applys[p++];
+	  
+	 /* A->getLocalRowCopy(cdof,indices,Entries,numEntries);	  
+	  for (std::size_t i=0; i<numEntries; i++) { 
+		  std::cout << cdof << ":" << i << "= " << Entries[i] << std::endl; }
+	  std::cout <<  " F= " << f_1dview[cdof] << std::endl;*/
+  }
+//  this->endFill(GhostedContainer);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 //
