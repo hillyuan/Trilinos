@@ -451,7 +451,7 @@ void DOFManager::buildGlobalUnknowns()
   // using new geometric pattern, build global unknowns
   buildGlobalUnknowns(aggFieldPattern);
 	
-//  buildNodalInfo();
+  buildNodalInfo();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1376,118 +1376,50 @@ void DOFManager::buildLocalIdsFromOwnedAndGhostedElements()
 	
 void DOFManager::buildNodalInfo()
 {
-  typedef panzer::TpetraNodeType Node;
-  typedef Tpetra::Map<panzer::LocalOrdinal, panzer::GlobalOrdinal, Node> Map;
-	
-  // given a set of elements over each element block build an overlap
-  // map that will provide the required element entities for the
-  // set of elements requested.
-  ElementBlockAccess ownedAccess(true,connMngr_);
-
-  Teuchos::RCP<const Map> overlapmap       = buildOverlapMapFromElements(ownedAccess);
-	
-//  for( auto a: fa_fps_ )
-//	  a->print( std::cout );
-
   std::vector<std::string> elementBlockIds;
   connMngr_->getElementBlockIds(elementBlockIds);
-  lid2gid_.clear();
-  gid2lid_.clear();
-  nodeDofMap_.clear();
-  for( auto blockId : elementBlockIds )
-  {
-	  const std::vector<panzer::LocalOrdinal>& elements = connMngr_->getElementBlock(blockId);
-	  for( auto ele: elements )
-	  {
-	//	  std::cout << "rank=" << communicator_->getRank() << " ele:" << blockId << "," << ele << std::endl;
-		auto connSize = connMngr_->getConnectivitySize(ele);
-        const auto * elmtConn = connMngr_->getConnectivity(ele);
-        for (int c = 0; c < connSize; ++c) 
-		{
-          std::size_t lid = overlapmap->getLocalElement(elmtConn[c]);
-	//	if( communicator_->getRank()==1)  std::cout << " d " << lid  << "," << elmtConn[c] << std::endl;
-          lid2gid_.insert( std::make_pair(lid, elmtConn[c]) );
-          gid2lid_.insert( std::make_pair(elmtConn[c], lid) );
-        }
-	  }
-  }
-
-  std::vector<int> fieldIDs;
-  getFieldNumbers(fieldIDs);
-  for( auto fd: fieldIDs )
-  {
-	  nodeDofMap_.insert( std::make_pair(fd,std::vector<std::size_t>(gid2lid_.size())) );
-  }
-
+//std::cout << "My rank= " << communicator_->getRank() << std::endl;
+  nodeLIDMap_.clear();
+  nodeGIDMap_.clear();
   //std::size_t dimension = ga_fp_->getDimension();
+  std::vector<panzer::GlobalOrdinal> nodeGIDs;
+  auto rank = connMngr_->getNodeRank();
   for( auto blockId : elementBlockIds )
   {
 	  const std::vector<int>& fields = this->getBlockFieldNumbers(blockId);
 	  const std::vector<panzer::LocalOrdinal>& elements = connMngr_->getElementBlock(blockId);
-	  
+
 	  for( int fd: fields )
 	  {
-	//	  std::cout << "rank=" << communicator_->getRank() << " ele:" << blockId << "," << fd << std::endl;
-		  auto offset = getGIDFieldOffsets(blockId, fd);
-	//	  for( auto em: offset ) std::cout << " e, " << em;
-	//	  std::cout << std::endl;
+		  std::map< panzer::GlobalOrdinal, panzer::LocalOrdinal > LidMap;
+		  std::map< panzer::GlobalOrdinal, panzer::GlobalOrdinal > GidMap;
 		  for( auto ele: elements )
 		  {
-			  auto connSize = connMngr_->getConnectivitySize(ele);
-			  TEUCHOS_ASSERT(connSize >= offset.size());
-			  const auto * elmtConn = connMngr_->getConnectivity(ele);
-	  		  std::vector<panzer::GlobalOrdinal> gids;
-	  	      getElementGIDs( ele, gids );
-			  
-			  for (int c = 0; c < offset.size(); ++c) 
+	  		  std::vector<panzer::GlobalOrdinal> GIDs;
+	  	      getElementGIDs( ele, GIDs );
+			  auto LIDs = getElementLIDs( ele );
+			  connMngr_->getElementalNodeConnectivity(ele, nodeGIDs);
+//std::cout << ele << std::endl;
+		//	  for( auto aa: nodeGIDs ) std::cout << " ," << aa;
+		//	  std::cout << std::endl;
+			  for( std::size_t i =0; i<nodeGIDs.size(); i++ )
 			  {
-				  auto mydof = gids[ offset[c] ];
-				 // int ndlid = gid2lid_[ elmtConn[c] ];
-				  std::size_t lid = overlapmap->getLocalElement(elmtConn[c]);
-     // 	if( communicator_->getRank()==1) std::cout << " d " << c << ",, " << lid  << "," << mydof << std::endl;
-				  nodeDofMap_[fd][lid] = mydof;
-       		  } 
-		  }
-	  }
-	  
-	  
-	/*  
-
-	  for( auto ele: elements ) 
-	  {
-		  auto connSize = connMngr_->getConnectivitySize(ele);
-       	  const auto * elmtConn = connMngr_->getConnectivity(ele);
-		  std::vector<panzer::GlobalOrdinal> gids;
-		  getElementGIDs( ele, gids );
-		  std::cout << "rank=" << communicator_->getRank() << " ele:" << ele << "," << connSize<< std::endl;
-		  for( auto gid: gids ) std::cout << " , " << gid;
-		  std::cout << std::endl;
-
-		  int c = 0;
-		  for( int d=0; d<dimension; d++ ) 
-		  {
-			  std::cout << " d " << d  << std::endl;
-			  for( int fa=0; fa<fa_fps_[0]->getSubcellCount(d); fa++ )
-		//  for (int c = 0; c < connSize; c++) 
-		 	  {
-			  	auto cfield = fields[c];
-				std::cout << " fa " << "," << fa << ",  " << c << ",  " << cfield << std::endl;
-			  	const std::pair<std::vector<int>,std::vector<int> > & indicePair 
-            		= getGIDFieldOffsets_closure( blockId, cfield, d, fa );
-       	  	  	const std::vector<int> & elmtOffset = indicePair.first;
-				  for( auto em: elmtOffset ) std::cout << " e, " << em;
-		  std::cout << std::endl;
-         //  	  const std::vector<int> & basisIdMap = indicePair.second;
-			  	auto mydof = gids[ elmtOffset[0] ];
-			  	int ndlid = gid2lid_[ elmtConn[c] ];
-			  	std::cout << "---  " << elmtConn[c] << ", " <<  mydof << ", " << ndlid << std::endl;
-			  	nodeDofMap_[cfield][ndlid] = mydof;
-				c++;
+				  const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd, rank, i);
+				  const auto& offsets =  offsetPair.first;
+				  if( offsets.empty() ) continue;
+			//	  std::cout << offsets[0] << std::endl;
+				  auto gid = GIDs[offsets[0]];
+				  auto lid = LIDs[offsets[0]];
+				  auto& ndgid = nodeGIDs[i];
+				  //std::cout << ndgid << ","  << blockId << ", "  << fd << ", " << rank << ","  << i << std::endl;
+				  LidMap.insert( std::make_pair(ndgid, lid) );
+				  GidMap.insert( std::make_pair(ndgid, gid) );
 			  }
 		  }
-	  }*/
+		  nodeGIDMap_.insert( std::make_pair(fd, GidMap) );
+		  nodeLIDMap_.insert( std::make_pair(fd, LidMap) );
+	  }
   }
-	
  // print_nodeInfo( std::cout );
 	
 }
@@ -1495,14 +1427,39 @@ void DOFManager::buildNodalInfo()
 void DOFManager::print_nodeInfo(std::ostream &os) const
 {
 	os << "My rank= " << communicator_->getRank() << std::endl;
-	for( auto a: nodeDofMap_ )
+	//connMngr_ -> print_nodeInfo(os);
+	for( auto ndmap: nodeLIDMap_ )
 	{
-		os << "Field: " << getFieldString(a.first) << "  with field number " << a.first << std::endl;
-		int cnt = 0;
-		for( auto b: a.second )
+		os << "Field: " << getFieldString(ndmap.first) << "  with field number " << ndmap.first << std::endl;
+		std::size_t c =0;
+		for( auto b: ndmap.second )
 		{
-			std::cout << "  node:" << cnt << "  with global id=" << lid2gid_.at(cnt++) << "  global dof=" << b << std::endl;
+			std::cout << "  node gid:" << b.first << "  with local index=" << b.second << std::endl;
+			c++;
 		}
+	}
+	for( auto ndmap: nodeGIDMap_ )
+	{
+		os << "Field: " << getFieldString(ndmap.first) << "  with field number " << ndmap.first << std::endl;
+		std::size_t c =0;
+		for( auto b: ndmap.second )
+		{
+			std::cout << "  node gid:" << b.first << "  with global index=" << b.second << std::endl;
+			c++;
+		}
+	}
+}
+	
+void DOFManager::getNodesetsLocalIndex(int fieldnum, std::vector<panzer::GlobalOrdinal>& nodeset, std::vector<panzer::LocalOrdinal>& ldofs)
+{
+	if( nodeLIDMap_.empty() ) buildNodalInfo();
+	
+	auto localmap = nodeLIDMap_.at( fieldnum );
+	ldofs.clear();
+	for( auto nd: nodeset )
+	{
+		auto a = localmap.at( nd );
+		ldofs.emplace_back( a );
 	}
 }
 

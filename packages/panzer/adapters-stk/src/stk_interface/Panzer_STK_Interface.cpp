@@ -1165,7 +1165,7 @@ void STK_Interface::getMyNodesId(const std::string & nodesetName,const std::stri
    nodeIds.clear();
    for( const auto n: nodes )
    {
-	   nodeIds.emplace_back( bulkData_->identifier(n)-1 );
+	   nodeIds.emplace_back( bulkData_->identifier(n) );
    }
 }
 	
@@ -1198,7 +1198,7 @@ void STK_Interface::getOwnedNodeSetsId(const std::string & nodesetName,std::vect
    nodeIds.clear();
    for( const auto n: nodes )
    {
-	   nodeIds.emplace_back( bulkData_->identifier(n)-1 );
+	   nodeIds.emplace_back( bulkData_->identifier(n) );
    }
 }
 	
@@ -1232,7 +1232,7 @@ void STK_Interface::getAllNodeSetsId(const std::string & nodesetName,std::vector
    nodeIds.clear();
    for( const auto n: nodes )
    {
-	   nodeIds.emplace_back( bulkData_->identifier(n)-1 );
+	   nodeIds.emplace_back( bulkData_->identifier(n) );
    }
 }
 	

@@ -205,6 +205,15 @@ public:
       * input. Default implementation returns false.
       */
     virtual bool hasAssociatedNeighbors() const;
+	
+	/** Get the node connectivity of a given element
+     *
+     * \param[in] elmtLid elemental local index
+     *
+     * \param[out] nodesgid Vector of global nodes IDs.
+     */
+   void getElementalNodeConnectivity(const LocalOrdinal& elmtLid, std::vector<GlobalOrdinal>& nodesgid) const;
+
 
 protected:
    /** Apply periodic boundary conditions associated with the mesh object.

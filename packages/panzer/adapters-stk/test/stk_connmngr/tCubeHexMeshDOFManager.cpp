@@ -91,8 +91,7 @@ Teuchos::RCP<panzer_stk::STK_Interface> buildHexMesh(stk::ParallelMachine comm,i
    return mesh;
 }
 	
-Teuchos::RCP<panzer_stk::STK_Interface> buildPamgenHexMesh(stk::ParallelMachine comm,int xelmts,int yelmts,int zelmts,
-                                                                                    int xblocks,int yblocks,int zblocks)
+Teuchos::RCP<panzer_stk::STK_Interface> buildPamgenHexMesh(stk::ParallelMachine comm)
 {
    Teuchos::ParameterList pl;
 
@@ -114,7 +113,7 @@ RCP<const panzer::FieldPattern> buildFieldPattern()
    RCP<const panzer::FieldPattern> pattern = rcp(new panzer::Intrepid2FieldPattern(basis));
    return pattern;
 }
-/*	
+/*
 // Cube tests
 TEUCHOS_UNIT_TEST(tCubeHexMeshDOFManager, 1_blocks)
 {
@@ -132,7 +131,7 @@ TEUCHOS_UNIT_TEST(tCubeHexMeshDOFManager, 1_blocks)
 
   // TEUCHOS_ASSERT(numProcs<=2);
 
-   RCP<STK_Interface> mesh = buildPamgenHexMesh(Comm,4,1,1,1,1,1);
+   RCP<STK_Interface> mesh = buildPamgenHexMesh(Comm);
    TEST_ASSERT(mesh!=Teuchos::null);
 
    RCP<const panzer::FieldPattern> fp 

@@ -319,6 +319,13 @@ public:
 	*/
   void buildNodalInfo();
 	
+ /**
+   * \param[in] fieldnum field number
+   * \param[in] global ids of a group of nodes
+   * \param[out] gdofs  local index of nodal dof
+   */
+  void getNodesetsLocalIndex(int fieldnum, std::vector<panzer::GlobalOrdinal>& nodeset, std::vector<panzer::LocalOrdinal>& ldofs);
+
   /** Prints to an output stream the information about
     * nodal gids.
     */
@@ -409,10 +416,6 @@ protected:
                                 const Tpetra::Map<panzer::LocalOrdinal,panzer::GlobalOrdinal,panzer::TpetraNodeType> & overlapmap,
                                 const Tpetra::MultiVector<panzer::GlobalOrdinal,panzer::LocalOrdinal,panzer::GlobalOrdinal,panzer::TpetraNodeType> & overlap_mv) const;
   void buildLocalIdsFromOwnedAndGhostedElements();
-	
-
-  std::map< std::size_t, std::size_t > gid2lid_;
-  std::map< std::size_t, std::size_t > lid2gid_;
 
   Teuchos::RCP<ConnManager> connMngr_;
   Teuchos::RCP<Teuchos::Comm<int> > communicator_;

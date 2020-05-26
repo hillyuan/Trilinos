@@ -301,8 +301,11 @@ public:
    };
 	
    // Return node dof map of fieldnum provided
-   const std::vector<std::size_t> getNodemapOfField(int f) const
-   { return nodeDofMap_.at(f); }
+   const panzer::GlobalOrdinal getNodalGDofOfField(int f, panzer::GlobalOrdinal nd) const
+   { return nodeGIDMap_.at(f).at(nd); }
+	
+   const panzer::LocalOrdinal getNodalLDofOfField(int f, panzer::GlobalOrdinal nd) const
+   { return nodeLIDMap_.at(f).at(nd); }
 	
    /** build map of <field ID -> dof position of each nodes>
     * P.A.: works for Lagrange type element H(grad) only. Do not call this function for H(div) and H(curl) elements
@@ -313,10 +316,9 @@ public:
 
 protected:
 	
-   // field ID -> nodal DOF position of 
-   std::map< int, std::vector<std::size_t> > nodeDofMap_;
-	
-   
+   // field ID -> nodal global index -> local & global index of dof
+   std::map< int, std::map<panzer::GlobalOrdinal, panzer::LocalOrdinal> > nodeLIDMap_;
+   std::map< int, std::map<panzer::GlobalOrdinal, panzer::GlobalOrdinal> > nodeGIDMap_;
 
    /** This method is used by derived classes to the construct the local IDs from 
      * the <code>getOwnedAndGhostedIndices</code> method.
