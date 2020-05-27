@@ -228,6 +228,8 @@ public:
 
    virtual bool hasAssociatedNeighbors() const
    { return false; }
+	
+   void getElementalNodeConnectivity(const LocalOrdinal&, std::vector<GlobalOrdinal>&) const {;}
 
 private:
 
