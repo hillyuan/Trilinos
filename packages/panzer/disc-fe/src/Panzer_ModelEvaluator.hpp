@@ -138,8 +138,12 @@ public:
   Thyra::ModelEvaluatorBase::InArgs<Scalar> getNominalValues() const override;
   
   // Dirichlet condition
-  void constructDirichlet( const std::shared_ptr< std::map<panzer::GlobalOrdinal, Scalar> >& in ) 
+  void constructDirichlet( const std::shared_ptr< std::map<panzer::LocalOrdinal, Scalar> >& in ) 
   { if( !in->empty() ) dirichlets_ = in; }
+  
+   // Dirichlet condition
+  void constructCflux( const std::shared_ptr< std::map<panzer::LocalOrdinal, Scalar> >& in ) 
+  { if( !in->empty() ) cflux_ = in; }
 
   //@}
 
@@ -709,7 +713,8 @@ private: // data members
 
   mutable bool oneTimeDirichletBeta_on_;
   mutable Scalar oneTimeDirichletBeta_;
-  std::shared_ptr< std::map<panzer::GlobalOrdinal, Scalar> > dirichlets_;
+  std::shared_ptr< std::map<panzer::LocalOrdinal, Scalar> > dirichlets_;
+  std::shared_ptr< std::map<panzer::LocalOrdinal, Scalar> > cflux_;
 
   bool build_volume_field_managers_;
   bool build_bc_field_managers_;

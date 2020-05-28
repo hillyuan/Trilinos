@@ -1559,6 +1559,7 @@ evalModelImpl_basic(const Thyra::ModelEvaluatorBase::InArgs<Scalar> &inArgs,
     oneTimeDirichletBeta_on_ = false;
   }
   ae_inargs.dirichlets_= this->dirichlets_;
+  ae_inargs.cflux_= this->cflux_;
 
   // here we are building a container, this operation is fast, simply allocating a struct
   const RCP<panzer::ThyraObjContainer<Scalar> > thGlobalContainer =

@@ -319,13 +319,6 @@ public:
 	*/
   void buildNodalInfo();
 	
- /**
-   * \param[in] fieldnum field number
-   * \param[in] global ids of a group of nodes
-   * \param[out] gdofs  local index of nodal dof
-   */
-  void getNodesetsLocalIndex(int fieldnum, std::vector<panzer::GlobalOrdinal>& nodeset, std::vector<panzer::LocalOrdinal>& ldofs);
-
   /** Prints to an output stream the information about
     * nodal gids.
     */

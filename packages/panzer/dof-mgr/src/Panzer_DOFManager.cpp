@@ -1450,19 +1450,6 @@ void DOFManager::print_nodeInfo(std::ostream &os) const
 	}
 }
 	
-void DOFManager::getNodesetsLocalIndex(int fieldnum, std::vector<panzer::GlobalOrdinal>& nodeset, std::vector<panzer::LocalOrdinal>& ldofs)
-{
-	if( nodeLIDMap_.empty() ) buildNodalInfo();
-	
-	auto localmap = nodeLIDMap_.at( fieldnum );
-	ldofs.clear();
-	for( auto nd: nodeset )
-	{
-		auto a = localmap.at( nd );
-		ldofs.emplace_back( a );
-	}
-}
-
 /*
 template <typename panzer::LocalOrdinal,typename panzer::GlobalOrdinal>
 Teuchos::RCP<const Tpetra::Map<panzer::LocalOrdinal,panzer::GlobalOrdinal,panzer::TpetraNodeType> >

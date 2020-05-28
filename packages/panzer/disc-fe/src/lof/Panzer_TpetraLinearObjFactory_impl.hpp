@@ -323,7 +323,7 @@ template <typename Traits,typename ScalarT,typename LocalOrdinalT,typename Globa
 void 
 TpetraLinearObjFactory<Traits,ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>::
 applyDirichlets(LinearObjContainer & GhostedContainer,
-	const std::map<panzer::GlobalOrdinal,double> &  applys) const
+	const std::map<panzer::LocalOrdinal,double> &  applys) const
 {
   ContainerType & t_ghosted = Teuchos::dyn_cast<ContainerType>(GhostedContainer);
   Teuchos::RCP<CrsMatrixType> A = t_ghosted.get_A();
@@ -359,6 +359,26 @@ applyDirichlets(LinearObjContainer & GhostedContainer,
   }
 //  this->endFill(GhostedContainer);
 }
+	
+/* 
+   Apply concentrated flux  
+*/
+template <typename Traits,typename ScalarT,typename LocalOrdinalT,typename GlobalOrdinalT,typename NodeT>
+void 
+TpetraLinearObjFactory<Traits,ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>::
+applyConcentratedFlux(LinearObjContainer & GhostedContainer,
+	const std::map<panzer::LocalOrdinal,double> &  applys) const
+{
+  ContainerType & t_ghosted = Teuchos::dyn_cast<ContainerType>(GhostedContainer);
+  VectorType f = *( t_ghosted.get_f() );
+  Teuchos::ArrayRCP<ScalarT> f_1dview = f.get1dViewNonConst();
+
+  for( auto itr: applys )
+  {
+      f_1dview[itr.first] += itr.second; //applys[p++];
+  }
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //

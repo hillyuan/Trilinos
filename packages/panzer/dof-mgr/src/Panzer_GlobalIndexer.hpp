@@ -312,6 +312,38 @@ public:
 	*/
    virtual void buildNodalInfo() {;}
 	
+   /**
+   * \param[in] fieldnum field number
+   * \param[in] global ids of a group of nodes
+   * \param[out] gdofs  local index of nodal dof
+   */
+   virtual void getNodesetsLocalIndex(int fieldnum, std::vector<panzer::GlobalOrdinal>& nodeset, std::vector<panzer::LocalOrdinal>& ldofs) const
+   {
+	if( nodeLIDMap_.empty() ) return;
+	
+	auto localmap = nodeLIDMap_.at( fieldnum );
+	ldofs.clear();
+	for( auto nd: nodeset )
+	{
+		auto a = localmap.at( nd );
+		ldofs.emplace_back( a );
+	}
+   }
+
+   /* for stk::mesh::EntityId = uint64_t */
+   virtual void getNodesetsLocalIndex(int fieldnum, std::vector<std::uint64_t>& nodeset, std::vector<panzer::LocalOrdinal>& ldofs) const
+   {
+	if( nodeLIDMap_.empty() ) return;
+	
+	auto localmap = nodeLIDMap_.at( fieldnum );
+	ldofs.clear();
+	for( auto nd: nodeset )
+	{
+		auto a = localmap.at( nd );
+		ldofs.emplace_back( a );
+	}
+   }
+	
    virtual void print_nodeInfo(std::ostream &os) const {};
 
 protected:

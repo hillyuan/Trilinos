@@ -250,7 +250,19 @@ public:
 	 * SHOULD BE pure virtual!
      */
    virtual void applyDirichlets( LinearObjContainer & thGhostedContainer,
-          const std::map<panzer::GlobalOrdinal,double>&  val) const {;}
+          const std::map<panzer::LocalOrdinal,double>&  val) const {;}
+		  
+   /** Modify the left hand of equation by add the concentrated Neumann flux upon given position.
+     *
+     * \param[in] gdof Contains a global index of dof of which Dirichlet constraint would be applied.
+	 *
+     * \param[in] val Containes the Neumann conditions' value.
+	 *
+	 * \param[out] Linear Object should be modified
+	 * SHOULD BE pure virtual!
+     */
+   virtual void applyConcentratedFlux( LinearObjContainer & thGhostedContainer,
+          const std::map<panzer::LocalOrdinal,double>&  val) const {;}
 		  
    virtual void writeOutMatrix( const std::string & identifier,const LinearObjContainer & loc ) const {;}
 

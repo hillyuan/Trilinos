@@ -110,6 +110,13 @@ evaluate(const panzer::AssemblyEngineInArgs& in, const EvaluationFlags flags)
       PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluate_interfacebcs("+PHX::print<EvalT>()+")",eval_interfacebcs);
       this->evaluateInterfaceBCs(in);
     }
+	  
+	// Dirchlet conditions require a global matrix
+    {
+    //  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluate_dirichlets("+PHX::print<EvalT>()+")",eval_dirichletbcs);
+		if( in.cflux_.get() != nullptr )
+    		m_lin_obj_factory->applyConcentratedFlux( *in.ghostedContainer_, *(in.cflux_));
+    }
 
     // Dirchlet conditions require a global matrix
     {
@@ -122,7 +129,6 @@ evaluate(const panzer::AssemblyEngineInArgs& in, const EvaluationFlags flags)
     //  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluate_dirichlets("+PHX::print<EvalT>()+")",eval_dirichletbcs);
 		if( in.dirichlets_.get() != nullptr )
     		m_lin_obj_factory->applyDirichlets( *in.ghostedContainer_, *(in.dirichlets_));
-	//	this->evaluateDirichlets(in);
     }
   }
 
