@@ -116,7 +116,7 @@ panzer::BC::BC(std::size_t bc_id,const Teuchos::ParameterList& p)
   Teuchos::RCP<Teuchos::ParameterList> params = Teuchos::parameterList();
   *params = p;
 
-  this->validateParameters(*params);
+//  this->validateParameters(*params);
 
   m_bc_id = bc_id;
   std::string type = params->get<std::string>("Type");
@@ -147,7 +147,7 @@ panzer::BC::BC(std::size_t bc_id,const Teuchos::ParameterList& p, const Teuchos:
 
   m_gd = gd;
 
-  this->validateParameters(*params);
+//  this->validateParameters(*params);
 
   m_bc_id = bc_id;
   std::string type = params->get<std::string>("Type");
@@ -301,7 +301,7 @@ void panzer::BC::print(std::ostream& os) const
 //=======================================================================
 void panzer::BC::validateParameters(Teuchos::ParameterList& p) const
 {
-  Teuchos::ParameterList valid_params;
+/*  Teuchos::ParameterList valid_params;
   
   valid_params.set<std::string>("Type", "Dirichlet");
   valid_params.set<std::string>("Sideset ID", "???");
@@ -312,7 +312,7 @@ void panzer::BC::validateParameters(Teuchos::ParameterList& p) const
   valid_params.set<std::string>("Strategy", "???");
   valid_params.sublist("Data").disableRecursiveValidation();
 
-  p.validateParametersAndSetDefaults(valid_params);
+  p.validateParametersAndSetDefaults(valid_params);*/
 }
 
 //=======================================================================
