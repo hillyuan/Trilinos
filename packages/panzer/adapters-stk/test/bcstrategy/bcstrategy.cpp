@@ -102,6 +102,30 @@ namespace panzer {
     bcs = my_factory.buildBCStrategy(bc,gd);
 
   }
+	
+  TEUCHOS_UNIT_TEST(bcstrategy, basic_construction_neumann)
+  {
+
+    std::size_t bc_id = 0;
+    panzer::BCType dirichlet = BCT_Neumann;
+    std::string sideset_id = "4";
+    std::string element_block_id = "fluid";
+    std::string dof_name = "UX";
+    std::string strategy = "Neumann Constant";
+    double value = 5.0;
+    Teuchos::ParameterList p;
+    p.set("Value",value);
+    panzer::BC bc(bc_id, dirichlet, sideset_id, element_block_id, dof_name,
+		  strategy, p);
+
+    Teuchos::RCP<panzer::BCStrategy_TemplateManager<panzer::Traits> > bcs;
+
+    Teuchos::RCP<panzer::GlobalData> gd = panzer::createGlobalData();
+
+    user_app::BCFactory my_factory;
+    bcs = my_factory.buildBCStrategy(bc,gd);
+
+  }
 
   TEUCHOS_UNIT_TEST(bcstrategy, constant_bc_strategy)
   {
