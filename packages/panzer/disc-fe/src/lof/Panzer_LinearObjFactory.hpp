@@ -250,7 +250,7 @@ public:
 	 * SHOULD BE pure virtual!
      */
    virtual void applyDirichlets( LinearObjContainer & thGhostedContainer,
-          const std::map<panzer::LocalOrdinal,double>&  val) const {;}
+          const std::map<panzer::LocalOrdinal,double>&  val) const = 0;
 		  
    /** Modify the left hand of equation by add the concentrated Neumann flux upon given position.
      *
