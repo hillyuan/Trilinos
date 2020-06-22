@@ -1,13 +1,18 @@
 #!/bin/bash
 
 CURRENT_SCRIPTS_DIR=`echo $BASH_SOURCE | sed "s/\(.*\)\/.*\.sh/\1/g"`
-#ATDM_CONFIG_SCRIPT_DIR=".."
-ATDM_CONFIG_SCRIPT_DIR=`readlink -f ${CURRENT_SCRIPTS_DIR}/..`
-#ATDM_UTIL_SCRIPT="atdm_config_helper_funcs.sh"
-ATDM_UTIL_SCRIPT=`readlink -f ${CURRENT_SCRIPTS_DIR}/atdm_config_helper_funcs.sh`
 
-source ${ATDM_UTIL_SCRIPT}
+if [[ "$(uname)" == "Darwin" ]]; then
+  ATDM_CONFIG_SCRIPT_DIR="../.."
+  ATDM_UTIL_SCRIPT_ATDM_CONFIG_HELPER_FUNCS="${ATDM_CONFIG_SCRIPT_DIR}/utils/atdm_config_helper_funcs.sh"
+  SHUNIT2_DIR="${ATDM_CONFIG_SCRIPT_DIR}/../../../commonTools/test/shunit2"
+else
+  ATDM_CONFIG_SCRIPT_DIR=`readlink -f ${CURRENT_SCRIPTS_DIR}/../..`
+  ATDM_UTIL_SCRIPT_ATDM_CONFIG_HELPER_FUNCS=`readlink -f ${ATDM_CONFIG_SCRIPT_DIR}/utils/atdm_config_helper_funcs.sh`
+  SHUNIT2_DIR=`readlink -f ${ATDM_CONFIG_SCRIPT_DIR}/../../../commonTools/test/shunit2`
+fi
 
+source ${ATDM_UTIL_SCRIPT_ATDM_CONFIG_HELPER_FUNCS}
 #
 # Test atdm utility functions
 #
@@ -59,18 +64,11 @@ test_atdm_remove_substrings_from_env_var() {
 
   for DELIM in ";" "." "/" " "; do
     RET=$(atdm_remove_substrings_from_env_var ENV_VAR "$DELIM" "$STRINGS")
-    assertEquals "$RET" "ERROR: atdm_remove_substrings_from_env_var: \"$DELIM\" is an invalid delimiter."
+    assertEquals "ERROR: atdm_remove_substrings_from_env_var: \"$DELIM\" is an invalid delimiter." "$RET"
   done
 }
-
-testAll() {
-  test_atdm_remove_substrings_from_env_var
-}
-
 
 #
 # Run the unit tests
 #
-SHUNIT2_DIR=`readlink -f ${ATDM_CONFIG_SCRIPT_DIR}/../../../commonTools/test/shunit2`
-#SHUNIT2_DIR="${ATDM_CONFIG_SCRIPT_DIR}/../../../commonTools/test/shunit2"
 . ${SHUNIT2_DIR}/shunit2
