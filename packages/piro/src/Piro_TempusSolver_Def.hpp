@@ -605,12 +605,16 @@ getInitTimeStep() const
   auto init_time_step = tsc->getInitTimeStep(); 
   return init_time_step; 
 } 
+
 template <typename Scalar>
 void Piro::TempusSolver<Scalar>::
 setObserver() const
 {
   Teuchos::RCP<Tempus::IntegratorObserverBasic<Scalar> > observer = Teuchos::null;
   if (Teuchos::nonnull(piroObserver_)) {
+	  observer = tempusObserver_;
+  }
+  else if (Teuchos::nonnull(piroObserver_)) {
     //Get solutionHistory from integrator
     const Teuchos::RCP<const Tempus::SolutionHistory<Scalar> > solutionHistory = piroTempusIntegrator_->getSolutionHistory();
     const Teuchos::RCP<const Tempus::TimeStepControl<Scalar> > timeStepControl = piroTempusIntegrator_->getTimeStepControl();

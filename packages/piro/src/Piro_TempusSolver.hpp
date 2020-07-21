@@ -158,6 +158,9 @@ public:
   
   Teuchos::RCP<const Piro::TempusIntegrator<Scalar>> 
   getPiroTempusIntegrator() const {return piroTempusIntegrator_;} 
+  
+  void setObserver( Teuchos::RCP<Tempus::IntegratorObserverBasic<Scalar> >& observer ) 
+  { tempusObserver_ = observer; }
 
 private:
   /** \name Overridden from Thyra::ModelEvaluatorDefaultBase. */
@@ -196,12 +199,13 @@ private:
   bool isInitialized_;
 
   Teuchos::RCP<Piro::ObserverBase<Scalar> > piroObserver_;
+  Teuchos::RCP<Tempus::IntegratorObserverBasic<Scalar> > tempusObserver_;
 
   bool supports_x_dotdot_; 
   
   //! Set observer
   void setObserver() const; 
-
+  
   //! Boolean to tell TempusSolver whether or not to abort if a transient solve fails 
   bool abort_on_failure_;
 
