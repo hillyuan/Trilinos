@@ -87,8 +87,7 @@ namespace panzer {
                                                        const panzer::FieldLibrary& fl,
                                                        const Teuchos::ParameterList& user_data) const = 0;
 									  
-	virtual void buildAndRegisterMaterialEvaluators(PHX::FieldManager<panzer::Traits>& fm, 
-							std::shared_ptr<TianYuan::Material>& matl) const {};
+	virtual void setMaterial(PHX::FieldManager<panzer::Traits>& fm, std::shared_ptr<TianYuan::Material>& matl)  {};
 
     virtual void buildAndRegisterDOFProjectionsToIPEvaluators(PHX::FieldManager<panzer::Traits>& fm,
                                                               const panzer::FieldLayoutLibrary& fl,
