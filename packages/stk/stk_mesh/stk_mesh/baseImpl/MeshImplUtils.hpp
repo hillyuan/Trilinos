@@ -40,6 +40,7 @@
 #include <stk_mesh/base/Types.hpp>
 #include <stk_mesh/base/BulkData.hpp>
 #include <stk_mesh/base/EntityProcMapping.hpp>
+#include <stk_mesh/base/EntitySorterBase.hpp>
 #include "stk_util/parallel/DistributedIndex.hpp"  // for DistributedIndex, etc
 
 #include <vector>
@@ -278,6 +279,9 @@ void check_size_of_types();
 void check_declare_element_side_inputs(const BulkData & mesh,
                                        const Entity elem,
                                        const unsigned localSideId);
+
+void connect_edge_to_elements(stk::mesh::BulkData& bulk, stk::mesh::Entity edge);
+
 } // namespace impl
 } // namespace mesh
 } // namespace stk
