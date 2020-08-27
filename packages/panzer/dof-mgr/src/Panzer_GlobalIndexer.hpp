@@ -301,10 +301,10 @@ public:
    };
 	
    // Return node dof map of fieldnum provided
-   const panzer::GlobalOrdinal getNodalGDofOfField(int f, panzer::GlobalOrdinal nd) const
+   panzer::GlobalOrdinal getNodalGDofOfField(int f, panzer::GlobalOrdinal nd) const
    { return nodeGIDMap_.at(f).at(nd); }
 	
-   const panzer::LocalOrdinal getNodalLDofOfField(int f, panzer::GlobalOrdinal nd) const
+   panzer::LocalOrdinal getNodalLDofOfField(int f, panzer::GlobalOrdinal nd) const
    { return nodeLIDMap_.at(f).at(nd); }
 	
    /** build map of <field ID -> dof position of each nodes>
