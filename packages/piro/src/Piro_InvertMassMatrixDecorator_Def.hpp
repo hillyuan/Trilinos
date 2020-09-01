@@ -100,10 +100,7 @@ Piro::InvertMassMatrixDecorator<Scalar>::InvertMassMatrixDecorator(
   linearSolverBuilder.setPreconditioningStrategyFactory(Teuchos::abstractFactoryStd<Base, Impl>(), "Ifpack2");
 #endif
 #ifdef HAVE_PIRO_MUELU
-  using local_ordinal_type = Tpetra::Map<>::local_ordinal_type;
-  using global_ordinal_type = Tpetra::Map<>::global_ordinal_type;
-  using node_type = Tpetra::Map<>::node_type;
-  Stratimikos::enableMueLu<local_ordinal_type, global_ordinal_type, node_type>(linearSolverBuilder);
+  Stratimikos::enableMueLu(linearSolverBuilder);
 #endif
 
    linearSolverBuilder.setParameterList(stratParams);
