@@ -885,7 +885,7 @@ addFlexibleResponse(const std::string & responseName,
    return respIndex;
 }
 
-
+/*
 template <typename Scalar>
 void panzer::ModelEvaluator<Scalar>::
 applyDirichletBCs(const Teuchos::RCP<Thyra::VectorBase<Scalar> > & x,
@@ -958,7 +958,7 @@ applyDirichletBCs(const Teuchos::RCP<Thyra::VectorBase<Scalar> > & x,
   // use the linear object factory to apply the result
   lof_->applyDirichletBCs(*counter,*result);
 }
-
+*/
 template <typename Scalar>
 void panzer::ModelEvaluator<Scalar>::
 evalModel_D2gDx2(int respIndex,

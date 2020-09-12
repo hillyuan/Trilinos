@@ -495,7 +495,7 @@ adjustForDirichletConditions(const Epetra_Vector & local_bcs,
       }
    }
 }
-
+/*
 template <typename Traits,typename LocalOrdinalT>
 void BlockedEpetraLinearObjFactory<Traits,LocalOrdinalT>::
 applyDirichletBCs(const LinearObjContainer & counter,
@@ -533,7 +533,7 @@ applyDirichletBCs(const LinearObjContainer & counter,
     }
   }
 }
-
+*/
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  buildReadOnlyDomainContainer()

@@ -366,7 +366,7 @@ panzer::ModelEvaluator_Epetra::createOutArgs() const
 
   return outArgs;
 }
-
+/*
 void panzer::ModelEvaluator_Epetra::
 applyDirichletBCs(const Teuchos::RCP<Thyra::VectorBase<double> > & x,
                   const Teuchos::RCP<Thyra::VectorBase<double> > & f) const
@@ -432,7 +432,7 @@ applyDirichletBCs(const Teuchos::RCP<Thyra::VectorBase<double> > & x,
   // use the linear object factory to apply the result
   lof_->applyDirichletBCs(*counter,*result);
 }
-
+*/
 void panzer::ModelEvaluator_Epetra::evalModel( const InArgs& inArgs, 
                                                const OutArgs& outArgs ) const
 {

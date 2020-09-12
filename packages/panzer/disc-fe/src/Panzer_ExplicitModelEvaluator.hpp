@@ -105,14 +105,14 @@ private: // data members
   /** Apply the dirichlet boundary conditions to the vector "f" using the 
     * "x" values as the current solution.
     */
-  void applyDirichletBCs(const Teuchos::RCP<Thyra::VectorBase<Scalar> > & x,
+ /* void applyDirichletBCs(const Teuchos::RCP<Thyra::VectorBase<Scalar> > & x,
                          const Teuchos::RCP<Thyra::VectorBase<Scalar> > & f) const
   {
     if(panzerModel_!=Teuchos::null)       { panzerModel_->applyDirichletBCs(x,f); return; }
     if(panzerEpetraModel_!=Teuchos::null) { panzerEpetraModel_->applyDirichletBCs(x,f); return; }
 
     TEUCHOS_ASSERT(false);
-  }
+  }*/
 
   /** This method builds the inverse mass matrix from the underlying model evaluator.
     * Not that this is constant method that modifies a mutable member.

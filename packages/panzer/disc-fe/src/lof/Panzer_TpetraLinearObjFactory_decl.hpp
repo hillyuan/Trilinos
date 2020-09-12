@@ -130,8 +130,8 @@ public:
    /** Adjust a vector by replacing selected rows with the value of the evaluated
      * dirichlet conditions. This is handled through the standard container mechanism.
      */
-   virtual void applyDirichletBCs(const LinearObjContainer & counter,
-                                  LinearObjContainer & result) const;
+//   virtual void applyDirichletBCs(const LinearObjContainer & counter,
+//                                  LinearObjContainer & result) const;
 								  
    /** Adjust a vector by replacing selected rows with the value of the evaluated
      * dirichlet conditions. This is handled through the standard container mechanism.

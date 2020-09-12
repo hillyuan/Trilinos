@@ -236,8 +236,8 @@ public:
      *                    values are specified in the "f" vector.
      * \param[in,out] result The vector to be modifed is the "f" vector.
      */
-   virtual void applyDirichletBCs(const LinearObjContainer & counter,
-                                  LinearObjContainer & result) const = 0;
+//   virtual void applyDirichletBCs(const LinearObjContainer & counter,
+//                                  LinearObjContainer & result) const = 0;
 								  
    /** Adjust a vector by replacing selected rows with the value of the evaluated
      * dirichlet conditions. This is handled through the standard container mechanism.
