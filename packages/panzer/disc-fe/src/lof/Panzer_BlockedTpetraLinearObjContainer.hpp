@@ -48,6 +48,7 @@
 // Tpetra includes
 #include "Tpetra_Vector.hpp"
 #include "Tpetra_CrsMatrix.hpp"
+#include "Tpetra_BlockCrsMatrix.hpp"
 
 #include "Teuchos_RCP.hpp"
 
@@ -100,6 +101,8 @@ public:
 
    inline void set_A(const Teuchos::RCP<CrsMatrixType> & in) { set_A_th(in); }
    inline Teuchos::RCP<CrsMatrixType> get_A() const { return get_A_th(); }
+
+   void applyDirichletBoundaryCondition( const std::vector<LocalOrdinalT>& indx ) override;
 
    // Inherited from LinearObjContainer
    virtual void initialize();

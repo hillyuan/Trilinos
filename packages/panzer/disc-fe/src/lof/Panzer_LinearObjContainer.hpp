@@ -63,6 +63,8 @@ public:
    typedef enum { X=0x1, DxDt=0x2, F=0x4, Mat=0x8} Members;
 
    virtual void initialize() = 0;
+
+   virtual void applyDirichletBoundaryCondition( const std::vector<panzer::LocalOrdinal>& indx ) = 0;
 };
 
 }

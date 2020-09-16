@@ -145,6 +145,10 @@ public:
    virtual Teuchos::RCP<Thyra::LinearOpBase<double> > get_A_th() const
    { return (A==Teuchos::null) ? Teuchos::null : Thyra::nonconstEpetraLinearOp(A); }
 
+   // not implementated yet
+   void applyDirichletBoundaryCondition( const std::vector<panzer::LocalOrdinal>& indx ) override
+   {}
+
 private:
    Teuchos::RCP<const Epetra_Map> domainMap;
    Teuchos::RCP<const Epetra_Map> rangeMap;

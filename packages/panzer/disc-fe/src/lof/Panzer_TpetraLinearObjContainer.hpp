@@ -50,6 +50,7 @@
 // Tpetra includes
 #include "Tpetra_Vector.hpp"
 #include "Tpetra_CrsMatrix.hpp"
+#include "Tpetra_applyDirichletBoundaryCondition.hpp"
 
 #include "Thyra_TpetraThyraWrappers.hpp"
 
@@ -155,6 +156,23 @@ public:
    { A = (in==Teuchos::null) ? Teuchos::null : Teuchos::rcp_dynamic_cast<CrsMatrixType>(TOE::getTpetraOperator(in),true); }
    virtual Teuchos::RCP<Thyra::LinearOpBase<ScalarT> > get_A_th() const
    { return (A==Teuchos::null) ? Teuchos::null : Thyra::createLinearOp<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>(A,rangeSpace,domainSpace); }
+
+   void applyDirichletBoundaryCondition( const std::vector<LocalOrdinalT>& indx ) override
+   {
+	   using device_type = typename CrsMatrixType::device_type;
+      using execution_space = typename CrsMatrixType::execution_space;
+      using range_type = Kokkos::RangePolicy<execution_space, LocalOrdinalT>;
+	   const LocalOrdinalT lclNumRows = indx.size();
+	   Kokkos::View<typename CrsMatrixType::local_ordinal_type*, device_type> lclRowInds ("lclRowInds", lclNumRows);
+	   Kokkos::parallel_for
+       ("Fill lclRowInds",
+         range_type (0, lclNumRows),
+         KOKKOS_LAMBDA (const LocalOrdinalT lclRow) {
+	     lclRowInds(lclRow) = indx[lclRow];
+       });
+	   
+	   Tpetra::applyDirichletBoundaryConditionToLocalMatrixRows(*A, lclRowInds);
+   }
     
 private:
    typedef Thyra::TpetraOperatorVectorExtraction<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT> TOE;

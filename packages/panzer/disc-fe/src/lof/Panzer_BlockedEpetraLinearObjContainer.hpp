@@ -110,6 +110,10 @@ public:
    void set_A_th(const Teuchos::RCP<CrsMatrixType> & in) { A = in; }
    Teuchos::RCP<CrsMatrixType> get_A_th() const { return A; }
 
+   // not implementated yet
+   void applyDirichletBoundaryCondition( const std::vector<panzer::LocalOrdinal>& indx ) override
+   {}
+
 private:
    Teuchos::RCP<VectorType> x, dxdt, f;
    Teuchos::RCP<CrsMatrixType> A;
