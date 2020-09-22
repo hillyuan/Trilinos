@@ -112,7 +112,13 @@ public:
 
    // not implementated yet
    void applyDirichletBoundaryCondition( const std::vector<panzer::LocalOrdinal>& indx ) override
-   {}
+   {
+      TEUCHOS_ASSERT(false); // not yet implemented
+   }
+   void evalDirichletResidual( const std::vector<panzer::LocalOrdinal>& indx ) override
+   {
+      TEUCHOS_ASSERT(false); // not yet implemented
+   }
 
 private:
    Teuchos::RCP<VectorType> x, dxdt, f;

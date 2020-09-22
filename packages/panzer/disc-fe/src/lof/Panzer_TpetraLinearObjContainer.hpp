@@ -162,16 +162,35 @@ public:
 	   using device_type = typename CrsMatrixType::device_type;
       using execution_space = typename CrsMatrixType::execution_space;
       using range_type = Kokkos::RangePolicy<execution_space, LocalOrdinalT>;
+	  
 	   const LocalOrdinalT lclNumRows = indx.size();
 	   Kokkos::View<typename CrsMatrixType::local_ordinal_type*, device_type> lclRowInds ("lclRowInds", lclNumRows);
 	   Kokkos::parallel_for
-       ("Fill lclRowInds",
+      ("Fill lclRowInds",
          range_type (0, lclNumRows),
          KOKKOS_LAMBDA (const LocalOrdinalT lclRow) {
-	     lclRowInds(lclRow) = indx[lclRow];
-       });
+	        lclRowInds(lclRow) = indx[lclRow];
+         }
+      );
 	   
 	   Tpetra::applyDirichletBoundaryConditionToLocalMatrixRows(*A, lclRowInds);
+   }
+   
+   void evalDirichletResidual( const std::vector<panzer::LocalOrdinal>& indx ) override
+   {
+      using device_type = typename CrsMatrixType::device_type;
+      using execution_space = typename CrsMatrixType::execution_space;
+      using range_type = Kokkos::RangePolicy<execution_space, LocalOrdinalT>;
+      
+      const LocalOrdinalT lclNumRows = indx.size();
+	   Kokkos::View<typename CrsMatrixType::local_ordinal_type*, device_type> lclRowInds ("lclRowInds", lclNumRows);
+	   Kokkos::parallel_for
+      ("Fill lclRowInds",
+         range_type (0, lclNumRows),
+         KOKKOS_LAMBDA (const LocalOrdinalT lclRow) {
+	        f->replaceLocalValue(lclRow, 0.0);
+         }
+      );
    }
     
 private:

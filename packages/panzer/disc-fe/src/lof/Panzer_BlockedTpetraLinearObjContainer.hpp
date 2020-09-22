@@ -103,6 +103,7 @@ public:
    inline Teuchos::RCP<CrsMatrixType> get_A() const { return get_A_th(); }
 
    void applyDirichletBoundaryCondition( const std::vector<LocalOrdinalT>& indx ) override;
+   void evalDirichletResidual( const std::vector<panzer::LocalOrdinal>& indx ) override {;}
 
    // Inherited from LinearObjContainer
    virtual void initialize();

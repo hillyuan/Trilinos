@@ -206,6 +206,11 @@ applyDirichletBoundaryCondition( const std::vector<LocalOrdinalT>& indx )
 	Tpetra::applyDirichletBoundaryConditionToLocalMatrixRows(*A, lclRowInds);*/
 }
 
+/*template <typename ScalarT,typename LocalOrdinalT,typename GlobalOrdinalT,typename NodeT>
+void BlockedTpetraLinearObjContainer<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>::
+evalDirichletResidual( const std::vector<LocalOrdinalT>& indx )
+{}*/
+
 template <typename ScalarT,typename LocalOrdinalT,typename GlobalOrdinalT,typename NodeT>
 void BlockedTpetraLinearObjContainer<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>::
 beginFill()
