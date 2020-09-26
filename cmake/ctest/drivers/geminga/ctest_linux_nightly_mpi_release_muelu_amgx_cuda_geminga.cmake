@@ -76,15 +76,8 @@ SET(Trilinos_PACKAGES MueLu Xpetra Amesos2 Tpetra)
 SET(EXTRA_CONFIGURE_OPTIONS
   ### ETI ###
   "-DTrilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON"
-    "-DTpetra_INST_INT_INT:BOOL=ON"
-    "-DTpetra_INST_INT_LONG:BOOL=OFF"
-    "-DTpetra_INST_INT_LONG_LONG:BOOL=OFF"
     "-DTpetra_INST_COMPLEX_DOUBLE:BOOL=OFF"
     "-DTpetra_INST_COMPLEX_FLOAT:BOOL=OFF"
-    "-DTpetra_INST_SERIAL=OFF"
-
-  ### Kokkos ###
-  "-DKOKKOS_ARCH=SNB;Kepler35"
 
   ### MISC ###
   "-DTrilinos_ENABLE_DEPENDENCY_UNIT_TESTS:BOOL=OFF"
@@ -94,17 +87,19 @@ SET(EXTRA_CONFIGURE_OPTIONS
   "-DTPL_ENABLE_SuperLU:BOOL=ON"
   "-DTPL_ENABLE_AmgX=ON"
     "-DAmgX_LIBRARY_DIRS=/usr/local/amgx/lib"
-    "-DAmgX_INCLUDE_DIRS=/usr/local/amgx/include"
-
+    "-DAmgX_INCLUDE_DIRS=/usr/local/amgx/include"  
+ 
   ### PACKAGES CONFIGURATION ###
+      "-DTpetra_ENABLE_INST_INT_INT=ON"
+      "-DTpetra_ENABLE_INST_INT_LONG_LONG=OFF"
       "-DMueLu_ENABLE_Experimental:BOOL=ON"
       "-DMueLu_ENABLE_Kokkos_Refactor:BOOL=ON"
       "-DXpetra_ENABLE_Experimental:BOOL=ON"
       "-DXpetra_ENABLE_Kokkos_Refactor:BOOL=ON"
 
   # Disable Pamgen and Shards due to weird nvcc errors
-  "-DTPL_ENALE_Pamgen:BOOL=OFF"
-  "-DTPL_ENALE_Shards:BOOL=OFF"
+  "-DTPL_ENABLE_Pamgen:BOOL=OFF"
+  "-DTPL_ENABLE_Shards:BOOL=OFF"
 
 
 
