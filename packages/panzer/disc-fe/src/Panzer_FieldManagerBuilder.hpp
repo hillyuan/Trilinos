@@ -102,6 +102,9 @@ namespace panzer {
 
     const std::vector< Teuchos::RCP< PHX::FieldManager<panzer::Traits> > >&
     getVolumeFieldManagers() const {return phx_volume_field_managers_;}
+	  
+	const Teuchos::RCP< PHX::FieldManager<panzer::Traits> >&
+    getDirichletFieldManager() const { return phx_dirichlet_field_manager_; }
 
     //! Look up field manager by an element block ID
     Teuchos::RCP< PHX::FieldManager<panzer::Traits> >
@@ -205,6 +208,8 @@ namespace panzer {
     //! Phalanx volume field managers for each element block.
     std::vector< Teuchos::RCP< PHX::FieldManager<panzer::Traits> > >
       phx_volume_field_managers_;
+	  
+	Teuchos::RCP< PHX::FieldManager<panzer::Traits> > phx_dirichlet_field_manager_;
 
     /** \brief Matches volume field managers so you can determine
       *        the appropriate set of worksets for each field manager.

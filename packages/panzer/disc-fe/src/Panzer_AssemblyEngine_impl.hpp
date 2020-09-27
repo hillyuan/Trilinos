@@ -131,6 +131,10 @@ evaluate(const panzer::AssemblyEngineInArgs& in, const EvaluationFlags flags)
     		m_lin_obj_factory->applyDirichlets( *in.ghostedContainer_, *(in.dirichlets_));
     }
   }
+	
+  // *********************
+  // Dirichlet conditions
+  // *********************
 
   if ( flags.getValue() & EvaluationFlags::Scatter) {
     PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluate_scatter("+PHX::print<EvalT>()+")",eval_scatter);
@@ -419,6 +423,22 @@ evaluateBCs(const panzer::BCType bc_type,
     } 
   }
 
+}
+
+//===========================================================================
+//===========================================================================
+template <typename EvalT>
+void panzer::AssemblyEngine<EvalT>::
+evaluateDirichletCondition(const panzer::AssemblyEngineInArgs& in)
+{
+  panzer::Traits::PED ped;
+  ped.gedc->addDataObject("Ghosted Container",in.ghostedContainer_);
+  in.fillGlobalEvaluationDataContainer(*(ped.gedc));
+	
+  auto pfm = m_field_manager_builder->getDirichletFieldManager();
+  pfm->template preEvaluate<EvalT>(ped);
+  pfm->template evaluateFields<EvalT>(NULL);
+  pfm->template postEvaluate<EvalT>(NULL);
 }
 
 #endif
