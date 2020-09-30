@@ -130,6 +130,12 @@ evaluate(const panzer::AssemblyEngineInArgs& in, const EvaluationFlags flags)
 		if( in.dirichlets_.get() != nullptr )
     		m_lin_obj_factory->applyDirichlets( *in.ghostedContainer_, *(in.dirichlets_));
     }
+
+	{
+      PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluateDirichletCondition("+PHX::print<EvalT>()+")",evaluateDirichletCondition);
+      this->evaluateDirichletCondition(in);
+    }
+	
   }
 	
   // *********************
@@ -431,13 +437,16 @@ template <typename EvalT>
 void panzer::AssemblyEngine<EvalT>::
 evaluateDirichletCondition(const panzer::AssemblyEngineInArgs& in)
 {
+  panzer::Workset workset;
   panzer::Traits::PED ped;
   ped.gedc->addDataObject("Ghosted Container",in.ghostedContainer_);
   in.fillGlobalEvaluationDataContainer(*(ped.gedc));
 	
-  auto pfm = m_field_manager_builder->getDirichletFieldManager();
+  const std::shared_ptr< PHX::FieldManager<panzer::Traits> > pfm = m_field_manager_builder->getDirichletFieldManager();
+  if( pfm == nullptr ) return;
+//  if(Teuchos::is_null(pfm))
   pfm->template preEvaluate<EvalT>(ped);
-  pfm->template evaluateFields<EvalT>(NULL);
+  pfm->template evaluateFields<EvalT>(workset);
   pfm->template postEvaluate<EvalT>(NULL);
 }
 
