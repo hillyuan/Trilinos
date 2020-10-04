@@ -157,9 +157,9 @@ public:
    virtual Teuchos::RCP<Thyra::LinearOpBase<ScalarT> > get_A_th() const
    { return (A==Teuchos::null) ? Teuchos::null : Thyra::createLinearOp<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>(A,rangeSpace,domainSpace); }
 
-   void applyDirichletBoundaryCondition( const std::vector<LocalOrdinalT>& indx ) override
+   void applyDirichletBoundaryCondition( const std::map< panzer::LocalOrdinal, double >& indx ) override
    {
-	   using device_type = typename CrsMatrixType::device_type;
+	 /*  using device_type = typename CrsMatrixType::device_type;
       using execution_space = typename CrsMatrixType::execution_space;
       using range_type = Kokkos::RangePolicy<execution_space, LocalOrdinalT>;
 	  
@@ -173,12 +173,35 @@ public:
          }
       );
 	   
-	   Tpetra::applyDirichletBoundaryConditionToLocalMatrixRows(*A, lclRowInds);
+	   Tpetra::applyDirichletBoundaryConditionToLocalMatrixRows(*A, lclRowInds);*/
+
+    //  ContainerType & t_ghosted = Teuchos::dyn_cast<ContainerType>(GhostedContainer);
+    //  Teuchos::RCP<CrsMatrixType> A = t_ghosted.get_A();
+    //  VectorType f = *( t_ghosted.get_f() );
+    //  Teuchos::ArrayRCP<ScalarT> f_1dview = f.get1dViewNonConst();
+
+      for( auto itr: indx )
+      {
+         std::cout << itr.first << "," << itr.second << std::endl;
+	     std::size_t numEntries = 0;
+         std::size_t sz = A->getNumEntriesInLocalRow(itr.first);
+         Teuchos::Array<LocalOrdinalT> indices(sz);
+         Teuchos::Array<ScalarT> Entries(sz);
+         A->getLocalRowCopy(itr.first,indices,Entries,numEntries);
+	      for (std::size_t i=0; i<sz; i++) {
+		      if( indices[i]==itr.first )
+			      Entries[i] = 1.0;
+		      else
+		  	      Entries[i] = 0.0;
+	      }  
+         A->replaceLocalValues(itr.first,indices,Entries);
+      //   f_1dview[itr.first] = 0.0;
+      }
    }
    
-   void evalDirichletResidual( const std::vector<panzer::LocalOrdinal>& indx ) override
+   void evalDirichletResidual( const std::map< panzer::LocalOrdinal, double >& indx ) override
    {
-      using device_type = typename CrsMatrixType::device_type;
+   /*   using device_type = typename CrsMatrixType::device_type;
       using execution_space = typename CrsMatrixType::execution_space;
       using range_type = Kokkos::RangePolicy<execution_space, LocalOrdinalT>;
       
@@ -190,7 +213,14 @@ public:
          KOKKOS_LAMBDA (const LocalOrdinalT lclRow) {
 	        f->replaceLocalValue(lclRow, 0.0);
          }
-      );
+      );*/
+
+	  Teuchos::ArrayRCP<const ScalarT> x_1dview = x->get1dView();
+      for( auto itr: indx )
+      {
+	  	double a = x_1dview[itr.first] - itr.second;
+         f->replaceLocalValue(itr.first, a);
+      }
    }
     
 private:

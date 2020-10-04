@@ -111,11 +111,11 @@ public:
    Teuchos::RCP<CrsMatrixType> get_A_th() const { return A; }
 
    // not implementated yet
-   void applyDirichletBoundaryCondition( const std::vector<panzer::LocalOrdinal>& indx ) override
+   void applyDirichletBoundaryCondition( const std::map< panzer::LocalOrdinal, double >& indx ) override
    {
       TEUCHOS_ASSERT(false); // not yet implemented
    }
-   void evalDirichletResidual( const std::vector<panzer::LocalOrdinal>& indx ) override
+   void evalDirichletResidual( const std::map< panzer::LocalOrdinal, double >& indx ) override
    {
       TEUCHOS_ASSERT(false); // not yet implemented
    }

@@ -188,7 +188,7 @@ clear()
 
 template <typename ScalarT,typename LocalOrdinalT,typename GlobalOrdinalT,typename NodeT>
 void BlockedTpetraLinearObjContainer<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>::
-applyDirichletBoundaryCondition( const std::vector<LocalOrdinalT>& indx )
+applyDirichletBoundaryCondition( const std::map< panzer::LocalOrdinal, double >& indx )
 {
 /*	using device_type = typename MapType::device_type;
    using execution_space = typename MapType::execution_space;

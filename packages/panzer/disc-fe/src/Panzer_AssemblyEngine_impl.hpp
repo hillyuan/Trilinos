@@ -131,8 +131,8 @@ evaluate(const panzer::AssemblyEngineInArgs& in, const EvaluationFlags flags)
     		m_lin_obj_factory->applyDirichlets( *in.ghostedContainer_, *(in.dirichlets_));
     }
 
-	{
-      PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluateDirichletCondition("+PHX::print<EvalT>()+")",evaluateDirichletCondition);
+	  {
+      PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluateDirichletCondition("+PHX::print<EvalT>()+")",eval_DirichletCondition);
       this->evaluateDirichletCondition(in);
     }
 	
@@ -437,6 +437,7 @@ template <typename EvalT>
 void panzer::AssemblyEngine<EvalT>::
 evaluateDirichletCondition(const panzer::AssemblyEngineInArgs& in)
 {
+//	std::cout << PHX::print<EvalT>()  << std::endl;
   panzer::Workset workset;
   panzer::Traits::PED ped;
   ped.gedc->addDataObject("Ghosted Container",in.ghostedContainer_);

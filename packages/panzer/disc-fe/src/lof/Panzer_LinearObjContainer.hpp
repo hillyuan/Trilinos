@@ -64,8 +64,8 @@ public:
 
    virtual void initialize() = 0;
 
-   virtual void evalDirichletResidual( const std::vector<panzer::LocalOrdinal>& indx ) = 0;
-   virtual void applyDirichletBoundaryCondition( const std::vector<panzer::LocalOrdinal>& indx ) = 0;
+   virtual void evalDirichletResidual( const std::map< panzer::LocalOrdinal, double >& indx ) = 0;
+   virtual void applyDirichletBoundaryCondition( const std::map< panzer::LocalOrdinal, double >& indx ) = 0;
 };
 
 }
