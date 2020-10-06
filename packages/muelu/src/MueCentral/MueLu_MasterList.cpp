@@ -154,6 +154,7 @@ namespace MueLu {
     if (name == "refmaxwell: dump matrices") { ss << "<Parameter name=\"refmaxwell: dump matrices\" type=\"bool\" value=" << value << "/>"; return ss.str(); }      
     if (name == "refmaxwell: subsolves on subcommunicators") { ss << "<Parameter name=\"refmaxwell: subsolves on subcommunicators\" type=\"bool\" value=" << value << "/>"; return ss.str(); }      
     if (name == "refmaxwell: ratio AH / A22 subcommunicators") { ss << "<Parameter name=\"refmaxwell: ratio AH / A22 subcommunicators\" type=\"double\" value=" << value << "/>"; return ss.str(); }      
+    if (name == "refmaxwell: enable reuse") { ss << "<Parameter name=\"refmaxwell: enable reuse\" type=\"bool\" value=" << value << "/>"; return ss.str(); }      
     return "";
   }
 
@@ -276,6 +277,9 @@ namespace MueLu {
   "<Parameter name=\"pcoarsen: lo basis\" type=\"string\" value=\"\"/>"
   "<Parameter name=\"smoother: neighborhood type\" type=\"string\" value=\"\"/>"
   "<Parameter name=\"filtered matrix: use lumping\" type=\"bool\" value=\"true\"/>"
+  "<Parameter name=\"filtered matrix: use spread lumping\" type=\"bool\" value=\"false\"/>"
+  "<Parameter name=\"filtered matrix: spread lumping diag dom growth factor\" type=\"double\" value=\"1.1\"/>"
+  "<Parameter name=\"filtered matrix: spread lumping diag dom cap\" type=\"double\" value=\"2.0\"/>"
   "<Parameter name=\"filtered matrix: use root stencil\" type=\"bool\" value=\"false\"/>"
   "<Parameter name=\"filtered matrix: Dirichlet threshold\" type=\"double\" value=\"-1.0\"/>"
   "<Parameter name=\"filtered matrix: reuse eigenvalue\" type=\"bool\" value=\"true\"/>"
@@ -332,6 +336,7 @@ namespace MueLu {
   "<Parameter name=\"refmaxwell: dump matrices\" type=\"bool\" value=\"false\"/>"
   "<Parameter name=\"refmaxwell: subsolves on subcommunicators\" type=\"bool\" value=\"false\"/>"
   "<Parameter name=\"refmaxwell: ratio AH / A22 subcommunicators\" type=\"double\" value=\"1.0\"/>"
+  "<Parameter name=\"refmaxwell: enable reuse\" type=\"bool\" value=\"false\"/>"
 "</ParameterList>"
 ;
   std::map<std::string,std::string> MasterList::DefaultProblemTypeLists_ = DefaultProblemStrings<std::string,std::string>
@@ -744,6 +749,12 @@ namespace MueLu {
       
          ("filtered matrix: use lumping","filtered matrix: use lumping")
       
+         ("filtered matrix: use spread lumping","filtered matrix: use spread lumping")
+      
+         ("filtered matrix: spread lumping diag dom growth factor","filtered matrix: spread lumping diag dom growth factor")
+      
+         ("filtered matrix: spread lumping diag dom cap","filtered matrix: spread lumping diag dom cap")
+      
          ("filtered matrix: use root stencil","filtered matrix: use root stencil")
       
          ("filtered matrix: Dirichlet threshold","filtered matrix: Dirichlet threshold")
@@ -855,6 +866,8 @@ namespace MueLu {
          ("refmaxwell: subsolves on subcommunicators","refmaxwell: subsolves on subcommunicators")
       
          ("refmaxwell: ratio AH / A22 subcommunicators","refmaxwell: ratio AH / A22 subcommunicators")
+      
+         ("refmaxwell: enable reuse","refmaxwell: enable reuse")
       ;
 
 }
