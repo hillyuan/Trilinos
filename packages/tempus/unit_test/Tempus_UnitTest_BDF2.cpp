@@ -15,6 +15,12 @@
 
 #include "Tempus_StepperFactory.hpp"
 #include "Tempus_UnitTest_Utils.hpp"
+#include "Tempus_StepperHHTAlphaModifierBase.hpp"
+#include "Tempus_StepperHHTAlphaModifierXBase.hpp"
+#include "Tempus_StepperHHTAlphaObserverBase.hpp"
+#include "Tempus_StepperHHTAlphaModifierDefault.hpp"
+#include "Tempus_StepperHHTAlphaModifierXDefault.hpp"
+#include "Tempus_StepperHHTAlphaObserverDefault.hpp"
 
 #include "../TestModels/SinCosModel.hpp"
 #include "../TestModels/VanDerPolModel.hpp"
@@ -61,9 +67,9 @@ TEUCHOS_UNIT_TEST(BDF2, Default_Construction)
   startUpStepper->initialize();
 
   auto defaultStepper = rcp(new Tempus::StepperBDF2<double>());
-  bool useFSAL              = defaultStepper->getUseFSALDefault();
-  std::string ICConsistency = defaultStepper->getICConsistencyDefault();
-  bool ICConsistencyCheck   = defaultStepper->getICConsistencyCheckDefault();
+  bool useFSAL              = defaultStepper->getUseFSAL();
+  std::string ICConsistency = defaultStepper->getICConsistency();
+  bool ICConsistencyCheck   = defaultStepper->getICConsistencyCheck();
   bool zeroInitialGuess     = defaultStepper->getZeroInitialGuess();
 
   // Test the set functions.

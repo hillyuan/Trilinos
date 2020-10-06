@@ -28,6 +28,9 @@ filtered matrix: use lumping = 1   [default]
 filtered matrix: reuse graph = 1   [default]
 filtered matrix: reuse eigenvalue = 1   [default]
 filtered matrix: use root stencil = 0   [default]
+filtered matrix: use spread lumping = 0   [default]
+filtered matrix: spread lumping diag dom growth factor = 1.1   [default]
+filtered matrix: spread lumping diag dom cap = 2   [default]
 filtered matrix: Dirichlet threshold = -1   [default]
 
 Build (MueLu::TentativePFactory)
@@ -37,7 +40,6 @@ BuildAggregates (Phase 1 (main))
 BuildAggregates (Phase 2a (secondary))
 BuildAggregates (Phase 2b (expansion))
 BuildAggregates (Phase 3 (cleanup))
-  singletons :0 (phase)
 aggregation: max agg size = -1   [default]
 aggregation: min agg size = 2   [default]
 aggregation: max selected neighbors = 0   [default]
@@ -121,6 +123,9 @@ filtered matrix: use lumping = 1   [default]
 filtered matrix: reuse graph = 1   [default]
 filtered matrix: reuse eigenvalue = 1   [default]
 filtered matrix: use root stencil = 0   [default]
+filtered matrix: use spread lumping = 0   [default]
+filtered matrix: spread lumping diag dom growth factor = 1.1   [default]
+filtered matrix: spread lumping diag dom cap = 2   [default]
 filtered matrix: Dirichlet threshold = -1   [default]
 
 Build (MueLu::TentativePFactory)
@@ -130,7 +135,6 @@ BuildAggregates (Phase 1 (main))
 BuildAggregates (Phase 2a (secondary))
 BuildAggregates (Phase 2b (expansion))
 BuildAggregates (Phase 3 (cleanup))
-  singletons :0 (phase)
 aggregation: max agg size = -1   [default]
 aggregation: min agg size = 2   [default]
 aggregation: max selected neighbors = 0   [default]
@@ -214,6 +218,9 @@ filtered matrix: use lumping = 1   [default]
 filtered matrix: reuse graph = 1   [default]
 filtered matrix: reuse eigenvalue = 1   [default]
 filtered matrix: use root stencil = 0   [default]
+filtered matrix: use spread lumping = 0   [default]
+filtered matrix: spread lumping diag dom growth factor = 1.1   [default]
+filtered matrix: spread lumping diag dom cap = 2   [default]
 filtered matrix: Dirichlet threshold = -1   [default]
 
 Build (MueLu::TentativePFactory)
@@ -223,7 +230,6 @@ BuildAggregates (Phase 1 (main))
 BuildAggregates (Phase 2a (secondary))
 BuildAggregates (Phase 2b (expansion))
 BuildAggregates (Phase 3 (cleanup))
-  singletons :0 (phase)
 aggregation: max agg size = -1   [default]
 aggregation: min agg size = 2   [default]
 aggregation: max selected neighbors = 0   [default]
@@ -307,6 +313,9 @@ filtered matrix: use lumping = 1   [default]
 filtered matrix: reuse graph = 1   [default]
 filtered matrix: reuse eigenvalue = 1   [default]
 filtered matrix: use root stencil = 0   [default]
+filtered matrix: use spread lumping = 0   [default]
+filtered matrix: spread lumping diag dom growth factor = 1.1   [default]
+filtered matrix: spread lumping diag dom cap = 2   [default]
 filtered matrix: Dirichlet threshold = -1   [default]
 
 Build (MueLu::TentativePFactory)
@@ -316,7 +325,6 @@ BuildAggregates (Phase 1 (main))
 BuildAggregates (Phase 2a (secondary))
 BuildAggregates (Phase 2b (expansion))
 BuildAggregates (Phase 3 (cleanup))
-  singletons :0 (phase)
 aggregation: max agg size = -1   [default]
 aggregation: min agg size = 2   [default]
 aggregation: max selected neighbors = 0   [default]
