@@ -885,8 +885,8 @@ addFlexibleResponse(const std::string & responseName,
    return respIndex;
 }
 
-/*
-template <typename Scalar>
+
+/*template <typename Scalar>
 void panzer::ModelEvaluator<Scalar>::
 applyDirichletBCs(const Teuchos::RCP<Thyra::VectorBase<Scalar> > & x,
                   const Teuchos::RCP<Thyra::VectorBase<Scalar> > & f) const
@@ -957,8 +957,8 @@ applyDirichletBCs(const Teuchos::RCP<Thyra::VectorBase<Scalar> > & x,
 
   // use the linear object factory to apply the result
   lof_->applyDirichletBCs(*counter,*result);
-}
-*/
+}*/
+
 template <typename Scalar>
 void panzer::ModelEvaluator<Scalar>::
 evalModel_D2gDx2(int respIndex,
@@ -1558,8 +1558,6 @@ evalModelImpl_basic(const Thyra::ModelEvaluatorBase::InArgs<Scalar> &inArgs,
 
     oneTimeDirichletBeta_on_ = false;
   }
-  ae_inargs.dirichlets_= this->dirichlets_;
-  ae_inargs.cflux_= this->cflux_;
 
   // here we are building a container, this operation is fast, simply allocating a struct
   const RCP<panzer::ThyraObjContainer<Scalar> > thGlobalContainer =

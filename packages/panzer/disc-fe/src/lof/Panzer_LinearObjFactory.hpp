@@ -236,35 +236,8 @@ public:
      *                    values are specified in the "f" vector.
      * \param[in,out] result The vector to be modifed is the "f" vector.
      */
-//   virtual void applyDirichletBCs(const LinearObjContainer & counter,
-//                                  LinearObjContainer & result) const = 0;
-								  
-   /** Adjust a vector by replacing selected rows with the value of the evaluated
-     * dirichlet conditions. This is handled through the standard container mechanism.
-     *
-     * \param[in] gdof Contains a global index of dof of which Dirichlet constraint would be applied.
-	 *
-     * \param[in] val Containes the Dirichlet constraints' value.
-	 *
-	 * \param[out] Linear Object should be modified
-	 * SHOULD BE pure virtual!
-     */
-   virtual void applyDirichlets( LinearObjContainer & thGhostedContainer,
-          const std::map<panzer::LocalOrdinal,double>&  val) const = 0;
-		  
-   /** Modify the left hand of equation by add the concentrated Neumann flux upon given position.
-     *
-     * \param[in] gdof Contains a global index of dof of which Dirichlet constraint would be applied.
-	 *
-     * \param[in] val Containes the Neumann conditions' value.
-	 *
-	 * \param[out] Linear Object should be modified
-	 * SHOULD BE pure virtual!
-     */
-   virtual void applyConcentratedFlux( LinearObjContainer & thGhostedContainer,
-          const std::map<panzer::LocalOrdinal,double>&  val) const {;}
-		  
-   virtual void writeOutMatrix( const std::string & identifier,const LinearObjContainer & loc ) const {;}
+  // virtual void applyDirichletBCs(const LinearObjContainer & counter,
+  //                                LinearObjContainer & result) const = 0;
 
    /** Acess to the MPI Comm used in constructing this LOF.
      */

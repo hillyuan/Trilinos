@@ -110,13 +110,6 @@ evaluate(const panzer::AssemblyEngineInArgs& in, const EvaluationFlags flags)
       PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluate_interfacebcs("+PHX::print<EvalT>()+")",eval_interfacebcs);
       this->evaluateInterfaceBCs(in);
     }
-	  
-	// Dirchlet conditions require a global matrix
-    {
-    //  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluate_dirichlets("+PHX::print<EvalT>()+")",eval_dirichletbcs);
-		if( in.cflux_.get() != nullptr )
-    		m_lin_obj_factory->applyConcentratedFlux( *in.ghostedContainer_, *(in.cflux_));
-    }
 
     // Dirchlet conditions require a global matrix
     {
@@ -124,23 +117,11 @@ evaluate(const panzer::AssemblyEngineInArgs& in, const EvaluationFlags flags)
       this->evaluateDirichletBCs(in);
     }
 	  
-    // Dirchlet conditions require a global matrix
-    {
-    //  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluate_dirichlets("+PHX::print<EvalT>()+")",eval_dirichletbcs);
-		if( in.dirichlets_.get() != nullptr )
-    		m_lin_obj_factory->applyDirichlets( *in.ghostedContainer_, *(in.dirichlets_));
-    }
-
-	  {
+	{
       PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluateDirichletCondition("+PHX::print<EvalT>()+")",eval_DirichletCondition);
       this->evaluateDirichletCondition(in);
     }
-	
   }
-	
-  // *********************
-  // Dirichlet conditions
-  // *********************
 
   if ( flags.getValue() & EvaluationFlags::Scatter) {
     PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluate_scatter("+PHX::print<EvalT>()+")",eval_scatter);
@@ -437,7 +418,6 @@ template <typename EvalT>
 void panzer::AssemblyEngine<EvalT>::
 evaluateDirichletCondition(const panzer::AssemblyEngineInArgs& in)
 {
-//	std::cout << PHX::print<EvalT>()  << std::endl;
   panzer::Workset workset;
   panzer::Traits::PED ped;
   ped.gedc->addDataObject("Ghosted Container",in.ghostedContainer_);
@@ -445,7 +425,7 @@ evaluateDirichletCondition(const panzer::AssemblyEngineInArgs& in)
 	
   const std::shared_ptr< PHX::FieldManager<panzer::Traits> > pfm = m_field_manager_builder->getDirichletFieldManager();
   if( pfm == nullptr ) return;
-//  if(Teuchos::is_null(pfm))
+
   pfm->template preEvaluate<EvalT>(ped);
   pfm->template evaluateFields<EvalT>(workset);
   pfm->template postEvaluate<EvalT>(NULL);

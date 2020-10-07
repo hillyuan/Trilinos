@@ -182,8 +182,8 @@ public:
 
       for( auto itr: indx )
       {
-         std::cout << itr.first << "," << itr.second << std::endl;
-	     std::size_t numEntries = 0;
+      //   std::cout << itr.first << "," << itr.second << std::endl;
+	      std::size_t numEntries = 0;
          std::size_t sz = A->getNumEntriesInLocalRow(itr.first);
          Teuchos::Array<LocalOrdinalT> indices(sz);
          Teuchos::Array<ScalarT> Entries(sz);

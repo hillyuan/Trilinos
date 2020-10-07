@@ -136,14 +136,6 @@ public:
   Thyra::ModelEvaluatorBase::InArgs<Scalar> createInArgs() const override;
 
   Thyra::ModelEvaluatorBase::InArgs<Scalar> getNominalValues() const override;
-  
-  // Dirichlet condition
-  void constructDirichlet( const std::shared_ptr< std::map<panzer::LocalOrdinal, Scalar> >& in ) 
-  { if( !in->empty() ) dirichlets_ = in; }
-  
-   // Dirichlet condition
-  void constructCflux( const std::shared_ptr< std::map<panzer::LocalOrdinal, Scalar> >& in ) 
-  { if( !in->empty() ) cflux_ = in; }
 
   //@}
 
@@ -376,8 +368,8 @@ public:
   /** Apply the dirichlet boundary conditions to the vector "f" using the
     * "x" values as the current solution.
     */
- // void applyDirichletBCs(const Teuchos::RCP<Thyra::VectorBase<Scalar> > & x,
- //                        const Teuchos::RCP<Thyra::VectorBase<Scalar> > & f) const;
+  //void applyDirichletBCs(const Teuchos::RCP<Thyra::VectorBase<Scalar> > & x,
+  //                       const Teuchos::RCP<Thyra::VectorBase<Scalar> > & f) const;
 
   /** Setup all the assembly input arguments required by "inArgs".
     *
@@ -713,8 +705,6 @@ private: // data members
 
   mutable bool oneTimeDirichletBeta_on_;
   mutable Scalar oneTimeDirichletBeta_;
-  std::shared_ptr< std::map<panzer::LocalOrdinal, Scalar> > dirichlets_;
-  std::shared_ptr< std::map<panzer::LocalOrdinal, Scalar> > cflux_;
 
   bool build_volume_field_managers_;
   bool build_bc_field_managers_;
