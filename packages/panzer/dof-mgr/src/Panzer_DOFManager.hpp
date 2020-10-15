@@ -319,6 +319,8 @@ public:
 	*/
   void buildNodalInfo();
 	
+  void buildEdgeInfo();
+	
   /** Prints to an output stream the information about
     * nodal gids.
     */

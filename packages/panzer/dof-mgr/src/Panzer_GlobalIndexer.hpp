@@ -312,6 +312,8 @@ public:
 	*/
    virtual void buildNodalInfo() {;}
 	
+   virtual void buildEdgeInfo() {;}
+	
    /**
    * \param[in] fieldnum field number
    * \param[in] global ids of a group of nodes
@@ -351,6 +353,14 @@ protected:
    // field ID -> nodal global index -> local & global index of dof
    std::map< int, std::map<panzer::GlobalOrdinal, panzer::LocalOrdinal> > nodeLIDMap_;
    std::map< int, std::map<panzer::GlobalOrdinal, panzer::GlobalOrdinal> > nodeGIDMap_;
+
+   // field ID -> edge global index -> local & global index of dof
+   std::map< int, std::map<panzer::GlobalOrdinal, panzer::LocalOrdinal> > edgeLIDMap_;
+   std::map< int, std::map<panzer::GlobalOrdinal, panzer::GlobalOrdinal> > edgeGIDMap_;
+
+   // field ID -> nodal global index -> local & global index of dof
+   std::map< int, std::map<panzer::GlobalOrdinal, panzer::LocalOrdinal> > faceLIDMap_;
+   std::map< int, std::map<panzer::GlobalOrdinal, panzer::GlobalOrdinal> > faceGIDMap_;
 
    /** This method is used by derived classes to the construct the local IDs from 
      * the <code>getOwnedAndGhostedIndices</code> method.

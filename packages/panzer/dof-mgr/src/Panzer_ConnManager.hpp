@@ -116,8 +116,30 @@ class FieldPattern; // from DOFManager
      * \returns Vector of local element IDs.
      */
     virtual const std::vector<LocalOrdinal> & getElementBlock(const std::string & blockID) const = 0;
+	  
+    /** Get the global nodes IDs for a particular element
+     *
+     * \param[in] local element ID
+     * \returns Vector of global nodal IDs.
+     */
     virtual void getElementalNodeConnectivity(const LocalOrdinal&, std::vector<GlobalOrdinal>&) const = 0;
     virtual int getNodeRank() const {return 0;}
+	  
+	/** Get the global edges IDs for a particular element
+     *
+     * \param[in] local element ID
+     * \returns Vector of global edges IDs.
+     */
+	virtual void getElementalEdges(const LocalOrdinal&, std::vector<GlobalOrdinal>&) const {}
+	virtual int getEdgeRank() const {return 1;}
+	
+	/** Get the global faces IDs for a particular element
+     *
+     * \param[in] local element ID
+     * \returns Vector of global faces IDs.
+     */
+	virtual void getElementalFaces(const LocalOrdinal&, std::vector<GlobalOrdinal>&) const {}
+	virtual int getFaceRank() const {return 2;}
 
     /** Get the local element IDs for all "neighbor" elements that reside in a paricular element
      * block (An element is a neighbor if it is in the one ring of owned elements).

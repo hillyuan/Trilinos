@@ -1441,6 +1441,57 @@ void DOFManager::print_nodeInfo(std::ostream &os) const
 	}
 }
 	
+
+void DOFManager::buildEdgeInfo()
+{
+  std::vector<std::string> elementBlockIds;
+  connMngr_->getElementBlockIds(elementBlockIds);
+//std::cout << "My rank= " << communicator_->getRank() << std::endl;
+  edgeLIDMap_.clear();
+  edgeGIDMap_.clear();
+  //std::size_t dimension = ga_fp_->getDimension();
+  std::vector<panzer::GlobalOrdinal> edgeGIDs;
+  auto rank = connMngr_->getEdgeRank();
+  for( auto blockId : elementBlockIds )
+  {
+	  const std::vector<int>& fields = this->getBlockFieldNumbers(blockId);
+	  const std::vector<panzer::LocalOrdinal>& elements = connMngr_->getElementBlock(blockId);
+
+	  for( int fd: fields )
+	  {
+		  std::map< panzer::GlobalOrdinal, panzer::LocalOrdinal > LidMap;
+		  std::map< panzer::GlobalOrdinal, panzer::GlobalOrdinal > GidMap;
+		  for( auto ele: elements )
+		  {
+	  		  std::vector<panzer::GlobalOrdinal> GIDs;
+	  	      getElementGIDs( ele, GIDs );
+			  auto LIDs = getElementLIDs( ele );
+			  connMngr_->getElementalEdges(ele, edgeGIDs);
+//std::cout << ele << std::endl;
+		//	  for( auto aa: nodeGIDs ) std::cout << " ," << aa;
+		//	  std::cout << std::endl;
+			  for( std::size_t i =0; i<edgeGIDs.size(); i++ )
+			  {
+				  const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd, rank, i);
+				  const auto& offsets =  offsetPair.first;
+				  if( offsets.empty() ) continue;
+			//	  std::cout << offsets[0] << std::endl;
+				  auto gid = GIDs[offsets[0]];
+				  auto lid = LIDs[offsets[0]];
+				  auto& ndgid = edgeGIDs[i];
+				  //std::cout << ndgid << ","  << blockId << ", "  << fd << ", " << rank << ","  << i << std::endl;
+				  LidMap.insert( std::make_pair(ndgid, lid) );
+				  GidMap.insert( std::make_pair(ndgid, gid) );
+			  }
+		  }
+		  edgeGIDMap_.insert( std::make_pair(fd, GidMap) );
+		  edgeLIDMap_.insert( std::make_pair(fd, LidMap) );
+	  }
+  }
+ // print_nodeInfo( std::cout );
+	
+}
+	
 /*
 template <typename panzer::LocalOrdinal,typename panzer::GlobalOrdinal>
 Teuchos::RCP<const Tpetra::Map<panzer::LocalOrdinal,panzer::GlobalOrdinal,panzer::TpetraNodeType> >
