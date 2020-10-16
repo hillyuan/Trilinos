@@ -320,6 +320,8 @@ public:
   void buildNodalInfo();
 	
   void buildEdgeInfo();
+  
+  void buildFaceInfo();
 	
   /** Prints to an output stream the information about
     * nodal gids.
