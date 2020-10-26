@@ -279,6 +279,9 @@ namespace panzer {
     // return the Physics Block parameter list
     Teuchos::RCP<const Teuchos::ParameterList> getParameterList() const
     { return m_input_parameters; }
+	  
+	int getIntegrationOrder() const
+	{ return m_default_integration_order; }
 
   protected:
     void initialize(const Teuchos::RCP<Teuchos::ParameterList>& input_parameters,
