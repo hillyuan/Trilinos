@@ -115,7 +115,7 @@ buildAndRegisterGatherAndOrientationEvaluators(PHX::FieldManager<panzer::Traits>
   pb.buildAndRegisterGatherAndOrientationEvaluators(fm,lof,user_data);
 
   // Iterate over each residual contribution
-  for (vector<std::tuple<std::string,std::string,std::string,int,Teuchos::RCP<panzer::PureBasis>,Teuchos::RCP<panzer::IntegrationRule> > >::const_iterator eq = 
+  /*for (vector<std::tuple<std::string,std::string,std::string,int,Teuchos::RCP<panzer::PureBasis>,Teuchos::RCP<panzer::IntegrationRule> > >::const_iterator eq = 
 	 m_residual_contributions.begin(); eq != m_residual_contributions.end(); ++eq) {
 
     const string& residual_name = std::get<0>(*eq);
@@ -156,7 +156,7 @@ buildAndRegisterGatherAndOrientationEvaluators(PHX::FieldManager<panzer::Traits>
       this->template registerEvaluator<EvalT>(fm, op);
     }
 
-  }
+  }*/
 }
 
 // ***********************************************************************
