@@ -1217,6 +1217,25 @@ void STK_Interface::getAllEdges(const std::string & edgeBlockName,std::vector<st
    // grab elements
    stk::mesh::get_selected_entities(edge_block,bulkData_->buckets(getEdgeRank()),edges);
 }
+	
+void STK_Interface::getAllEdgesId(const std::string & edgeBlockName,std::vector<stk::mesh::EntityId> & edgesIds) const
+{
+   stk::mesh::Part * edgeBlockPart = getEdgeBlock(edgeBlockName);
+   TEUCHOS_TEST_FOR_EXCEPTION(edgeBlockPart==0,std::logic_error,
+                      "Unknown edge block \"" << edgeBlockName << "\"");
+
+   stk::mesh::Selector edge_block = *edgeBlockPart;
+
+   // grab elements
+   std::vector<stk::mesh::Entity> edges;
+   stk::mesh::get_selected_entities(edge_block,bulkData_->buckets(getEdgeRank()),edges);
+	
+   edgesIds.clear();
+   for( const auto n: edges )
+   {
+	   edgesIds.emplace_back( bulkData_->identifier(n) );
+   }
+}
 
 void STK_Interface::getAllEdges(const std::string & edgeBlockName,const std::string & blockName,std::vector<stk::mesh::Entity> & edges) const
 {

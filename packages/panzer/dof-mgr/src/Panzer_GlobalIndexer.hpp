@@ -347,6 +347,30 @@ public:
    }
 	
    virtual void print_nodeInfo(std::ostream &os) const {};
+	
+   /**
+   * \param[in] fieldnum field number
+   * \param[in] global ids of a group of edges
+   * \param[out] gdofs  local index of edges' dof
+   */
+   virtual void getEdgesetsLocalIndex(int fieldnum, std::vector<panzer::GlobalOrdinal>& edgeset, std::vector<panzer::LocalOrdinal>& ldofs) const
+   {
+	if( edgeLIDMap_.empty() ) return;
+	
+	auto localmap = edgeLIDMap_.at( fieldnum );
+	ldofs.clear();
+	for( auto nd: edgeset )
+	{
+		auto a = localmap.at( nd );
+		ldofs.emplace_back( a );
+	}
+   }
+	
+   panzer::LocalOrdinal getEdgeLDofOfField(int f, panzer::GlobalOrdinal nd) const
+   { return edgeLIDMap_.at(f).at(nd); }
+	
+   panzer::GlobalOrdinal getEdgeGDofOfField(int f, panzer::GlobalOrdinal nd) const
+   { return edgeLIDMap_.at(f).at(nd); }
 
 protected:
 	

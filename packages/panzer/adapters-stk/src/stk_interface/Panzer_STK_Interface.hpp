@@ -320,6 +320,7 @@ public:
      * \param[in,out] edges Vector of entities containing the requested edges.
      */
    void getAllEdges(const std::string & edgeBlockName,std::vector<stk::mesh::Entity> & edges) const;
+   void getAllEdgesId(const std::string & edgeBlockName,std::vector<stk::mesh::EntityId> & edges) const;
 
    /** Get Entities corresponding to the edge block requested. This also limits the entities
      * to be in a particular element block. The Entites in the vector should be a dimension
