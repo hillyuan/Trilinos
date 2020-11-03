@@ -1221,8 +1221,10 @@ void STK_Interface::getAllEdges(const std::string & edgeBlockName,std::vector<st
 void STK_Interface::getAllEdgesId(const std::string & edgeBlockName,std::vector<stk::mesh::EntityId> & edgesIds) const
 {
    stk::mesh::Part * edgeBlockPart = getEdgeBlock(edgeBlockName);
-   TEUCHOS_TEST_FOR_EXCEPTION(edgeBlockPart==0,std::logic_error,
-                      "Unknown edge block \"" << edgeBlockName << "\"");
+   if (edgeBlockPart==0 ) {
+      std::cout << "Unknown edge block \"" << edgeBlockName << "\"" << std::endl;
+      return;
+   }
 
    stk::mesh::Selector edge_block = *edgeBlockPart;
 
@@ -1364,6 +1366,37 @@ void STK_Interface::getAllSides(const std::string & sideName,std::vector<stk::me
    // grab elements
    stk::mesh::get_selected_entities(side,bulkData_->buckets(getSideRank()),sides);
 }
+	
+void STK_Interface::getAllSideEdgesId(const std::string & sideName,std::vector<stk::mesh::EntityId> & edgesIds) const
+{
+   stk::mesh::Part * sidePart = getSideset(sideName);
+   if (sidePart==0 ) {
+      std::cout << "Unknown side set \"" << sideName << "\"" << std::endl;
+      return;
+   }
+
+   stk::mesh::Selector side = *sidePart;
+   // check side set dimension here?
+
+   // grab elements
+   std::vector<stk::mesh::Entity> edges;
+   stk::mesh::get_selected_entities(side,bulkData_->buckets(getEdgeRank()),edges);
+	
+   std::set<stk::mesh::EntityId> s;
+   for( const auto n: edges )
+   {
+	   s.emplace( bulkData_->identifier(n) );
+   }
+	
+   // delete duplicate value
+   edgesIds.clear();
+   edgesIds.assign( s.begin(), s.end() );
+	
+	/* or
+	std::sort( edgesIds.begin(), edgesIds.end() );
+	edgesIds.erase( std::unique( edgesIds.begin(), edgesIds.end() ), edgesIds.end() ); */
+}
+
 
 void STK_Interface::getAllSides(const std::string & sideName,const std::string & blockName,std::vector<stk::mesh::Entity> & sides) const
 {
