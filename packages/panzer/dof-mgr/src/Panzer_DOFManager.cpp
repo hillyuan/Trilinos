@@ -452,6 +452,8 @@ void DOFManager::buildGlobalUnknowns()
   buildGlobalUnknowns(aggFieldPattern);
 	
   buildNodalInfo();
+  buildEdgeInfo();
+  buildFaceInfo();
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -307,13 +307,6 @@ public:
    panzer::LocalOrdinal getNodalLDofOfField(int f, panzer::GlobalOrdinal nd) const
    { return nodeLIDMap_.at(f).at(nd); }
 	
-   /** build map of <field ID -> dof position of each nodes>
-    * P.A.: works for Lagrange type element H(grad) only. Do not call this function for H(div) and H(curl) elements
-	*/
-   virtual void buildNodalInfo() {;}
-	
-   virtual void buildEdgeInfo() {;}
-	
    /**
    * \param[in] fieldnum field number
    * \param[in] global ids of a group of nodes

@@ -314,13 +314,10 @@ public:
     */
   void printFieldInformation(std::ostream & os) const;
 	
-  /** build map of <field ID -> dof position of each nodes>
-    * P.A.: works for Lagrange type element H(grad) only. Do not call this function for H(div) and H(curl) elements
+  /** build map of <field ID -> dof position of each nodes(Hgrad)/edges(Hcurl)/faces(Hdiv)>
 	*/
   void buildNodalInfo();
-	
   void buildEdgeInfo();
-  
   void buildFaceInfo();
 	
   /** Prints to an output stream the information about
