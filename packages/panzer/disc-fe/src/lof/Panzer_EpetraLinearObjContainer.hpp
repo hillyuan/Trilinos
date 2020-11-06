@@ -50,6 +50,7 @@
 // Epetra includes
 #include "Epetra_Vector.h"
 #include "Epetra_CrsMatrix.h"
+#include "EpetraExt_RowMatrixOut.h"
 
 #include "Panzer_LinearObjFactory.hpp" 
 #include "Panzer_ThyraObjContainer.hpp"
@@ -145,7 +146,7 @@ public:
    virtual Teuchos::RCP<Thyra::LinearOpBase<double> > get_A_th() const
    { return (A==Teuchos::null) ? Teuchos::null : Thyra::nonconstEpetraLinearOp(A); }
 
-   // not implementated yet
+   // not implemented yet
    void applyDirichletBoundaryCondition( const std::map< panzer::LocalOrdinal, double >& indx ) override
    {
       TEUCHOS_ASSERT(false); // not yet implemented
@@ -153,6 +154,11 @@ public:
    void evalDirichletResidual( const std::map< panzer::LocalOrdinal, double >& indx ) override
    {
       TEUCHOS_ASSERT(false); // not yet implemented
+   }
+   
+   void writeMatrixMarket(const std::string& filename) override
+   {
+	  EpetraExt::RowMatrixToMatlabFile(filename, *A);
    }
 
 private:

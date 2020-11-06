@@ -110,7 +110,7 @@ public:
    void set_A_th(const Teuchos::RCP<CrsMatrixType> & in) { A = in; }
    Teuchos::RCP<CrsMatrixType> get_A_th() const { return A; }
 
-   // not implementated yet
+   // not implemented yet
    void applyDirichletBoundaryCondition( const std::map< panzer::LocalOrdinal, double >& indx ) override
    {
       TEUCHOS_ASSERT(false); // not yet implemented
@@ -119,6 +119,9 @@ public:
    {
       TEUCHOS_ASSERT(false); // not yet implemented
    }
+   
+   void writeMatrixMarket(const std::string& filename) override
+   {}
 
 private:
    Teuchos::RCP<VectorType> x, dxdt, f;

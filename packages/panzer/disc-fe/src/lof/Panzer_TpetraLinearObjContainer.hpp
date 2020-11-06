@@ -50,6 +50,7 @@
 // Tpetra includes
 #include "Tpetra_Vector.hpp"
 #include "Tpetra_CrsMatrix.hpp"
+#include "MaxtrixMarket_Tpetra.hpp"
 #include "Tpetra_applyDirichletBoundaryCondition.hpp"
 
 #include "Thyra_TpetraThyraWrappers.hpp"
@@ -221,6 +222,11 @@ public:
 	  	double a = x_1dview[itr.first] - itr.second;
          f->replaceLocalValue(itr.first, a);
       }
+   }
+   
+   void writeMatrixMarket(const std::string& filename) override
+   {
+	   Tpetra::MatrixMarket::Writer<TpetraCrsMatrix>::writeSparseFile(filename, *A);
    }
     
 private:
