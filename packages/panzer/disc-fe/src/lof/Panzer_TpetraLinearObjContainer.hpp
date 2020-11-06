@@ -50,7 +50,7 @@
 // Tpetra includes
 #include "Tpetra_Vector.hpp"
 #include "Tpetra_CrsMatrix.hpp"
-#include "MaxtrixMarket_Tpetra.hpp"
+#include "MatrixMarket_Tpetra.hpp"
 #include "Tpetra_applyDirichletBoundaryCondition.hpp"
 
 #include "Thyra_TpetraThyraWrappers.hpp"
@@ -224,9 +224,10 @@ public:
       }
    }
    
-   void writeMatrixMarket(const std::string& filename) override
+   void writeMatrixMarket(const std::string& filename) const override
    {
-	   Tpetra::MatrixMarket::Writer<TpetraCrsMatrix>::writeSparseFile(filename, *A);
+	   Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>>
+	   		::writeSparseFile(filename, *A);
    }
     
 private:

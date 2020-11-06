@@ -156,9 +156,9 @@ public:
       TEUCHOS_ASSERT(false); // not yet implemented
    }
    
-   void writeMatrixMarket(const std::string& filename) override
+   void writeMatrixMarket(const std::string& filename) const override
    {
-	  EpetraExt::RowMatrixToMatlabFile(filename, *A);
+	  EpetraExt::RowMatrixToMatlabFile(filename.c_str(), *A);
    }
 
 private:

@@ -49,7 +49,7 @@
 #include "Tpetra_Vector.hpp"
 #include "Tpetra_CrsMatrix.hpp"
 #include "Tpetra_BlockCrsMatrix.hpp"
-#include "MaxtrixMarket_Tpetra.hpp"
+#include "MatrixMarket_Tpetra.hpp"
 
 #include "Teuchos_RCP.hpp"
 
@@ -126,9 +126,9 @@ public:
    void beginFill();
    void endFill();
 
-   void writeMatrixMarket(const std::string& filename) override
+   void writeMatrixMarket(const std::string& filename) const override
    {
-	   Tpetra::MatrixMarket::Writer<CrsMatrixType>::writeSparseFile(filename, *A);
+	//   Tpetra::MatrixMarket::Writer<CrsMatrixType>::writeSparseFile(filename, *A);
    }
 
 private:

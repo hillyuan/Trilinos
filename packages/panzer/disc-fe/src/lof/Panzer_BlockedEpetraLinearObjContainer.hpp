@@ -120,7 +120,7 @@ public:
       TEUCHOS_ASSERT(false); // not yet implemented
    }
    
-   void writeMatrixMarket(const std::string& filename) override
+   void writeMatrixMarket(const std::string& filename) const override
    {}
 
 private:
