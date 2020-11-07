@@ -160,9 +160,12 @@ public:
 
    void applyDirichletBoundaryCondition( const std::map< panzer::LocalOrdinal, double >& indx ) override
    {
-	 /*  using device_type = typename CrsMatrixType::device_type;
+	   /*using device_type = typename CrsMatrixType::device_type;
       using execution_space = typename CrsMatrixType::execution_space;
       using range_type = Kokkos::RangePolicy<execution_space, LocalOrdinalT>;
+
+      std::vector<panzer::LocalOrdinal> lids;
+      for( auto itr: indx ) lids.emplace_back(itr.first);
 	  
 	   const LocalOrdinalT lclNumRows = indx.size();
 	   Kokkos::View<typename CrsMatrixType::local_ordinal_type*, device_type> lclRowInds ("lclRowInds", lclNumRows);
@@ -170,7 +173,7 @@ public:
       ("Fill lclRowInds",
          range_type (0, lclNumRows),
          KOKKOS_LAMBDA (const LocalOrdinalT lclRow) {
-	        lclRowInds(lclRow) = indx[lclRow];
+	        lclRowInds(lclRow) = lids[lclRow];
          }
       );
 	   
