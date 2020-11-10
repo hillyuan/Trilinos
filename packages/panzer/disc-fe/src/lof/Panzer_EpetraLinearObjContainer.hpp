@@ -159,6 +159,8 @@ public:
    void writeMatrixMarket(const std::string& filename) const override
    {
 	  EpetraExt::RowMatrixToMatlabFile(filename.c_str(), *A);
+     EpetraExt::VectorToMatrixMarketFile("x_vec.mm",*x);
+     EpetraExt::VectorToMatrixMarketFile("b_vec.mm",*f);
    }
 
 private:
