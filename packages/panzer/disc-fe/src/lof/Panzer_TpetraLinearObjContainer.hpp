@@ -231,10 +231,10 @@ public:
    {
 	   Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>>
 	   		::writeSparseFile(filename, *A);
-      Tpetra::MatrixMarket::writeDenseFile<Tpetra::CrsMatrix<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>>
-	   		::writeSparseFile("b_vec.mm", *f);
-	  Tpetra::MatrixMarket::writeDenseFile<Tpetra::CrsMatrix<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>>
-	   		::writeSparseFile("x_vec.mm", *x);
+      Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>>
+	   		::writeDenseFile("b_vec.mm", *f);
+	  Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>>
+	   		::writeDenseFile("x_vec.mm", *x);
    }
     
 private:

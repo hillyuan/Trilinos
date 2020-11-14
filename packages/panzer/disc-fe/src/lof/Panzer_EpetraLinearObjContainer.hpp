@@ -51,6 +51,7 @@
 #include "Epetra_Vector.h"
 #include "Epetra_CrsMatrix.h"
 #include "EpetraExt_RowMatrixOut.h"
+#include "EpetraExt_VectorOut.h"
 
 #include "Panzer_LinearObjFactory.hpp" 
 #include "Panzer_ThyraObjContainer.hpp"
