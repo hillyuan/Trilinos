@@ -324,6 +324,8 @@ public:
     * nodal gids.
     */
   void print_nodeInfo(std::ostream &os) const;
+  void print_edgeInfo(std::ostream &os) const;
+  void print_faceInfo(std::ostream &os) const;
 
   /** Turn on/off the use of a tie break object in the
     * createOneToOne algorithm. Turning this one gives

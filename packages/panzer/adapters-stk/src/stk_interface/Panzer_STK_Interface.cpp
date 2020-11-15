@@ -1381,16 +1381,21 @@ void STK_Interface::getAllSideEdgesId(const std::string & sideName,std::vector<s
    // grab elements
    std::vector<stk::mesh::Entity> edges;
    stk::mesh::get_selected_entities(side,bulkData_->buckets(getEdgeRank()),edges);
-	
-   std::set<stk::mesh::EntityId> s;
+
+   edgesIds.clear();
+   for( const auto n: edges )
+   {
+	   edgesIds.emplace_back( bulkData_->identifier(n) );
+   }
+/*   std::set<stk::mesh::EntityId> s;
    for( const auto n: edges )
    {
 	   s.emplace( bulkData_->identifier(n) );
    }
 	
    // delete duplicate value
-   edgesIds.clear();
-   edgesIds.assign( s.begin(), s.end() );
+   
+   edgesIds.assign( s.begin(), s.end() );*/
 	
 	/* or
 	std::sort( edgesIds.begin(), edgesIds.end() );
