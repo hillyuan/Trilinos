@@ -1454,17 +1454,23 @@ void DOFManager::buildEdgeInfo()
   //std::size_t dimension = ga_fp_->getDimension();
   std::vector<panzer::GlobalOrdinal> edgeGIDs;
   auto rank = connMngr_->getEdgeRank();
+
+//	std::vector< std::map< panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidMaps;
+//  std::vector< std::map< panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidMaps;
+  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidTuple;   // field id, edge id, dof offset
+  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidTuple;  // field id, edge id, dof offset
+  std::set<int> fieldids;
   for( auto blockId : elementBlockIds )
   {
 	  const std::vector<int>& fields = this->getBlockFieldNumbers(blockId);
 	  const std::vector<panzer::LocalOrdinal>& elements = connMngr_->getElementBlock(blockId);
 	  
-	  std::map<std::string,int>::const_iterator bitr = blockNameToID_.find(blockId);
-  	if(bitr==blockNameToID_.end()) return;    // block not in FieldAggPattern manager
+	/*  std::map<std::string,int>::const_iterator bitr = blockNameToID_.find(blockId);
+  	  if(bitr==blockNameToID_.end()) return;    // block not in FieldAggPattern manager
 	  
 	  int bid=bitr->second;
 	  int mdim = fa_fps_[bid]->getDimension();
-  /*  std::vector< std::vector<int> > sbcell_index(mdim);
+      std::vector< std::vector<int> > sbcell_index(mdim);
 	  for( int cdim=0; cdim<mdim; cdim++ ) {
 	  	int nn = fa_fps_[bid]->getSubcellCount(cdim);
 	  	for( int nitem=0; nitem<nn; nitem++ ) {
@@ -1474,16 +1480,15 @@ void DOFManager::buildEdgeInfo()
 
 	//  for( int fd: fields )
 	//  {
-		std::map< panzer::GlobalOrdinal, panzer::LocalOrdinal > LidMap;
-		std::map< panzer::GlobalOrdinal, panzer::GlobalOrdinal > GidMap;
+	    
 		for( auto ele: elements )
 		{
-      int fd = fields[ele];
-      Teuchos::RCP<const FieldPattern> fp = fa_fps_[bid]->getFieldPattern(fd);
+            int fd = fields[ele];
+			fieldids.insert(fd);
 	  		std::vector<panzer::GlobalOrdinal> GIDs;
-	  	  getElementGIDs( ele, GIDs );
-			  auto LIDs = getElementLIDs( ele );
-			  connMngr_->getElementalEdges(ele, edgeGIDs);
+	  	    getElementGIDs( ele, GIDs );
+			auto LIDs = getElementLIDs( ele );
+			connMngr_->getElementalEdges(ele, edgeGIDs);
 std::cout << blockId <<"," << ele << std::endl;
 			  for( auto aa: edgeGIDs ) std::cout << " ," << aa;
 			  std::cout << std::endl;
@@ -1496,16 +1501,32 @@ std::cout << blockId <<"," << ele << std::endl;
 				  auto gid = GIDs[offsets[0]];
 				  auto lid = LIDs[offsets[0]];
 				  auto& ndgid = edgeGIDs[i];
-				//  std::cout << ndgid << ","  << blockId << ", "  << fd << ", " << rank << ","  << i << std::endl;
-				  LidMap.insert( std::make_pair(ndgid, lid) );
-				  GidMap.insert( std::make_pair(ndgid, gid) );
+				  std::cout << ndgid << ","  << blockId << ", "  << fd << ", " << rank << ","  << i << std::endl;
+				  LidTuple.emplace_back( std::make_tuple(fd, ndgid, lid) );
+				  GidTuple.emplace_back( std::make_tuple(fd, ndgid, gid) );
 			  }
 		  }
-		//  edgeGIDMap_.insert( std::make_pair(fd, GidMap) );
-		//  edgeLIDMap_.insert( std::make_pair(fd, LidMap) );
+		//  
+		//  
+  }
+  if( LidTuple.empty() ) return;   // no edge dofs
+
+  for(auto fd : fieldids) {
+	  std::map< panzer::GlobalOrdinal, panzer::LocalOrdinal > LidMap;
+	  for( auto lids: LidTuple ) {
+		  if( std::get<0>(lids) != fd ) continue;
+		  LidMap.insert( std::make_pair(std::get<1>(lids), std::get<2>(lids)) );
 	  }
-  //}
-  print_edgeInfo( std::cout );
+	  std::map< panzer::GlobalOrdinal, panzer::GlobalOrdinal > GidMap;
+	  for( auto gids: GidTuple ) {
+		  if( std::get<0>(gids) != fd ) continue;
+		  GidMap.insert( std::make_pair(std::get<1>(gids), std::get<2>(gids)) );
+	  }
+	  edgeLIDMap_.insert( std::make_pair(fd, LidMap) );
+	  edgeGIDMap_.insert( std::make_pair(fd, GidMap) );
+  }
+		  
+//  print_edgeInfo( std::cout );
 	
 }
 	
@@ -1519,7 +1540,7 @@ void DOFManager::print_edgeInfo(std::ostream &os) const
 		std::size_t c =0;
 		for( auto b: ndmap.second )
 		{
-			std::cout << "  node gid:" << b.first << "  with local index=" << b.second << std::endl;
+			std::cout << "  Edge gid:" << b.first << "  with local index=" << b.second << std::endl;
 			c++;
 		}
 	}
@@ -1529,7 +1550,7 @@ void DOFManager::print_edgeInfo(std::ostream &os) const
 		std::size_t c =0;
 		for( auto b: ndmap.second )
 		{
-			std::cout << "  node gid:" << b.first << "  with global index=" << b.second << std::endl;
+			std::cout << "  Edge gid:" << b.first << "  with global index=" << b.second << std::endl;
 			c++;
 		}
 	}
@@ -1581,7 +1602,7 @@ void DOFManager::buildFaceInfo()
 		  faceLIDMap_.insert( std::make_pair(fd, LidMap) );
 	  }
   }
- // print_nodeInfo( std::cout );
+ // print_faceInfo( std::cout );
 	
 }
 	
@@ -1595,7 +1616,7 @@ void DOFManager::print_faceInfo(std::ostream &os) const
 		std::size_t c =0;
 		for( auto b: ndmap.second )
 		{
-			std::cout << "  node gid:" << b.first << "  with local index=" << b.second << std::endl;
+			std::cout << "  face gid:" << b.first << "  with local index=" << b.second << std::endl;
 			c++;
 		}
 	}
@@ -1605,7 +1626,7 @@ void DOFManager::print_faceInfo(std::ostream &os) const
 		std::size_t c =0;
 		for( auto b: ndmap.second )
 		{
-			std::cout << "  node gid:" << b.first << "  with global index=" << b.second << std::endl;
+			std::cout << "  face gid:" << b.first << "  with global index=" << b.second << std::endl;
 			c++;
 		}
 	}
