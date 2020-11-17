@@ -1451,9 +1451,11 @@ void DOFManager::buildEdgeInfo()
 //std::cout << "My rank= " << communicator_->getRank() << std::endl;
   edgeLIDMap_.clear();
   edgeGIDMap_.clear();
-  //std::size_t dimension = ga_fp_->getDimension();
+  std::size_t dimension = ga_fp_->getDimension();
   std::vector<panzer::GlobalOrdinal> edgeGIDs;
-  auto rank = connMngr_->getEdgeRank();
+  std::vector<panzer::GlobalOrdinal> subcellGIDs;
+  auto nrank = connMngr_->getNodeRank();
+  auto erank = connMngr_->getEdgeRank();
 
 //	std::vector< std::map< panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidMaps;
 //  std::vector< std::map< panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidMaps;
@@ -1465,49 +1467,48 @@ void DOFManager::buildEdgeInfo()
 	  const std::vector<int>& fields = this->getBlockFieldNumbers(blockId);
 	  const std::vector<panzer::LocalOrdinal>& elements = connMngr_->getElementBlock(blockId);
 	  
-	/*  std::map<std::string,int>::const_iterator bitr = blockNameToID_.find(blockId);
+	  std::map<std::string,int>::const_iterator bitr = blockNameToID_.find(blockId);
   	  if(bitr==blockNameToID_.end()) return;    // block not in FieldAggPattern manager
 	  
 	  int bid=bitr->second;
-	  int mdim = fa_fps_[bid]->getDimension();
-      std::vector< std::vector<int> > sbcell_index(mdim);
-	  for( int cdim=0; cdim<mdim; cdim++ ) {
-	  	int nn = fa_fps_[bid]->getSubcellCount(cdim);
-	  	for( int nitem=0; nitem<nn; nitem++ ) {
-	  		sbcell_index[cdim] = fa_fps_[bid]-> getSubcellIndices(cdim, nitem);
-		  }
-	  }*/
-
-	//  for( int fd: fields )
-	//  {
+	  // const auto fv = fa_fps_[bid]->fieldIds();  = above fields
 	    
-		for( auto ele: elements )
+	  for( auto ele: elements )
+	  {
+        std::vector<panzer::GlobalOrdinal> GIDs;
+	  	getElementGIDs( ele, GIDs );
+		auto LIDs = getElementLIDs( ele );
+		
+		int fd, dofcount = 0;
+		connMngr_->getElementalNodeConnectivity(ele, subcellGIDs);
+	    auto nn = fa_fps_[bid]->getSubcellCount(nrank);
+		for( std::size_t i =0; i<fa_fps_[bid]->getSubcellCount(nrank); i++ )
 		{
-            int fd = fields[ele];
+			fd = fields[dofcount];
 			fieldids.insert(fd);
-	  		std::vector<panzer::GlobalOrdinal> GIDs;
-	  	    getElementGIDs( ele, GIDs );
-			auto LIDs = getElementLIDs( ele );
-			connMngr_->getElementalEdges(ele, edgeGIDs);
-std::cout << blockId <<"," << ele << std::endl;
-			  for( auto aa: edgeGIDs ) std::cout << " ," << aa;
-			  std::cout << std::endl;
-			  for( std::size_t i =0; i<edgeGIDs.size(); i++ )
-			  {
-				  const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd, rank, i);
-				  const auto& offsets =  offsetPair.first;
-				  if( offsets.empty() ) continue;
-			//	  std::cout << offsets[0] << std::endl;
-				  auto gid = GIDs[offsets[0]];
-				  auto lid = LIDs[offsets[0]];
-				  auto& ndgid = edgeGIDs[i];
-				  std::cout << ndgid << ","  << blockId << ", "  << fd << ", " << rank << ","  << i << std::endl;
-				  LidTuple.emplace_back( std::make_tuple(fd, ndgid, lid) );
-				  GidTuple.emplace_back( std::make_tuple(fd, ndgid, gid) );
-			  }
-		  }
-		//  
-		//  
+			const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd, nrank, i);
+			const auto& offsets =  offsetPair.first;
+			if( offsets.empty() ) continue;
+			dofcount++;
+		}
+			
+		connMngr_->getElementalEdges(ele, edgeGIDs);
+  	    for( std::size_t i =0; i<edgeGIDs.size(); i++ )
+		{
+			fd = fields[dofcount];
+			fieldids.insert(fd);
+			const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd, erank, i);
+			const auto& offsets =  offsetPair.first;
+			if( offsets.empty() ) continue;
+			dofcount++;
+
+			auto gid = GIDs[offsets[0]];
+			auto lid = LIDs[offsets[0]];
+			auto& ndgid = edgeGIDs[i];
+			LidTuple.emplace_back( std::make_tuple(fd, ndgid, lid) );
+			GidTuple.emplace_back( std::make_tuple(fd, ndgid, gid) );
+	   }
+	}
   }
   if( LidTuple.empty() ) return;   // no edge dofs
 
