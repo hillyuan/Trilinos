@@ -63,6 +63,10 @@
 #include <Epetra_LinearProblem.h>
 #endif
 
+#ifdef HAVE_FEI_TPETRA
+#include <Tpetra_CrsMatrix.hpp>
+#endif
+
 #ifdef HAVE_FEI_TEUCHOS
 #include <Teuchos_ParameterList.hpp>
 #endif
