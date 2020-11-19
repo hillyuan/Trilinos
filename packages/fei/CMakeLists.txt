@@ -46,6 +46,15 @@ IF (${PACKAGE_NAME}_ENABLE_Amesos)
     )
 ENDIF()
 
+IF (Trilinos_ENABLE_Tpetra)
+  TRIBITS_ADD_OPTION_AND_DEFINE(
+    FEI_TPETRA
+    HAVE_FEI_TPETRA
+    "FEI support for Tpetra"
+    ${${PACKAGE_NAME}_ENABLE_Tpetra}
+  )
+ENDIF()
+
 #
 # C) Add the libraries, tests, and examples
 #
