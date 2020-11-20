@@ -64,6 +64,7 @@
 #endif
 
 #ifdef HAVE_FEI_TPETRA
+#include <Tpetra_MultiVector.h>
 #include <Tpetra_CrsMatrix.hpp>
 #endif
 
