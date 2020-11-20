@@ -57,6 +57,10 @@
 #include <fei_LinProbMgr_EpetraBasic.hpp>
 #endif
 
+#ifdef HAVE_FEI_TPETRA
+#include <fei_VectorTraits_Tpetra.hpp>
+#endif
+
 #include <fei_Factory.hpp>
 #include <fei_ParameterSet.hpp>
 #include <fei_Reducer.hpp>
@@ -119,6 +123,24 @@ class Factory_Trilinos : public fei::Factory {
   fei::SharedPtr<fei::Vector>
     wrapVector(fei::SharedPtr<fei::MatrixGraph> matGraph,
                fei::SharedPtr<Epetra_MultiVector> multiVec);
+#endif
+
+#ifdef HAVE_FEI_TPETRA
+  /** Wrap fei::Vector around existing Epetra_MultiVector.
+      If the specified vector-space isn't compatible with the multi-vector's size,
+      then return a null fei::Vector.
+  */
+  fei::SharedPtr<fei::Vector>
+    wrapVector(fei::SharedPtr<fei::VectorSpace> vecSpace,
+               fei::SharedPtr<Tpetra::MultiVector> multiVec);
+
+  /** Wrap fei::Vector around existing Epetra_MultiVector.
+      If the specified matrix-graph's vector-space isn't compatible with
+      the multi-vector's size, then return a null fei::Vector.
+  */
+  fei::SharedPtr<fei::Vector>
+    wrapVector(fei::SharedPtr<fei::MatrixGraph> matGraph,
+               fei::SharedPtr<Tpetra::MultiVector> multiVec);
 #endif
 
   /** Implementation of fei::Vector::Factory::createVector() */

@@ -34,7 +34,7 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Questions? Contact Alan Williams (william@sandia.gov) 
+// Developed by YUAN, Nov., 2020 
 //
 // ************************************************************************
 // @HEADER
@@ -57,7 +57,7 @@ namespace fei {
   /** Declare an Tpetra_MultiVector specialization of the
       fei::VectorTraits struct.
 
-      This allows Epetra_MultiVector to be used as the template parameter of the
+      This allows Tpetra_MultiVector to be used as the template parameter of the
       fei::Vector class.
   */
   template <class ST, class LO, class GO, class NT>
@@ -81,16 +81,32 @@ namespace fei {
                            bool isSolnVector=false,
                            int vectorIndex=0)
       {
-		auto vec_data = vec->subViewNonConst(Teuchos::Range1D(vectorIndex, vectorIndex+1));
+		/*Teuchos::Array<size_t> cols(1);
+        cols[0] = vectorIndex;
+		auto vec_data = vec->subViewNonConst(cols);
+		*/
+	   //auto vec_data = vec->subViewNonConst(Teuchos::Range1D(vectorIndex, vectorIndex+1));
        // ST* localVecValues = vec_data[vectorIndex];
+		auto vec_data = vec->getVectorNonConst(vectorIndex);
+		/*Teuchos::ArrayRCP<ST> vec_view = vec_data->get1dViewNonConst();
         if (sum_into) {
           for(int i=0; i<numValues; ++i) {
-            vec_data[indices[i]-firstLocalOffset] += values[i];
+            vec_view[ indices[i] ] += values[i];
           }
         }
         else {
           for(int i=0; i<numValues; ++i) {
-            vec_data[indices[i]-firstLocalOffset] = values[i];
+            vec_view[ indices[i] ] = values[i];
+          }
+        }*/
+		if (sum_into) {
+          for(int i=0; i<numValues; ++i) {
+            vec_data->sumIntoLocalValue(indices[i], values[i]);
+          }
+        }
+        else {
+          for(int i=0; i<numValues; ++i) {
+            vec_data->replaceLocalValue(indices[i], values[i]);
           }
         }
         return(0);
@@ -103,10 +119,10 @@ namespace fei {
                        bool isSolnVector=false,
                        int vectorIndex=0)
       {
-      //  ST* localVecValues = (*vec)[vectorIndex];
-		auto vec_data = vec->subViewNonConst(Teuchos::Range1D(vectorIndex, vectorIndex+1));
+		auto vec_data = vec->getVector(vectorIndex);
+		Teuchos::ArrayRCP<ST> vec_view = vec_data->get1dView();
         for(int i=0; i<numValues; ++i) {
-          vec_data[i] = localVecValues[indices[i]-firstLocalOffset];
+          values[i] = vec_view[ indices[i] ];
         }
 
         return(0);
@@ -116,8 +132,9 @@ namespace fei {
                                     bool isSolnVector=false,
                                     int vectorIndex=0)
       {
-		auto vec_data = vec->subViewNonConst(Teuchos::Range1D(vectorIndex, vectorIndex+1));
-		return vec_data->get1dViewNonConst();
+		//auto vec_data = vec->subViewNonConst(Teuchos::Range1D(vectorIndex, vectorIndex+1));
+		auto vec_data = vec->getVectorNonConst(vectorIndex);
+		return vec_data->get1dViewNonConst().getRawPtr();
       //  return((*vec)[vectorIndex]);
       }
 

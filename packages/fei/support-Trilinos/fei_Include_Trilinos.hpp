@@ -64,8 +64,12 @@
 #endif
 
 #ifdef HAVE_FEI_TPETRA
-#include <Tpetra_MultiVector.h>
+#include <Tpetra_Map.hpp>
+#include <Tpetra_CrsGraph.hpp>
+#include <Tpetra_MultiVector.hpp>
+#include <Tpetra_Vector.hpp>
 #include <Tpetra_CrsMatrix.hpp>
+#include <Tpetra_BlockCrsMatrix.hpp>
 #endif
 
 #ifdef HAVE_FEI_TEUCHOS
