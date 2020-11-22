@@ -316,9 +316,7 @@ public:
 	
   /** build map of <field ID -> dof position of each nodes(Hgrad)/edges(Hcurl)/faces(Hdiv)>
 	*/
-  void buildNodalInfo();
-  void buildEdgeInfo();
-  void buildFaceInfo();
+  void buildDofsInfo();
 	
   /** Prints to an output stream the information about
     * nodal gids.

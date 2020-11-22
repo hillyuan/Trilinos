@@ -451,9 +451,9 @@ void DOFManager::buildGlobalUnknowns()
   // using new geometric pattern, build global unknowns
   buildGlobalUnknowns(aggFieldPattern);
 	
-  buildNodalInfo();
-  buildEdgeInfo();
-  buildFaceInfo();
+//  buildNodalInfo();
+  buildDofsInfo();
+//  buildFaceInfo();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1367,55 +1367,6 @@ void DOFManager::buildLocalIdsFromOwnedAndGhostedElements()
   this->setLocalIds(elementLIDs);
 }
 	
-void DOFManager::buildNodalInfo()
-{
-  std::vector<std::string> elementBlockIds;
-  connMngr_->getElementBlockIds(elementBlockIds);
-//std::cout << "My rank= " << communicator_->getRank() << std::endl;
-  nodeLIDMap_.clear();
-  nodeGIDMap_.clear();
-  //std::size_t dimension = ga_fp_->getDimension();
-  std::vector<panzer::GlobalOrdinal> nodeGIDs;
-  auto rank = connMngr_->getNodeRank();
-  for( auto blockId : elementBlockIds )
-  {
-	  const std::vector<int>& fields = this->getBlockFieldNumbers(blockId);
-	  const std::vector<panzer::LocalOrdinal>& elements = connMngr_->getElementBlock(blockId);
-
-	  for( int fd: fields )
-	  {
-		  std::map< panzer::GlobalOrdinal, panzer::LocalOrdinal > LidMap;
-		  std::map< panzer::GlobalOrdinal, panzer::GlobalOrdinal > GidMap;
-		  for( auto ele: elements )
-		  {
-	  		  std::vector<panzer::GlobalOrdinal> GIDs;
-	  	      getElementGIDs( ele, GIDs );
-			  auto LIDs = getElementLIDs( ele );
-			  connMngr_->getElementalNodeConnectivity(ele, nodeGIDs);
-//std::cout << ele << std::endl;
-		//	  for( auto aa: nodeGIDs ) std::cout << " ," << aa;
-		//	  std::cout << std::endl;
-			  for( std::size_t i =0; i<nodeGIDs.size(); i++ )
-			  {
-				  const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd, rank, i);
-				  const auto& offsets =  offsetPair.first;
-				  if( offsets.empty() ) continue;
-			//	  std::cout << offsets[0] << std::endl;
-				  auto gid = GIDs[offsets[0]];
-				  auto lid = LIDs[offsets[0]];
-				  auto& ndgid = nodeGIDs[i];
-				  //std::cout << ndgid << ","  << blockId << ", "  << fd << ", " << rank << ","  << i << std::endl;
-				  LidMap.insert( std::make_pair(ndgid, lid) );
-				  GidMap.insert( std::make_pair(ndgid, gid) );
-			  }
-		  }
-		  nodeGIDMap_.insert( std::make_pair(fd, GidMap) );
-		  nodeLIDMap_.insert( std::make_pair(fd, LidMap) );
-	  }
-  }
- // print_nodeInfo( std::cout );
-	
-}
 	
 void DOFManager::print_nodeInfo(std::ostream &os) const
 {
@@ -1444,23 +1395,34 @@ void DOFManager::print_nodeInfo(std::ostream &os) const
 }
 	
 
-void DOFManager::buildEdgeInfo()
+void DOFManager::buildDofsInfo()
 {
   std::vector<std::string> elementBlockIds;
   connMngr_->getElementBlockIds(elementBlockIds);
 //std::cout << "My rank= " << communicator_->getRank() << std::endl;
+  nodeLIDMap_.clear();
+  nodeGIDMap_.clear();
   edgeLIDMap_.clear();
   edgeGIDMap_.clear();
+  faceLIDMap_.clear();
+  faceGIDMap_.clear();
   std::size_t dimension = ga_fp_->getDimension();
   std::vector<panzer::GlobalOrdinal> edgeGIDs;
   std::vector<panzer::GlobalOrdinal> subcellGIDs;
+  std::vector<panzer::GlobalOrdinal> faceGIDs;
   auto nrank = connMngr_->getNodeRank();
   auto erank = connMngr_->getEdgeRank();
+  auto frank = connMngr_->getFaceRank();
 
 //	std::vector< std::map< panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidMaps;
 //  std::vector< std::map< panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidMaps;
   std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidTuple;   // field id, edge id, dof offset
   std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidTuple;  // field id, edge id, dof offset
+  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidTuple_nd;   // field id, edge id, dof offset
+  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidTuple_nd;  // field id, edge id, dof offset
+  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidTuple_fc;   // field id, edge id, dof offset
+  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidTuple_fc;  // field id, edge id, dof offset
+
   std::set<int> fieldids;
   for( auto blockId : elementBlockIds )
   {
@@ -1481,16 +1443,22 @@ void DOFManager::buildEdgeInfo()
 		
 		int fd, dofcount = 0;
 		connMngr_->getElementalNodeConnectivity(ele, subcellGIDs);
-	    auto nn = fa_fps_[bid]->getSubcellCount(nrank);
-		for( std::size_t i =0; i<fa_fps_[bid]->getSubcellCount(nrank); i++ )
+		for( std::size_t i =0; i<subcellGIDs.size(); i++ )
 		{
 			fd = fields[dofcount];
 			fieldids.insert(fd);
 			const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd, nrank, i);
 			const auto& offsets =  offsetPair.first;
-			if( offsets.empty() ) continue;
+			if( offsets.empty() ) break;
 			dofcount++;
+			
+			auto gid = GIDs[offsets[0]];
+			auto lid = LIDs[offsets[0]];
+			auto& ndgid = subcellGIDs[i];
+			LidTuple_nd.emplace_back( std::make_tuple(fd, ndgid, lid) );
+			GidTuple_nd.emplace_back( std::make_tuple(fd, ndgid, gid) );
 		}
+		if( dofcount>=fields.size() ) continue;  // no edge/face dofs
 			
 		connMngr_->getElementalEdges(ele, edgeGIDs);
   	    for( std::size_t i =0; i<edgeGIDs.size(); i++ )
@@ -1499,7 +1467,7 @@ void DOFManager::buildEdgeInfo()
 			fieldids.insert(fd);
 			const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd, erank, i);
 			const auto& offsets =  offsetPair.first;
-			if( offsets.empty() ) continue;
+			if( offsets.empty() ) break;    // no edge dof of current field
 			dofcount++;
 
 			auto gid = GIDs[offsets[0]];
@@ -1508,11 +1476,48 @@ void DOFManager::buildEdgeInfo()
 			LidTuple.emplace_back( std::make_tuple(fd, ndgid, lid) );
 			GidTuple.emplace_back( std::make_tuple(fd, ndgid, gid) );
 	   }
+       if( dofcount>=fields.size() ) continue;  // no face dofs
+		  
+       if( dimension>1 ) {
+		   connMngr_->getElementalFaces(ele, faceGIDs);
+		   for( std::size_t i =0; i<faceGIDs.size(); i++ )
+		   {
+			 fd = fields[dofcount];
+			 fieldids.insert(fd);
+			 const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd, frank, i);
+			 const auto& offsets =  offsetPair.first;
+			 if( offsets.empty() ) break;    // no face dof of current field
+			 dofcount++;
+
+			 auto gid = GIDs[offsets[0]];
+			 auto lid = LIDs[offsets[0]];
+			 auto& ndgid = faceGIDs[i];
+			 LidTuple_fc.emplace_back( std::make_tuple(fd, ndgid, lid) );
+			 GidTuple_fc.emplace_back( std::make_tuple(fd, ndgid, gid) );
+	      }
+	   }
 	}
   }
-  if( LidTuple.empty() ) return;   // no edge dofs
+	
+  if( !LidTuple_nd.empty() ) {
+  	for(auto fd : fieldids) {
+	  std::map< panzer::GlobalOrdinal, panzer::LocalOrdinal > LidMap;
+	  for( auto lids: LidTuple_nd ) {
+		  if( std::get<0>(lids) != fd ) continue;
+		  LidMap.insert( std::make_pair(std::get<1>(lids), std::get<2>(lids)) );
+	  }
+	  std::map< panzer::GlobalOrdinal, panzer::GlobalOrdinal > GidMap;
+	  for( auto gids: GidTuple_nd ) {
+		  if( std::get<0>(gids) != fd ) continue;
+		  GidMap.insert( std::make_pair(std::get<1>(gids), std::get<2>(gids)) );
+	  }
+	  nodeLIDMap_.insert( std::make_pair(fd, LidMap) );
+	  nodeGIDMap_.insert( std::make_pair(fd, GidMap) );
+	}
+  }
 
-  for(auto fd : fieldids) {
+  if( !LidTuple.empty() ) {
+  	for(auto fd : fieldids) {
 	  std::map< panzer::GlobalOrdinal, panzer::LocalOrdinal > LidMap;
 	  for( auto lids: LidTuple ) {
 		  if( std::get<0>(lids) != fd ) continue;
@@ -1525,9 +1530,10 @@ void DOFManager::buildEdgeInfo()
 	  }
 	  edgeLIDMap_.insert( std::make_pair(fd, LidMap) );
 	  edgeGIDMap_.insert( std::make_pair(fd, GidMap) );
+	}
+	  
+	//print_edgeInfo( std::cout );
   }
-		  
-//  print_edgeInfo( std::cout );
 	
 }
 	
@@ -1557,55 +1563,6 @@ void DOFManager::print_edgeInfo(std::ostream &os) const
 	}
 }
 
-void DOFManager::buildFaceInfo()
-{
-  std::vector<std::string> elementBlockIds;
-  connMngr_->getElementBlockIds(elementBlockIds);
-//std::cout << "My rank= " << communicator_->getRank() << std::endl;
-  faceLIDMap_.clear();
-  faceGIDMap_.clear();
-  //std::size_t dimension = ga_fp_->getDimension();
-  std::vector<panzer::GlobalOrdinal> faceGIDs;
-  auto rank = connMngr_->getFaceRank();
-  for( auto blockId : elementBlockIds )
-  {
-	  const std::vector<int>& fields = this->getBlockFieldNumbers(blockId);
-	  const std::vector<panzer::LocalOrdinal>& elements = connMngr_->getElementBlock(blockId);
-
-	  for( int fd: fields )
-	  {
-		  std::map< panzer::GlobalOrdinal, panzer::LocalOrdinal > LidMap;
-		  std::map< panzer::GlobalOrdinal, panzer::GlobalOrdinal > GidMap;
-		  for( auto ele: elements )
-		  {
-	  		  std::vector<panzer::GlobalOrdinal> GIDs;
-	  	      getElementGIDs( ele, GIDs );
-			  auto LIDs = getElementLIDs( ele );
-			  connMngr_->getElementalFaces(ele, faceGIDs);
-//std::cout << ele << std::endl;
-		//	  for( auto aa: nodeGIDs ) std::cout << " ," << aa;
-		//	  std::cout << std::endl;
-			  for( std::size_t i =0; i<faceGIDs.size(); i++ )
-			  {
-				  const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd, rank, i);
-				  const auto& offsets =  offsetPair.first;
-				  if( offsets.empty() ) continue;
-			//	  std::cout << offsets[0] << std::endl;
-				  auto gid = GIDs[offsets[0]];
-				  auto lid = LIDs[offsets[0]];
-				  auto& ndgid = faceGIDs[i];
-				  //std::cout << ndgid << ","  << blockId << ", "  << fd << ", " << rank << ","  << i << std::endl;
-				  LidMap.insert( std::make_pair(ndgid, lid) );
-				  GidMap.insert( std::make_pair(ndgid, gid) );
-			  }
-		  }
-		  faceGIDMap_.insert( std::make_pair(fd, GidMap) );
-		  faceLIDMap_.insert( std::make_pair(fd, LidMap) );
-	  }
-  }
- // print_faceInfo( std::cout );
-	
-}
 	
 void DOFManager::print_faceInfo(std::ostream &os) const
 {
