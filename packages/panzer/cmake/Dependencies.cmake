@@ -6,5 +6,5 @@ TRIBITS_PACKAGE_DEFINE_DEPENDENCIES(
     AdaptersSTK   adapters-stk   PT  OPTIONAL
 #    AdaptersIOSS  adapters-ioss  PT  OPTIONAL
     MiniEM        mini-em        PT  OPTIONAL
-    ExprEval      expr-eval      EX  OPTIONAL
+    ExprEval      expr-eval      PT  OPTIONAL
   )
