@@ -334,6 +334,160 @@ create_from_LPM_EpetraBasic(fei::SharedPtr<fei::MatrixGraph> matrixGraph,
 }
 #endif //HAVE_FEI_EPETRA
 
+#ifdef HAVE_FEI_TPETRA
+
+template <class LO, class GO, class Node>
+Tpetra::Map<LO,GO,Node>
+create_Tpetra_Map(MPI_Comm comm, const std::vector<LO>& local_eqns)
+{
+  Teuchos::RCP<const Teuchos::Comm<int> > comm = Tpetra::getDefaultComm ();
+
+  LO localSize = local_eqns.size();
+
+  const Tpetra::global_size_t INVALID =
+    Teuchos::OrdinalTraits<Tpetra::global_size_t>::invalid();
+  const GO indexBase = 0;
+  Tpetra::Map<LO,GO,Node> TMap(INVALID, localSize, indexBase, comm);
+  return(TMap);
+}
+
+template <class LO, class GO, class Node>
+Tpetra::BlockMap<LO,GO,Node>
+create_Tpetra_BlockMap(const fei::SharedPtr<fei::VectorSpace>& vecspace)
+{
+  if (vecspace.get() == 0) {
+    throw std::runtime_error("create_Tpetra_Map needs non-null fei::VectorSpace");
+  }
+
+  Teuchos::RCP<const Teuchos::Comm<int> > comm = Tpetra::getDefaultComm ();
+
+  int localSizeBlk = vecspace->getNumBlkIndices_Owned();
+  int globalSizeBlk = vecspace->getGlobalNumBlkIndices();
+
+  if (localSizeBlk < 0 || globalSizeBlk < 0) {
+    throw std::runtime_error("Trilinos_Helpers::create_Tpetra_BlockMap: fei::VectorSpace has negative local or global size.");
+  }
+
+  std::vector<int> blkEqns(localSizeBlk*2);
+  int* blkEqnsPtr = &(blkEqns[0]);
+
+  int chkNum = 0;
+  int errcode = vecspace->getBlkIndices_Owned(localSizeBlk,
+					      blkEqnsPtr, blkEqnsPtr+localSizeBlk,
+					      chkNum);
+  if (errcode != 0) {
+    FEI_OSTRINGSTREAM osstr;
+    osstr << "create_Epetra_BlockMap ERROR, nonzero errcode="<<errcode
+	  << " returned by vecspace->getBlkIndices_Owned.";
+    throw std::runtime_error(osstr.str());
+  }
+
+  Tpetra::BlockMap<LO,GO,Node> TBMap(globalSizeBlk, localSizeBlk,
+			blkEqnsPtr, blkEqnsPtr+localSizeBlk, 0, comm);
+
+  return(TBMap);
+}
+
+template <class LO, class GO, class Node>
+Tpetra::CrsGraph<LO,GO,Node>
+create_Tpetra_CrsGraph(const fei::SharedPtr<fei::MatrixGraph>& matgraph,
+                       bool blockEntries,
+                       bool orderRowsWithLocalColsFirst=false)
+{
+  fei::SharedPtr<fei::SparseRowGraph> localSRGraph = matgraph->createGraph(blockEntries);
+  if (localSRGraph.get() == NULL) {
+    throw std::runtime_error("create_Epetra_CrsGraph ERROR in fei::MatrixGraph::createGraph");
+  }
+
+  int numLocallyOwnedRows = localSRGraph->rowNumbers.size();
+  int* rowNumbers = numLocallyOwnedRows>0 ? &(localSRGraph->rowNumbers[0]) : NULL;
+  int* rowOffsets = &(localSRGraph->rowOffsets[0]);
+  int* packedColumnIndices = numLocallyOwnedRows>0 ? &(localSRGraph->packedColumnIndices[0]) : NULL;
+
+  fei::SharedPtr<fei::VectorSpace> vecspace = matgraph->getRowSpace();
+  MPI_Comm comm = vecspace->getCommunicator();
+  std::vector<int>& local_eqns = localSRGraph->rowNumbers;
+
+  Tpetra::CrsGraph<LO,GO,Node> emap = ?
+    create_Tpetra_BlockMap(vecspace) : create_Tpetra_Map(comm, local_eqns);
+
+  if (orderRowsWithLocalColsFirst == true &&
+      comm->getSize() > 2 && !blockEntries) {
+    bool* used_row = new bool[local_eqns.size()];
+    for(unsigned ii=0; ii<local_eqns.size(); ++ii) used_row[ii] = false;
+
+    int offset = 0;
+    std::vector<int> ordered_local_eqns(local_eqns.size());
+    for(unsigned ii=0; ii<local_eqns.size(); ++ii) {
+      bool row_has_off_proc_cols = false;
+      for(int j=rowOffsets[ii]; j<rowOffsets[ii+1]; ++j) {
+        if (emap.isNodeGlobalElement(packedColumnIndices[j]) == false) {
+          row_has_off_proc_cols = true;
+          break;
+        }
+      }
+
+      if (row_has_off_proc_cols == false) {
+        ordered_local_eqns[offset++] = rowNumbers[ii];
+        used_row[ii] = true;
+      }
+    }
+
+    for(unsigned ii=0; ii<local_eqns.size(); ++ii) {
+      if (used_row[ii] == true) continue;
+      ordered_local_eqns[offset++] = rowNumbers[ii];
+    }
+
+    emap = create_Tpetra_Map(comm, ordered_local_eqns);
+    delete [] used_row;
+  }
+
+//  EpetraExt::BlockMapToMatrixMarketFile("EBMap.np12.mm",emap,"AriaTest");
+
+  std::vector<int> rowLengths; rowLengths.reserve(numLocallyOwnedRows);
+  for(int ii=0; ii<numLocallyOwnedRows; ++ii) {
+    rowLengths.push_back(rowOffsets[ii+1]-rowOffsets[ii]);
+  }
+
+  bool staticProfile = true;
+  int* rowLengthsPtr = rowLengths.empty() ? NULL : &rowLengths[0];
+  Tpetra::CrsGraph<LO,GO,Node> egraph(Copy, emap, rowLengthsPtr, staticProfile);
+
+ // const Epetra_Comm& ecomm = emap.Comm();
+  int localProc = comm->getRank ();
+
+  int firstLocalEqn = numLocallyOwnedRows > 0 ? rowNumbers[0] : -1;
+
+  int offset = 0;
+  for(int i=0; i<numLocallyOwnedRows; ++i) {
+    int err = egraph.InsertGlobalIndices(firstLocalEqn+i,
+					 rowLengths[i],
+					 &(packedColumnIndices[offset]));
+    if (err != 0) {
+      fei::console_out() << "proc " << localProc << " err-return " << err
+               << " inserting row " << firstLocalEqn+i<<", cols ";
+      for(int ii=0; ii<rowLengths[i]; ++ii) {
+        fei::console_out() << packedColumnIndices[offset+ii]<<",";
+      }
+      fei::console_out() << FEI_ENDL;
+      throw std::runtime_error("... occurred in create_Epetra_CrsGraph");
+    }
+
+    offset += rowLengths[i];
+  }
+
+  //Epetra_BlockMap* domainmap = const_cast<Epetra_BlockMap*>(&(epetraGraph_->DomainMap()));
+  //Epetra_BlockMap* rangemap = const_cast<Epetra_BlockMap*>(&(epetraGraph_->RangeMap()));
+  egraph.FillComplete();
+
+  //only optimize-storage for graph if we're not in block-matrix mode.
+  //(Epetra_VbrMatrix can't be constructed with an optimize-storage'd graph.)
+  //if (!blockEntries) egraph.OptimizeStorage();
+
+  return(egraph);
+}
+#endif //HAVE_FEI_TPETRA
+
 void copy_parameterset(const fei::ParameterSet& paramset,
                        Teuchos::ParameterList& paramlist)
 {

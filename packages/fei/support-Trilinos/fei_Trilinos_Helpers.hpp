@@ -96,6 +96,22 @@ namespace Trilinos_Helpers {
                                    lpm_epetrabasic);
 #endif
 
+#ifdef HAVE_FEI_TPETRA
+  template <class LO, class GO, class Node>
+  Tpetra::Map<LO,GO,Node> 
+  create_Tpetra_Map(MPI_Comm comm, const std::vector<LO>& local_eqns);
+  
+  template <class LO, class GO, class Node>
+  Tpetra::BlockMap<LO,GO,Node>
+  create_Tpetra_BlockMap(const fei::SharedPtr<fei::VectorSpace>& vecspace);
+
+  template <class LO, class GO, class Node>
+  Tpetra::CrsGraph<LO,GO,Node>
+  create_Tpetra_CrsGraph(const fei::SharedPtr<fei::MatrixGraph>& matgraph,
+                         bool blockEntries,
+                         bool orderRowsWithLocalColsFirst=false);
+#endif
+
   /** Copies parameters from fei::ParameterSet to Teuchos::ParameterList.
     Does not clear any pre-existing contents from the Teuchos:ParameterList.
   */
