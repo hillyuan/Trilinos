@@ -184,6 +184,8 @@ public:
     //  VectorType f = *( t_ghosted.get_f() );
     //  Teuchos::ArrayRCP<ScalarT> f_1dview = f.get1dViewNonConst();
 
+      ScalarT inputVals[1];  inputVals[1]=0.0;
+      LocalOrdinalT inputCols[1];
       for( auto itr: indx )
       {
       //   std::cout << itr.first << "," << itr.second << std::endl;
@@ -192,11 +194,14 @@ public:
          Teuchos::Array<LocalOrdinalT> indices(sz);
          Teuchos::Array<ScalarT> Entries(sz);
          A->getLocalRowCopy(itr.first,indices,Entries,numEntries);
+         inputCols[1] = itr.first;
 	      for (std::size_t i=0; i<sz; i++) {
 		      if( indices[i]==itr.first )
 			      Entries[i] = 1.0;
-		      else
+		      else {
 		  	      Entries[i] = 0.0;
+               A->replaceLocalValues(indices[i],1,inputVals,inputCols);   // For symmetric mastrix only
+            }
 	      }  
          A->replaceLocalValues(itr.first,indices,Entries);
       //   f_1dview[itr.first] = 0.0;
