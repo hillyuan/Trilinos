@@ -184,7 +184,7 @@ public:
     //  VectorType f = *( t_ghosted.get_f() );
     //  Teuchos::ArrayRCP<ScalarT> f_1dview = f.get1dViewNonConst();
 
-      ScalarT inputVals[1];  inputVals[1]=0.0;
+      ScalarT inputVals[1];  inputVals[0]=0.0;
       LocalOrdinalT inputCols[1];
       for( auto itr: indx )
       {
@@ -194,7 +194,7 @@ public:
          Teuchos::Array<LocalOrdinalT> indices(sz);
          Teuchos::Array<ScalarT> Entries(sz);
          A->getLocalRowCopy(itr.first,indices,Entries,numEntries);
-         inputCols[1] = itr.first;
+         inputCols[0] = itr.first;
 	      for (std::size_t i=0; i<sz; i++) {
 		      if( indices[i]==itr.first )
 			      Entries[i] = 1.0;
