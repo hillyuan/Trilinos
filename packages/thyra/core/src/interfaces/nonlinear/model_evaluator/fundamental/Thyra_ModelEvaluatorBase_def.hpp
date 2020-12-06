@@ -117,6 +117,7 @@ ModelEvaluatorBase::InArgs<Scalar>::InArgs()
   beta_  = ST::zero();
   step_size_ = ST::zero();
   stage_number_ = ST::one();
+  active_dirichlet_ = true;
 }
 
 
@@ -370,10 +371,17 @@ template<class Scalar>
 Scalar ModelEvaluatorBase::InArgs<Scalar>::get_stage_number() const
 { assert_supports(IN_ARG_stage_number); return stage_number_; }
 
-
 template<class Scalar>
 void ModelEvaluatorBase::InArgs<Scalar>::set_stage_number( Scalar stage_number)
 { assert_supports(IN_ARG_stage_number); stage_number_ = stage_number; }
+	
+template<class Scalar>
+void ModelEvaluatorBase::InArgs<Scalar>::set_active_dirichlet( bool act )
+{ active_dirichlet_ = act; }
+
+template<class Scalar>
+bool ModelEvaluatorBase::InArgs<Scalar>::get_active_dirichlet() const
+{ return active_dirichlet_; }
 
 
 template<class Scalar>

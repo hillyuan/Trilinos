@@ -118,8 +118,10 @@ evaluate(const panzer::AssemblyEngineInArgs& in, const EvaluationFlags flags)
     }
 	  
 	{
-      PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluateDirichletCondition("+PHX::print<EvalT>()+")",eval_DirichletCondition);
-      this->evaluateDirichletCondition(in);
+	  if( in.active_dirichlet ) {
+      	PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluateDirichletCondition("+PHX::print<EvalT>()+")",eval_DirichletCondition);
+      	this->evaluateDirichletCondition(in);
+	  }
     }
   }
 

@@ -205,6 +205,12 @@ applyDirichletBoundaryCondition( const std::map< panzer::LocalOrdinal, double >&
 	   
 	Tpetra::applyDirichletBoundaryConditionToLocalMatrixRows(*A, lclRowInds);*/
 }
+	
+template <typename ScalarT,typename LocalOrdinalT,typename GlobalOrdinalT,typename NodeT>
+void BlockedTpetraLinearObjContainer<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>::
+applyDirichletBoundaryCondition( const double& p, const std::map< panzer::LocalOrdinal, double >& indx )
+{
+}
 
 /*template <typename ScalarT,typename LocalOrdinalT,typename GlobalOrdinalT,typename NodeT>
 void BlockedTpetraLinearObjContainer<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>::

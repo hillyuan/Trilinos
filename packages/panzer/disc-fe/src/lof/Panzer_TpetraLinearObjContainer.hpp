@@ -158,6 +158,7 @@ public:
    virtual Teuchos::RCP<Thyra::LinearOpBase<ScalarT> > get_A_th() const
    { return (A==Teuchos::null) ? Teuchos::null : Thyra::createLinearOp<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>(A,rangeSpace,domainSpace); }
 
+   // -- 1-0 clear out
    void applyDirichletBoundaryCondition( const std::map< panzer::LocalOrdinal, double >& indx ) override
    {
 	   /*using device_type = typename CrsMatrixType::device_type;
@@ -208,6 +209,31 @@ public:
       }
    }
    
+   // -- Penaly
+   void applyDirichletBoundaryCondition( const double& p, const std::map< panzer::LocalOrdinal, double >& indx ) override
+   {
+   	VectorType diagCopy (A->getRowMap ());
+	   Teuchos::ArrayRCP<std::size_t> offsets;
+	   A->getLocalDiagOffsets (offsets);
+      A->getLocalDiagCopy (diagCopy, offsets());
+      Teuchos::ArrayRCP<const ScalarT> diags = diagCopy.get1dView ();
+	//  diagCopy.sync_host ();
+	//  auto diagCopyData = diagCopy.getLocalViewHost ();
+   //	  MapType map = A->getMap();
+   //	  VectorType diagonal(map,false);
+   //	  A->getLocalDiagCopy(diagonal);
+//	  auto diags = diagonal.getData();
+	  
+   	ScalarT inputVals[1];
+      LocalOrdinalT inputCols[1];
+   	for( auto itr: indx )
+      {
+        inputCols[0] = itr.first;
+		  inputVals[0] = diags[itr.first]*p;
+		  A->replaceLocalValues(itr.first,1,inputVals,inputCols);
+      }
+   }
+   
    void evalDirichletResidual( const std::map< panzer::LocalOrdinal, double >& indx ) override
    {
    /*   using device_type = typename CrsMatrixType::device_type;
@@ -234,7 +260,7 @@ public:
    
    void writeMatrixMarket(const std::string& filename) const override
    {
-	   Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>>
+	  Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>>
 	   		::writeSparseFile(filename, *A);
       Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>>
 	   		::writeDenseFile("b_vec.mm", *f);

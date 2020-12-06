@@ -115,6 +115,10 @@ public:
    {
       TEUCHOS_ASSERT(false); // not yet implemented
    }
+   void applyDirichletBoundaryCondition( const double&, const std::map< panzer::LocalOrdinal, double >& indx ) override
+   {
+      TEUCHOS_ASSERT(false); // not yet implemented
+   }
    void evalDirichletResidual( const std::map< panzer::LocalOrdinal, double >& indx ) override
    {
       TEUCHOS_ASSERT(false); // not yet implemented
