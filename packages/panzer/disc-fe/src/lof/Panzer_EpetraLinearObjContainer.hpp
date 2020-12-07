@@ -160,10 +160,6 @@ public:
    {
       TEUCHOS_ASSERT(false); // not yet implemented
    }
-   void clearoutDirichletDofs( const std::map< panzer::LocalOrdinal, double >& indx ) override
-   {
-      TEUCHOS_ASSERT(false); // not yet implemented
-   }
    
    void writeMatrixMarket(const std::string& filename) const override
    {
