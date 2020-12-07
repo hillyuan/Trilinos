@@ -95,6 +95,9 @@ public:
 
     if (type == "block_davidson" || type == "block davidson")
       return rcp(new BlockDavidsonSolMgr<ScalarType,MV,OP>(problem, pl));
+	  
+	else if (type == "gen_block_davidson" || type == "gen block davidson")
+      return rcp(new GeneralizedDavidsonSolMgr<ScalarType,MV,OP>(problem, pl));
 
     else if (type == "block_krylov_schur" || type == "block krylov schur")
       return rcp(new BlockKrylovSchurSolMgr<ScalarType,MV,OP>(problem, pl));
@@ -107,6 +110,12 @@ public:
 
     else if (type == "simple_lobpcg" || type == "simple lobpcg")
       return rcp(new SimpleLOBPCGSolMgr<ScalarType,MV,OP>(problem, pl));
+	  
+	else if (type == "TRACE_MIN" || type == "trace min")
+      return rcp(new Experimental::TraceMinSolMgr<ScalarType,MV,OP>(problem, pl));
+	  
+	else if (type == "trace_min_davidson" || type == "trace min davidson")
+      return rcp(new Experimental::TraceMinDavidsonSolMgr<ScalarType,MV,OP>(problem, pl));
 
     else
       TEUCHOS_TEST_FOR_EXCEPTION(true, std::invalid_argument,
@@ -127,6 +136,9 @@ public:
 
     if (type == "block_davidson" || type == "block davidson")
       return rcp(new BlockDavidsonSolMgr<ScalarType,MV,OP>(problem, pl));
+	  
+	else if (type == "gen_block_davidson" || type == "gen block davidson")
+      return rcp(new GeneralizedDavidsonSolMgr<ScalarType,MV,OP>(problem, pl));
 
     else if (type == "block_krylov_schur" || type == "block krylov schur")
       return rcp(new BlockKrylovSchurSolMgr<ScalarType,MV,OP>(problem, pl));
