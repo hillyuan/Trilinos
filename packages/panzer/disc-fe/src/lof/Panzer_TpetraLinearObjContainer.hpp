@@ -234,6 +234,28 @@ public:
       }
    }
    
+   // -- let item in column and row to zero, specified for mass matrix in eigenvalue calculation
+   void clearoutDirichletDofs( const std::map< panzer::LocalOrdinal, double >& indx ) override
+   {
+      ScalarT inputVals[1];  inputVals[0]=0.0;
+      LocalOrdinalT inputCols[1];
+      for( auto itr: indx )
+      {
+         std::size_t numEntries = 0;
+         std::size_t sz = A->getNumEntriesInLocalRow(itr.first);
+         Teuchos::Array<LocalOrdinalT> indices(sz);
+         Teuchos::Array<ScalarT> Entries(sz);
+         A->getLocalRowCopy(itr.first,indices,Entries,numEntries);
+         inputCols[0] = itr.first;
+	     for (std::size_t i=0; i<sz; i++) {
+		   Entries[i] = 0.0;
+           A->replaceLocalValues(indices[i],1,inputVals,inputCols);   // For symmetric mastrix only
+		 }
+	  }  
+      A->replaceLocalValues(itr.first,indices,Entries);
+      //   f_1dview[itr.first] = 0.0;
+   }
+   
    void evalDirichletResidual( const std::map< panzer::LocalOrdinal, double >& indx ) override
    {
    /*   using device_type = typename CrsMatrixType::device_type;

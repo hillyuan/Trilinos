@@ -106,6 +106,7 @@ public:
    void applyDirichletBoundaryCondition( const std::map< panzer::LocalOrdinal, double >& indx ) override;
    void applyDirichletBoundaryCondition( const double&, const std::map< panzer::LocalOrdinal, double >& indx ) override;
    void evalDirichletResidual( const std::map< panzer::LocalOrdinal, double >& indx ) override {;}
+   void clearoutDirichletDofs( const std::map< panzer::LocalOrdinal, double >& indx ) override {;}
 
    // Inherited from LinearObjContainer
    virtual void initialize();

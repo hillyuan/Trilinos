@@ -118,10 +118,10 @@ evaluate(const panzer::AssemblyEngineInArgs& in, const EvaluationFlags flags)
     }
 	  
 	{
-	  if( in.active_dirichlet ) {
+	//  if( in.active_dirichlet ) {
       	PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluateDirichletCondition("+PHX::print<EvalT>()+")",eval_DirichletCondition);
       	this->evaluateDirichletCondition(in);
-	  }
+	//  }
     }
   }
 
@@ -429,6 +429,7 @@ evaluateDirichletCondition(const panzer::AssemblyEngineInArgs& in)
   if( pfm == nullptr ) return;
 
   pfm->template preEvaluate<EvalT>(ped);
+  workset.clearout_dirichlet = in.active_dirichlet;
   pfm->template evaluateFields<EvalT>(workset);
   pfm->template postEvaluate<EvalT>(NULL);
 }
