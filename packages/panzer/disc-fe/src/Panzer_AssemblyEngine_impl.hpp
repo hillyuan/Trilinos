@@ -429,7 +429,6 @@ evaluateDirichletCondition(const panzer::AssemblyEngineInArgs& in)
   if( pfm == nullptr ) return;
 
   pfm->template preEvaluate<EvalT>(ped);
-  workset.clearout_dirichlet = in.active_dirichlet;
   pfm->template evaluateFields<EvalT>(workset);
   pfm->template postEvaluate<EvalT>(NULL);
 }

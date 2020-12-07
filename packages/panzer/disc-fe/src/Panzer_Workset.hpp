@@ -206,7 +206,6 @@ namespace panzer {
     double stage_number;
     std::vector<double> gather_seeds; // generic gather seeds
     bool evaluate_transient_terms;
-	bool clearout_dirichlet;
 
     //! other contains details about the side-sharing elements on the other side
     //! of the interface. If Teuchos::nonnull(other), then Workset contains two
