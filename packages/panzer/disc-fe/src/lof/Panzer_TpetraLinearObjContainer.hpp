@@ -212,17 +212,11 @@ public:
    // -- Penaly
    void applyDirichletBoundaryCondition( const double& p, const std::map< panzer::LocalOrdinal, double >& indx ) override
    {
-   	VectorType diagCopy (A->getRowMap ());
+   	/*VectorType diagCopy (A->getRowMap ());
 	   Teuchos::ArrayRCP<std::size_t> offsets;
 	   A->getLocalDiagOffsets (offsets);
       A->getLocalDiagCopy (diagCopy, offsets());
       Teuchos::ArrayRCP<const ScalarT> diags = diagCopy.get1dView ();
-	//  diagCopy.sync_host ();
-	//  auto diagCopyData = diagCopy.getLocalViewHost ();
-   //	  MapType map = A->getMap();
-   //	  VectorType diagonal(map,false);
-   //	  A->getLocalDiagCopy(diagonal);
-//	  auto diags = diagonal.getData();
 	  
    	ScalarT inputVals[1];
       LocalOrdinalT inputCols[1];
@@ -231,6 +225,27 @@ public:
         inputCols[0] = itr.first;
 		  inputVals[0] = diags[itr.first]*p;
 		  A->replaceLocalValues(itr.first,1,inputVals,inputCols);
+      }*/
+	  
+	  ScalarT inputVals[1];  inputVals[0]=0.0;
+      LocalOrdinalT inputCols[1];
+      for( auto itr: indx )
+      {
+         std::size_t numEntries = 0;
+         std::size_t sz = A->getNumEntriesInLocalRow(itr.first);
+         Teuchos::Array<LocalOrdinalT> indices(sz);
+         Teuchos::Array<ScalarT> Entries(sz);
+         A->getLocalRowCopy(itr.first,indices,Entries,numEntries);
+         inputCols[0] = itr.first;
+	      for (std::size_t i=0; i<sz; i++) {
+		      if( indices[i]==itr.first )
+			      Entries[i] = p;
+		      else {
+		  	      Entries[i] = 0.0;
+               A->replaceLocalValues(indices[i],1,inputVals,inputCols);   // For symmetric mastrix only
+            }
+	      }  
+         A->replaceLocalValues(itr.first,indices,Entries);
       }
    }
 

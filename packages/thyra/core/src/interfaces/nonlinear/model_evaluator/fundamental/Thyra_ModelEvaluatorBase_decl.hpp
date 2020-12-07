@@ -268,9 +268,9 @@ public:
     /** \brief Precondition: <tt>supports(IN_ARG_stage_number)==true</tt>.  */
     void set_stage_number( Scalar stage_number);
 	/** \brief Precondition: <tt>supports(IN_ARG_step_size)==true</tt>.  */
-    void set_active_dirichlet( bool step_size);
+    void set_pivot_dirichlet( Scalar v);
     /** \brief Precondition: <tt>supports(IN_ARG_step_size)==true</tt>.  */
-    bool get_active_dirichlet() const;
+    Scalar get_pivot_dirichlet() const;
     /** \brief Precondition: <tt>supports(IN_ARG_stage_number)==true</tt>.  */
     Scalar get_stage_number() const;
     /** \brief Set non-null arguments (does not overwrite non-NULLs with
@@ -334,7 +334,7 @@ public:
     Scalar W_x_dot_dot_coeff_;
     Scalar step_size_;
     Scalar stage_number_;
-	bool active_dirichlet_;
+	Scalar pivot_dirichlet_;  // pivot value in 1-0 strategy of Dirichlet condition
     bool supports_[NUM_E_IN_ARGS_MEMBERS];
     Teuchos::Array<bool> supports_p_mp_; //Np
     // functions
