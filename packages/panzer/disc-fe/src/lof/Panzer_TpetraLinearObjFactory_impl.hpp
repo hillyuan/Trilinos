@@ -57,6 +57,7 @@
 #include "Tpetra_MultiVector.hpp"
 #include "Tpetra_Vector.hpp"
 #include "Tpetra_CrsMatrix.hpp"
+#include "MatrixMarket_Tpetra.hpp"
 
 namespace panzer {
 
@@ -100,6 +101,36 @@ TpetraLinearObjFactory<Traits,ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>::
 
 // LinearObjectFactory functions 
 /////////////////////////////////////////////////////////////////////
+
+template <typename Traits,typename ScalarT,typename LocalOrdinalT,typename GlobalOrdinalT,typename NodeT>
+void
+TpetraLinearObjFactory<Traits,ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>::
+readVector(const std::string & identifier,LinearObjContainer & loc,int id) const
+{
+  using Teuchos::RCP;
+	
+  RCP<const MapType> map = Teuchos::null;  //dummy
+//  RCP<VectorType> tx = Thyra::TpetraOperatorVectorExtraction<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>::getTpetraVector(vec);
+  RCP<VectorType> ptr_tx = Tpetra::MatrixMarket::Reader<Tpetra::CrsMatrix<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>>
+	   		::readVectorFile(identifier, comm_, map);
+ // TEUCHOS_ASSERT(ptr_tx->is_null());
+
+  ContainerType & tloc = Teuchos::dyn_cast<ContainerType>(loc);
+  switch(id) {
+  case LinearObjContainer::X:
+    tloc.set_x(ptr_tx);
+    break;
+  case LinearObjContainer::DxDt:
+    tloc.set_dxdt(ptr_tx);
+    break;
+  case LinearObjContainer::F:
+    tloc.set_f(ptr_tx);
+    break;
+  default:
+    TEUCHOS_ASSERT(false);
+    break;
+  };
+}
 
 template <typename Traits,typename ScalarT,typename LocalOrdinalT,typename GlobalOrdinalT,typename NodeT>
 Teuchos::RCP<LinearObjContainer> 
