@@ -1418,10 +1418,10 @@ void DOFManager::buildDofsInfo()
 //  std::vector< std::map< panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidMaps;
   std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidTuple;   // field id, edge id, dof offset
   std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidTuple;  // field id, edge id, dof offset
-  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidTuple_nd;   // field id, edge id, dof offset
-  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidTuple_nd;  // field id, edge id, dof offset
-  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidTuple_fc;   // field id, edge id, dof offset
-  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidTuple_fc;  // field id, edge id, dof offset
+  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidTuple_nd;   // field id, node id, dof offset
+  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidTuple_nd;  // field id, node id, dof offset
+  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidTuple_fc;   // field id, face id, dof offset
+  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidTuple_fc;  // field id, face id, dof offset
 
   std::set<int> fieldids;
   for( auto blockId : elementBlockIds )
@@ -1587,6 +1587,53 @@ void DOFManager::print_faceInfo(std::ostream &os) const
 			std::cout << "  face gid:" << b.first << "  with global index=" << b.second << std::endl;
 			c++;
 		}
+	}
+}
+	
+void DOFManager::getFieldIndex(const std::string& fd, std::vector<panzer::LocalOrdinal>& ldofs) const
+{
+	// All element ids in current cpu
+	const auto elementLIDs = this->getLIDs();
+	// All element blocks in current cpu
+	std::vector< std::string > ebs;
+	this->getElementBlockIds(ebs);
+	
+	int fieldNum = this->getFieldNum(fd);
+
+	ldofs.clear();
+	for( auto eb: ebs ) 
+	{
+		if( !fieldInBlock(fd, eb ) ) continue;
+		const auto eblockLIDs = this->getElementBlock(eb);
+		const std::vector<int> offsets = this->getGIDFieldOffsets(eb, fieldNum);
+		
+		for( auto ele: eblockLIDs )
+		{
+			for(std::size_t basis=0;basis<offsets.size();basis++) {
+          		int offset = offsets[basis];
+          		auto lid   = elementLIDs(ele,offset);
+          		ldofs.emplace_back( lid );
+        	}
+		}
+	}
+}
+	
+void DOFManager::getFieldIndex_ElementBlock(const std::string& fd, const std::string& eb, std::vector<panzer::LocalOrdinal>& ldofs) const
+{
+	// All element ids in current element block
+	const auto elementLIDs = this->getElementBlock(eb);
+	int fieldNum = this->getFieldNum(fd);
+	const std::vector<int> offsets = this->getGIDFieldOffsets(eb, fieldNum);
+	
+	ldofs.clear();
+	for( auto ele: elementLIDs )
+	{
+		auto LIDs = getElementLIDs( ele );
+		for(std::size_t basis=0;basis<offsets.size();basis++) {
+          int offset = offsets[basis];
+          auto lid   = LIDs(offset);
+          ldofs.emplace_back(lid);
+        }
 	}
 }
 	

@@ -364,6 +364,10 @@ public:
 	
    panzer::GlobalOrdinal getEdgeGDofOfField(int f, panzer::GlobalOrdinal nd) const
    { return edgeLIDMap_.at(f).at(nd); }
+	
+   /* Get dof index of a given field */
+   virtual void getFieldIndex(const std::string& fd, std::vector<panzer::LocalOrdinal>& ldofs) const = 0;
+   virtual void getFieldIndex_ElementBlock(const std::string& fd, const std::string& eb, std::vector<panzer::LocalOrdinal>& ldofs) const = 0;
 
 protected:
 	
