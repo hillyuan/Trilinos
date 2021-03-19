@@ -14,7 +14,7 @@
 
 namespace Tempus {
 
-// Forward Declaration for recursive includes (this AppAction <--> Stepper)
+// Forward Declaration
 template<class Scalar> class StepperSubcycling;
 
 /** \brief Application Action for StepperSubcycling.

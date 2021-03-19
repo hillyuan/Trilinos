@@ -60,8 +60,6 @@
 #include "BelosMinresSolMgr.hpp"
 #include "BelosTFQMRSolMgr.hpp"
 #include "BelosBiCGStabSolMgr.hpp"
-#include "BelosLSQRSolMgr.hpp"
-#include "BelosPCPGSolMgr.hpp"
 #include "BelosFixedPointSolMgr.hpp"
 
 #include "BelosThyraAdapter.hpp"
@@ -104,10 +102,6 @@ template<class Scalar>
 const std::string BelosLinearOpWithSolveFactory<Scalar>::TFQMR_name = "TFQMR";
 template<class Scalar>
 const std::string BelosLinearOpWithSolveFactory<Scalar>::BiCGStab_name = "BiCGStab";
-template<class Scalar>
-const std::string BelosLinearOpWithSolveFactory<Scalar>::LSQR_name = "LSQR";
-template<class Scalar>
-const std::string BelosLinearOpWithSolveFactory<Scalar>::PCPG_name = "PCPG";
 template<class Scalar>
 const std::string BelosLinearOpWithSolveFactory<Scalar>::FixedPoint_name = "Fixed Point";
 template<class Scalar>
@@ -406,8 +400,6 @@ Teuchos::ValidatorXMLConverterDB::addConverter(
         "MINRES",
         "TFQMR",
         "BiCGStab",
-        "LSQR",
-        "PCPG",
         "Fixed Point"
         ),
       tuple<std::string>(
@@ -453,11 +445,7 @@ Teuchos::ValidatorXMLConverterDB::addConverter(
 
         "BiCGStab solver for nonsymmetric linear systems.",
 
-        "LSQR solver for nonsymmetric linear systems.",
-
-        "PCPG solver for nonsymmetric linear systems.",
-
-        "Fixed Point solver for nonsymmetric linear systems."
+        "Fixed point iteration"
         ),
       tuple<EBelosSolverType>(
         SOLVER_TYPE_BLOCK_GMRES,
@@ -470,8 +458,6 @@ Teuchos::ValidatorXMLConverterDB::addConverter(
         SOLVER_TYPE_MINRES,
         SOLVER_TYPE_TFQMR,
         SOLVER_TYPE_BICGSTAB,
-        SOLVER_TYPE_LSQR,
-        SOLVER_TYPE_PCPG,
         SOLVER_TYPE_FIXEDPOINT
         ),
       &*validParamList
@@ -544,18 +530,6 @@ Teuchos::ValidatorXMLConverterDB::addConverter(
     {
       Belos::BiCGStabSolMgr<Scalar,MV_t,LO_t> mgr;
       solverTypesSL.sublist(BiCGStab_name).setParameters(
-        *mgr.getValidParameters()
-        );
-    }
-    {
-      Belos::LSQRSolMgr<Scalar,MV_t,LO_t> mgr;
-      solverTypesSL.sublist(LSQR_name).setParameters(
-        *mgr.getValidParameters()
-        );
-    }
-    {
-      Belos::PCPGSolMgr<Scalar,MV_t,LO_t> mgr;
-      solverTypesSL.sublist(LSQR_name).setParameters(
         *mgr.getValidParameters()
         );
     }
@@ -944,58 +918,20 @@ void BelosLinearOpWithSolveFactory<Scalar>::initializeOpImpl(
       }
       break;
     }
-    case SOLVER_TYPE_LSQR:
-    {
-      // Set the PL
-      if(paramList_.get()) {
-        Teuchos::ParameterList &solverTypesPL = paramList_->sublist(SolverTypes_name);
-        Teuchos::ParameterList &LSQRPL = solverTypesPL.sublist(LSQR_name);
-        solverPL = Teuchos::rcp( &LSQRPL, false );
-      }
-      // Create the solver
-      if (oldIterSolver != Teuchos::null) {
-        iterativeSolver = oldIterSolver;
-        iterativeSolver->setProblem( lp );
-        iterativeSolver->setParameters( solverPL );
-      }
-      else {
-        iterativeSolver = rcp(new Belos::LSQRSolMgr<Scalar,MV_t,LO_t>(lp,solverPL));
-      }
-      break;
-    }
-    case SOLVER_TYPE_PCPG:
-    {
-      // Set the PL
-      if(paramList_.get()) {
-        Teuchos::ParameterList &solverTypesPL = paramList_->sublist(SolverTypes_name);
-        Teuchos::ParameterList &PCPGPL = solverTypesPL.sublist(PCPG_name);
-        solverPL = Teuchos::rcp( &PCPGPL, false );
-      }
-      // Create the solver
-      if (oldIterSolver != Teuchos::null) {
-        iterativeSolver = oldIterSolver;
-        iterativeSolver->setProblem( lp );
-        iterativeSolver->setParameters( solverPL );
-      } 
-      else {
-        iterativeSolver = rcp(new Belos::PCPGSolMgr<Scalar,MV_t,LO_t>(lp,solverPL));
-      }
-      break;
-    }
     case SOLVER_TYPE_FIXEDPOINT:
     {
       // Set the PL
       if(paramList_.get()) {
         Teuchos::ParameterList &solverTypesPL = paramList_->sublist(SolverTypes_name);
-        Teuchos::ParameterList &FixedPointPL = solverTypesPL.sublist(FixedPoint_name);
-        solverPL = Teuchos::rcp( &FixedPointPL, false );
+        Teuchos::ParameterList &fixedPointPL = solverTypesPL.sublist(FixedPoint_name);
+        solverPL = Teuchos::rcp( &fixedPointPL, false );
       }
       // Create the solver
       if (oldIterSolver != Teuchos::null) {
         iterativeSolver = oldIterSolver;
         iterativeSolver->setProblem( lp );
         iterativeSolver->setParameters( solverPL );
-      } 
+      }
       else {
         iterativeSolver = rcp(new Belos::FixedPointSolMgr<Scalar,MV_t,LO_t>(lp,solverPL));
       }
