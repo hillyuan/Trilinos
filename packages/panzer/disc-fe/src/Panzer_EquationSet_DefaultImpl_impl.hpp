@@ -104,7 +104,7 @@ setupDOFs()
     // Create the bases
     TEUCHOS_ASSERT(nonnull(itr->second.basis));
     this->m_provided_dofs.push_back(std::make_pair(itr->first, itr->second.basis));
-    this->m_provided_dofs_dof.emplcae_back(itr->num);
+    this->m_provided_dofs_dof.emplace_back(itr->num);
 
     //{
     //  Teuchos::FancyOStream out(Teuchos::rcpFromRef(std::cout));
