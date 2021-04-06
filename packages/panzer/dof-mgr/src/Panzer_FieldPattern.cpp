@@ -54,7 +54,7 @@ int FieldPattern::numberIds() const
    // compute number of IDs
    for(int i=0;i<dim+1;i++) {
       for(int sc=0;sc<getSubcellCount(i);sc++)
-         count += getSubcellIndices(i,sc).size();
+         count += getSubcellIndices(i,sc).size() * this->numberSubcellDofs(i);
    }
 
    return count;

@@ -108,11 +108,7 @@ void STKConnManager::buildLocalElementMapping()
    std::vector<std::string> blockIds;
    stkMeshDB_->getElementBlockNames(blockIds);
 
-   std::size_t blockIndex=0;
-   for(std::vector<std::string>::const_iterator idItr=blockIds.begin();
-       idItr!=blockIds.end();++idItr,++blockIndex) {
-      std::string blockId = *idItr;
-
+   for( auto blockId : blockIds ) {
       // grab elements on this block
       std::vector<stk::mesh::Entity> blockElmts;
       stkMeshDB_->getMyElements(blockId,blockElmts);
@@ -128,9 +124,8 @@ void STKConnManager::buildLocalElementMapping()
 
    ownedElementCount_ = elements_->size();
 
-   blockIndex=0;
    for(std::vector<std::string>::const_iterator idItr=blockIds.begin();
-       idItr!=blockIds.end();++idItr,++blockIndex) {
+       idItr!=blockIds.end();++idItr ) {
       std::string blockId = *idItr;
 
       // grab elements on this block

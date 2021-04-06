@@ -102,9 +102,16 @@ public:
    virtual shards::CellTopology getCellTopology() const = 0;
    
    /** How many degrees of freedom are associated with
+     * this subcell (node, edge, face, volume).
+     *
+     * \returns The number of DOFs associated with this subcell.
+     */
+   virtual int numberSubcellDofs(int dim) const 
+   {return 1;}
+   
+   /** How many degrees of freedom are associated with
      * this pattern. In this terminology an ID is a single
-     * degree of freedom defined at the element level. By default
-     * this is the sum of the size of all the sub cells. Where
+     * degree of freedom defined at the element level. Where
      * the sub cells are defined by the <code>getSubcellIndices</code>.
      *
      * \returns The number of IDs associated with this pattern.
