@@ -121,6 +121,7 @@ namespace panzer {
     virtual const Teuchos::RCP<Teuchos::ParameterList> getEvaluatorParameterList() const;
     
     virtual const std::vector<std::pair<std::string,Teuchos::RCP<panzer::PureBasis> > > & getProvidedDOFs() const;
+	virtual const std::vector<int> & getProvidedDOFsDOF() const;
 
     virtual const std::vector<std::vector<std::string> > & getCoordinateDOFs() const;
 

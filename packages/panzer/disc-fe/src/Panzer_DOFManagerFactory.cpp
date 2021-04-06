@@ -79,7 +79,7 @@ DOFManagerFactory::buildGlobalIndexer(const Teuchos::RCP<const Teuchos::OpaqueWr
       Teuchos::RCP<const panzer::PhysicsBlock> pb = *physIter;
        
       const std::vector<StrPureBasisPair> & blockFields = pb->getProvidedDOFs();
-      const std::vector<int> & numDofsField = pb->getProvidedDOFsDOF();
+      //const std::vector<int> & numDofsField = pb->getProvidedDOFsDOF();
 
       // insert all fields into a set
       std::set<StrPureBasisPair,StrPureBasisComp> fieldNames;

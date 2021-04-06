@@ -239,6 +239,7 @@ namespace panzer {
 
     const std::vector<std::string>& getDOFNames() const;
     const std::vector<StrPureBasisPair>& getProvidedDOFs() const;
+    const std::vector<StrPureBasisPair>& getProvidedDOFsDOF() const;
 
     const std::vector<std::vector<std::string> > & getCoordinateDOFs() const;
 
