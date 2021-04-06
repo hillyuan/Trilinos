@@ -169,14 +169,14 @@ STKConnManager::buildOffsetsAndIdCounts(const panzer::FieldPattern & fp,
    int patternDim = fp.getDimension();
    switch(patternDim) {
    case 3:
-     faceIdCnt = fp.getSubcellIndices(2,0).size();
+     faceIdCnt = fp.getSubcellIndices(2,0).size() * fp.numberSubcellDofs(2);
      // Intentional fall-through.
    case 2:
-     edgeIdCnt = fp.getSubcellIndices(1,0).size();
+     edgeIdCnt = fp.getSubcellIndices(1,0).size() * fp.numberSubcellDofs(1);
      // Intentional fall-through.
    case 1:
-     nodeIdCnt = fp.getSubcellIndices(0,0).size();
-     cellIdCnt = fp.getSubcellIndices(patternDim,0).size();
+     nodeIdCnt = fp.getSubcellIndices(0,0).size() * fp.numberSubcellDofs(0);
+     cellIdCnt = fp.getSubcellIndices(patternDim,0).size() * fp.numberSubcellDofs(patternDim) ;
      break;
    case 0:
    default:

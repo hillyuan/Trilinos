@@ -94,6 +94,7 @@ setupDOFs()
   // }
 
   this->m_provided_dofs.clear();
+  this->m_provided_dofs_dof.clear();
   this->m_int_rules.clear();
 
   // load up the provided dofs and unique int rules from the descriptor map
@@ -103,6 +104,7 @@ setupDOFs()
     // Create the bases
     TEUCHOS_ASSERT(nonnull(itr->second.basis));
     this->m_provided_dofs.push_back(std::make_pair(itr->first, itr->second.basis));
+    this->m_provided_dofs_dof.emplcae_back(itr->num);
 
     //{
     //  Teuchos::FancyOStream out(Teuchos::rcpFromRef(std::cout));
@@ -743,6 +745,14 @@ panzer::EquationSet_DefaultImpl<EvalT>::getProvidedDOFs() const
 
 // ***********************************************************************
 template <typename EvalT>
+const std::vector<int>&
+panzer::EquationSet_DefaultImpl<EvalT>::getProvidedDOFsDOF() const
+{
+  return m_provided_dofs_dof;
+}
+
+// ***********************************************************************
+template <typename EvalT>
 const std::vector<std::vector<std::string> > &
 panzer::EquationSet_DefaultImpl<EvalT>::getCoordinateDOFs() const
 {
@@ -870,7 +880,8 @@ addDOF(const std::string & dofName,
        const int & basisOrder,
        const int integrationOrder,
        const std::string residualName,
-       const std::string scatterName)
+       const std::string scatterName,
+       const int numScalar)
 {
   typename std::map<std::string,DOFDescriptor>::const_iterator itr = m_provided_dofs_desc.find(dofName);
 
@@ -881,6 +892,7 @@ addDOF(const std::string & dofName,
   // allocate and populate a dof descriptor associated with the field "dofName"
   DOFDescriptor & desc = m_provided_dofs_desc[dofName];
   desc.dofName = dofName;
+  desc.num = numScalar;
   desc.basisType = basisType;
   desc.basisOrder = basisOrder;
   desc.basis = Teuchos::rcp(new panzer::PureBasis(desc.basisType,desc.basisOrder,m_cell_data));

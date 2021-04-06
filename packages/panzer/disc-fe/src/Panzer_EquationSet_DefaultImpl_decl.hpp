@@ -215,7 +215,8 @@ namespace panzer {
                 const int & basisOrder,
                 const int integrationOrder = -1,
                 const std::string residualName = "",
-                const std::string scatterName = "");
+                const std::string scatterName = "",
+                const int numScalar = 1);
 
     /** Alert the panzer library that a gradient of particular a DOF is needed.
       *
@@ -353,6 +354,7 @@ namespace panzer {
         , timeDerivative(std::make_pair(false,"")) {}
 
       std::string dofName;
+      int num;
       std::string basisType;
       int basisOrder;
       Teuchos::RCP<panzer::PureBasis> basis;
@@ -367,6 +369,7 @@ namespace panzer {
 
       void print(std::ostream & os) const {
         os << "DOF Desc = \"" << dofName << "\": "
+           << "Number of scalar variables = " << num << "\"), "
            << "Basis = (" << basisType << ", \"" << basisOrder << "\"), "
            << "Res = (" << residualName.first << ", \"" << residualName.second << "\"), "
            << "Grad = (" << grad.first << ", \"" << grad.second << "\"), "
@@ -410,6 +413,7 @@ namespace panzer {
     
     //! Key is the dof name and the value is the corresponding basis
     std::vector<std::pair<std::string,Teuchos::RCP<panzer::PureBasis> > >  m_provided_dofs;
+    std::vector<int>  m_provided_dofs_dof;
 
     //! Key is the coordinate prefix name and the value is the corresponding basis
     std::vector<std::pair<std::string,Teuchos::RCP<panzer::PureBasis> > >  m_provided_coord_prefixes;
