@@ -177,20 +177,23 @@ namespace Intrepid2 {
   class Basis_HVOL_LINE_Cn_FEM
     : public Basis<DeviceType,outputValueType,pointValueType> {
   public:
-    using OrdinalTypeArray1DHost = typename Basis<DeviceType,outputValueType,pointValueType>::OrdinalTypeArray1DHost;
-    using OrdinalTypeArray2DHost = typename Basis<DeviceType,outputValueType,pointValueType>::OrdinalTypeArray2DHost;
-    using OrdinalTypeArray3DHost = typename Basis<DeviceType,outputValueType,pointValueType>::OrdinalTypeArray3DHost;
+    using BasisBase = Basis<DeviceType,outputValueType,pointValueType>;
+    using HostBasis = Basis_HVOL_LINE_Cn_FEM<typename Kokkos::HostSpace::device_type,outputValueType,pointValueType>;
+    
+    using OrdinalTypeArray1DHost = typename BasisBase::OrdinalTypeArray1DHost;
+    using OrdinalTypeArray2DHost = typename BasisBase::OrdinalTypeArray2DHost;
+    using OrdinalTypeArray3DHost = typename BasisBase::OrdinalTypeArray3DHost;
+    
+    using OutputViewType = typename BasisBase::OutputViewType;
+    using PointViewType  = typename BasisBase::PointViewType ;
+    using ScalarViewType = typename BasisBase::ScalarViewType;
 
     /** \brief  Constructor.
      */
     Basis_HVOL_LINE_Cn_FEM(const ordinal_type order,
-                            const EPointType   pointType = POINTTYPE_EQUISPACED);  
+                           const EPointType   pointType = POINTTYPE_EQUISPACED);  
 
-    using OutputViewType = typename Basis<DeviceType,outputValueType,pointValueType>::OutputViewType;
-    using PointViewType  = typename Basis<DeviceType,outputValueType,pointValueType>::PointViewType;
-    using ScalarViewType = typename Basis<DeviceType,outputValueType,pointValueType>::ScalarViewType;
-
-    using Basis<DeviceType,outputValueType,pointValueType>::getValues;
+    using BasisBase::getValues;
 
     virtual
     void
@@ -255,11 +258,17 @@ namespace Intrepid2 {
       return "Intrepid2_HVOL_LINE_Cn_FEM";
     }
 
+    virtual HostBasisPtr<outputValueType,pointValueType>
+    getHostBasis() const override{
+      return Teuchos::rcp(new Basis_HVOL_LINE_Cn_FEM<typename Kokkos::HostSpace::device_type,outputValueType,pointValueType>(this->basisDegree_, pointType_));
+    }
+
   private:
 
     /** \brief inverse of Generalized Vandermonde matrix, whose columns store the expansion
                coefficients of the nodal basis in terms of phis_ */
     Kokkos::DynRankView<typename ScalarViewType::value_type,DeviceType> vinv_;
+    EPointType   pointType_;
   };
 
 }// namespace Intrepid2
