@@ -237,6 +237,10 @@ public:
     /// Get the local cell IDs for the workset getLocalCellIDs
     Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getGlobalCellIDs() const final
     {return cell_global_ids_;}
+    Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getOwnedGlobalCellIDs() const final
+    {return owned_cell_global_ids_;}
+    Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getGhostGlobalCellIDs() const final
+    {return ghost_cell_global_ids_;}
 
 
 protected:
@@ -267,6 +271,8 @@ protected:
 
    Teuchos::RCP<std::vector<stk::mesh::Entity> > elements_;
    PHX::View<const panzer::GlobalOrdinal*> cell_global_ids_;
+   PHX::View<const panzer::GlobalOrdinal*> owned_cell_global_ids_;
+   PHX::View<const panzer::GlobalOrdinal*> ghost_cell_global_ids_;
 
    // element block information
    std::map<std::string,Teuchos::RCP<std::vector<LocalOrdinal> > > elementBlocks_;

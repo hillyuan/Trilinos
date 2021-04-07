@@ -108,15 +108,14 @@ class FieldPattern; // from DOFManager
     /** Returns the cellTopologies linked to element blocks in this connection manager */
     virtual void getElementBlockTopologies(std::vector<shards::CellTopology> & elementBlockTopologies) const = 0;
 
-    /** Get the local element IDs for a paricular element
-     * block.
+    /** Get the local element IDs for a particular element block.
      *
      * \param[in] blockID Block ID
      *
      * \returns Vector of local element IDs.
      */
     virtual const std::vector<LocalOrdinal> & getElementBlock(const std::string & blockID) const = 0;
-	  
+  
     /** Get the global nodes IDs for a particular element
      *
      * \param[in] local element ID
@@ -124,22 +123,22 @@ class FieldPattern; // from DOFManager
      */
     virtual void getElementalNodeConnectivity(const LocalOrdinal&, std::vector<GlobalOrdinal>&) const = 0;
     virtual int getNodeRank() const {return 0;}
-	  
-	/** Get the global edges IDs for a particular element
+  
+    /** Get the global edges IDs for a particular element
      *
      * \param[in] local element ID
      * \returns Vector of global edges IDs.
      */
-	virtual void getElementalEdges(const LocalOrdinal&, std::vector<GlobalOrdinal>&) const {}
-	virtual int getEdgeRank() const {return 1;}
-	
-	/** Get the global faces IDs for a particular element
+    virtual void getElementalEdges(const LocalOrdinal&, std::vector<GlobalOrdinal>&) const {}
+    virtual int getEdgeRank() const {return 1;}
+
+    /** Get the global faces IDs for a particular element
      *
      * \param[in] local element ID
      * \returns Vector of global faces IDs.
      */
-	virtual void getElementalFaces(const LocalOrdinal&, std::vector<GlobalOrdinal>&) const {}
-	virtual int getFaceRank() const {return 2;}
+    virtual void getElementalFaces(const LocalOrdinal&, std::vector<GlobalOrdinal>&) const {}
+    virtual int getFaceRank() const {return 2;}
 
     /** Get the local element IDs for all "neighbor" elements that reside in a paricular element
      * block (An element is a neighbor if it is in the one ring of owned elements).
@@ -162,6 +161,8 @@ class FieldPattern; // from DOFManager
 
     /** Get global ids of all cell in current CPU */
     virtual Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getGlobalCellIDs() const = 0;
+    virtual Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getOwnedGlobalCellIDs() const = 0;
+    virtual Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getGhostGlobalCellIDs() const = 0;
   };
 
 }

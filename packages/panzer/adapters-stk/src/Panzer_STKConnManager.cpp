@@ -107,6 +107,7 @@ void STKConnManager::buildLocalElementMapping()
    // defines ordering of blocks
    std::vector<std::string> blockIds;
    stkMeshDB_->getElementBlockNames(blockIds);
+   stk::mesh::BulkData& bulkData = *stkMeshDB_->getBulkData();
 
    for( auto blockId : blockIds ) {
       // grab elements on this block
@@ -123,6 +124,11 @@ void STKConnManager::buildLocalElementMapping()
    }
 
    ownedElementCount_ = elements_->size();
+   owned_cell_global_ids_.clear();
+   for( auto element : elements_ ) {
+     owned_cell_global_ids_.emplace_back( bulkdata.identifier(element) );
+   }
+   ghost_cell_global_ids_.clear();
 
    for(std::vector<std::string>::const_iterator idItr=blockIds.begin();
        idItr!=blockIds.end();++idItr ) {
@@ -137,16 +143,22 @@ void STKConnManager::buildLocalElementMapping()
 
       // build block to LID map
       neighborElementBlocks_[blockId] = Teuchos::rcp(new std::vector<LocalOrdinal>);
-      for(std::size_t i=0;i<blockElmts.size();i++)
+      for(std::size_t i=0;i<blockElmts.size();i++) {
          neighborElementBlocks_[blockId]->push_back(stkMeshDB_->elementLocalId(blockElmts[i]));
+         ghost_cell_global_ids_.emplace_back( bulkdata.identifier(blockElmts[i]) );
+      }
    }
 
-   // this expensive operation gurantees ordering of local IDs
+   // this expensive operation guarantees ordering of local IDs
    std::sort(elements_->begin(),elements_->end(),LocalIdCompare(stkMeshDB_));
 
    cell_global_ids_.clear();
    for( auto element : elements_ ) {
-     cell_global_ids_.emblace_back( bulkdata.identifier(element) );
+     cell_global_ids_.emplace_back( bulkdata.identifier(element) );
+   }
+   
+   for( auto element : elements_ ) {
+     
    }
 
    // allocate space for element LID to Connectivty map
