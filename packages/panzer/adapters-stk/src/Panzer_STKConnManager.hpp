@@ -270,9 +270,9 @@ protected:
    Teuchos::RCP<const STK_Interface> stkMeshDB_;
 
    Teuchos::RCP<std::vector<stk::mesh::Entity> > elements_;
-   PHX::View<const panzer::GlobalOrdinal*> cell_global_ids_;
-   PHX::View<const panzer::GlobalOrdinal*> owned_cell_global_ids_;
-   PHX::View<const panzer::GlobalOrdinal*> ghost_cell_global_ids_;
+   PHX::View<panzer::GlobalOrdinal*> cell_global_ids_;
+   PHX::View<panzer::GlobalOrdinal*> owned_cell_global_ids_;
+   PHX::View<panzer::GlobalOrdinal*> ghost_cell_global_ids_;
 
    // element block information
    std::map<std::string,Teuchos::RCP<std::vector<LocalOrdinal> > > elementBlocks_;

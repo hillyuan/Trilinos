@@ -1432,7 +1432,7 @@ void DOFManager::buildDofsInfo()
 	  std::map<std::string,int>::const_iterator bitr = blockNameToID_.find(blockId);
   	  if(bitr==blockNameToID_.end()) return;    // block not in FieldAggPattern manager
 	  
-	  int bid=bitr->second;
+	  //int bid=bitr->second;
 	  // const auto fv = fa_fps_[bid]->fieldIds();  = above fields
 	    
 	  for( auto ele: elements )

@@ -50,6 +50,8 @@
 #include "Shards_CellTopology.hpp"
 #include "PanzerDofMgr_config.hpp"
 
+#include "Phalanx_KokkosDeviceTypes.hpp"
+
 namespace panzer {
 
 class FieldPattern; // from DOFManager

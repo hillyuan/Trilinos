@@ -124,12 +124,13 @@ void STKConnManager::buildLocalElementMapping()
    }
 
    ownedElementCount_ = elements_->size();
-   owned_cell_global_ids_.clear();
-   for( auto element : elements_ ) {
-     owned_cell_global_ids_.emplace_back( bulkdata.identifier(element) );
-   }
-   ghost_cell_global_ids_.clear();
+   owned_cell_global_ids_ = PHX::View<panzer::GlobalOrdinal*>("owned_global_cells",ownedElementCount_);
 
+   for( std::size_t id=0; id<ownedElementCount_; ++id ) {
+     owned_cell_global_ids_(id) = bulkData.identifier( elements_->at(id) );
+   }
+
+   std::vector<std::size_t> ghost_id;
    for(std::vector<std::string>::const_iterator idItr=blockIds.begin();
        idItr!=blockIds.end();++idItr ) {
       std::string blockId = *idItr;
@@ -145,16 +146,23 @@ void STKConnManager::buildLocalElementMapping()
       neighborElementBlocks_[blockId] = Teuchos::rcp(new std::vector<LocalOrdinal>);
       for(std::size_t i=0;i<blockElmts.size();i++) {
          neighborElementBlocks_[blockId]->push_back(stkMeshDB_->elementLocalId(blockElmts[i]));
-         ghost_cell_global_ids_.emplace_back( bulkdata.identifier(blockElmts[i]) );
+         ghost_id.emplace_back( bulkData.identifier( blockElmts[i] ) );
       }
+   }
+
+   std::size_t ghostElementCount = ghost_id.size();
+   ghost_cell_global_ids_ = PHX::View<panzer::GlobalOrdinal*>("ghost_global_cells",ghostElementCount);
+   for( std::size_t id=0; id<ghostElementCount; ++id ) {
+     ghost_cell_global_ids_(id) = ghost_id[id];
    }
 
    // this expensive operation guarantees ordering of local IDs
    std::sort(elements_->begin(),elements_->end(),LocalIdCompare(stkMeshDB_));
 
-   cell_global_ids_.clear();
-   for( auto element : elements_ ) {
-     cell_global_ids_.emplace_back( bulkdata.identifier(element) );
+   std::size_t allElementCount = elements_->size();
+   cell_global_ids_ = PHX::View<panzer::GlobalOrdinal*>("global_cells",allElementCount);
+   for( std::size_t id=0; id<allElementCount; ++id ) {
+     cell_global_ids_(id) = bulkData.identifier( elements_->at(id) );
    }
 
    // allocate space for element LID to Connectivty map
