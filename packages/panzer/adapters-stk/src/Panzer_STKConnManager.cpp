@@ -144,6 +144,11 @@ void STKConnManager::buildLocalElementMapping()
    // this expensive operation gurantees ordering of local IDs
    std::sort(elements_->begin(),elements_->end(),LocalIdCompare(stkMeshDB_));
 
+   cell_global_ids_.clear();
+   for( auto element : elements_ ) {
+     cell_global_ids_.emblace_back( bulkdata.identifier(element) );
+   }
+
    // allocate space for element LID to Connectivty map
    // connectivity size
    elmtLidToConn_.clear();

@@ -159,6 +159,9 @@ class FieldPattern; // from DOFManager
      * input.
      */
     virtual bool hasAssociatedNeighbors() const = 0;
+
+    /** Get global ids of all cell in current CPU */
+    virtual Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getGlobalCellIDs() const = 0;
   };
 
 }
