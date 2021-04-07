@@ -156,10 +156,6 @@ void STKConnManager::buildLocalElementMapping()
    for( auto element : elements_ ) {
      cell_global_ids_.emplace_back( bulkdata.identifier(element) );
    }
-   
-   for( auto element : elements_ ) {
-     
-   }
 
    // allocate space for element LID to Connectivty map
    // connectivity size
