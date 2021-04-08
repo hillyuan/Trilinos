@@ -277,6 +277,10 @@ void IOSSConnManager::buildLocalElementMapping() {
 	// Ioss::GroupingEntity::get_field_data() will resize indices
 	// up or down as needed.
 	ownedElementCount_ += indices.size();
+  owned_cell_global_ids_ = PHX::View<panzer::GlobalOrdinal*>("owned_global_cells",ownedElementCount_);
+  for( std::size_t id=0; id<ownedElementCount_; ++id ) {
+    owned_cell_global_ids_(id) = indices[id];
+  }
 
     elementBlocks_[name] = rcp(new std::vector<LocalOrdinal>);
     for (GlobalOrdinal element : indices) {

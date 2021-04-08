@@ -161,13 +161,18 @@ class FieldPattern; // from DOFManager
      */
     virtual bool hasAssociatedNeighbors() const = 0;
 
-    /** Get global ids of all cell in current CPU */
-    virtual Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getGlobalCellIDs() const
-	{return PHX::View<panzer::GlobalOrdinal*>("global_cells",0);}
-    virtual Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getOwnedGlobalCellIDs() const
-	{return PHX::View<panzer::GlobalOrdinal*>("owned_global_cells",0);}
-    virtual Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getGhostGlobalCellIDs() const
-	{return PHX::View<panzer::GlobalOrdinal*>("ghost_global_cells",0);}
+    /// Get the local cell IDs for the workset getLocalCellIDs
+    Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getGlobalCellIDs() const
+    {return cell_global_ids_;}
+    Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getOwnedGlobalCellIDs() const
+    {return owned_cell_global_ids_;}
+    Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getGhostGlobalCellIDs() const
+    {return ghost_cell_global_ids_;}
+
+  protected:
+    PHX::View<panzer::GlobalOrdinal*> cell_global_ids_;
+    PHX::View<panzer::GlobalOrdinal*> owned_cell_global_ids_;
+    PHX::View<panzer::GlobalOrdinal*> ghost_cell_global_ids_;
   };
 
 }
