@@ -127,7 +127,7 @@ void STKConnManager::buildLocalElementMapping()
    owned_cell_global_ids_ = PHX::View<panzer::GlobalOrdinal*>("owned_global_cells",ownedElementCount_);
 
    for( std::size_t id=0; id<ownedElementCount_; ++id ) {
-     owned_cell_global_ids_(id) = bulkData.identifier( elements_->at(id) );
+     owned_cell_global_ids_(id) = bulkData.identifier( elements_->at(id) ) -1;
    }
 
    std::vector<std::size_t> ghost_id;
@@ -146,7 +146,7 @@ void STKConnManager::buildLocalElementMapping()
       neighborElementBlocks_[blockId] = Teuchos::rcp(new std::vector<LocalOrdinal>);
       for(std::size_t i=0;i<blockElmts.size();i++) {
          neighborElementBlocks_[blockId]->push_back(stkMeshDB_->elementLocalId(blockElmts[i]));
-         ghost_id.emplace_back( bulkData.identifier( blockElmts[i] ) );
+         ghost_id.emplace_back( bulkData.identifier( blockElmts[i] ) -1 );
       }
    }
 
@@ -162,7 +162,7 @@ void STKConnManager::buildLocalElementMapping()
    std::size_t allElementCount = elements_->size();
    cell_global_ids_ = PHX::View<panzer::GlobalOrdinal*>("global_cells",allElementCount);
    for( std::size_t id=0; id<allElementCount; ++id ) {
-     cell_global_ids_(id) = bulkData.identifier( elements_->at(id) );
+     cell_global_ids_(id) = bulkData.identifier( elements_->at(id) ) -1 ;
    }
 
    // allocate space for element LID to Connectivty map
