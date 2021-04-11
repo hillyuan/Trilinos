@@ -222,7 +222,8 @@ double distance(Container &nodeCoord, int i1, int i2) {
     \param  CurlCurl           [in]    H(curl) stiffness matrix
     \param  D0clean            [in]    Edge to node stiffness matrix
     \param  M0inv              [in]    H(grad) mass matrix inverse
-    \param  M1                 [in]    H(curl) mass matrix
+    \param  Ms                 [in]    H(curl) mass matrix w/ sigma
+    \param  M1                 [in]    H(curl) mass matrix w/o sigma
     \param  xh                 [out]   solution vector
     \param  b                  [in]    right-hand-side vector
     \param  TotalErrorResidual [out]   error residual
@@ -234,6 +235,7 @@ void TestMultiLevelPreconditioner_Maxwell(char ProblemType[],
                                           Epetra_CrsMatrix   & CurlCurl,
                                           Epetra_CrsMatrix   & D0clean,
                                           Epetra_CrsMatrix   & M0inv,
+                                          Epetra_CrsMatrix   & Ms,
                                           Epetra_CrsMatrix   & M1,
                                           Epetra_MultiVector & xh,
                                           Epetra_MultiVector & b,
@@ -248,7 +250,8 @@ void TestMultiLevelPreconditioner_Maxwell(char ProblemType[],
     \param  CurlCurl           [in]    H(curl) stiffness matrix
     \param  D0clean            [in]    Edge to node stiffness matrix
     \param  M0inv              [in]    H(grad) mass matrix inverse
-    \param  M1                 [in]    H(curl) mass matrix
+    \param  Ms                 [in]    H(curl) mass matrix w/ sigma
+    \param  M1                 [in]    H(curl) mass matrix w/o sigma
     \param  xh                 [out]   solution vector
     \param  b                  [in]    right-hand-side vector
     \param  TotalErrorResidual [out]   error residual
@@ -260,6 +263,7 @@ void TestMueLuMultiLevelPreconditioner_Maxwell(char ProblemType[],
                                                Epetra_CrsMatrix   & CurlCurl,
                                                Epetra_CrsMatrix   & D0clean,
                                                Epetra_CrsMatrix   & M0inv,
+                                               Epetra_CrsMatrix   & Ms,
                                                Epetra_CrsMatrix   & M1,
                                                Epetra_MultiVector & coords,
                                                Epetra_MultiVector & xh,
@@ -276,7 +280,8 @@ void TestMueLuMultiLevelPreconditioner_Maxwell(char ProblemType[],
     \param  CurlCurl           [in]    H(curl) stiffness matrix
     \param  D0clean            [in]    Edge to node stiffness matrix
     \param  M0inv              [in]    H(grad) mass matrix inverse
-    \param  M1                 [in]    H(curl) mass matrix
+    \param  Ms                 [in]    H(curl) mass matrix w/ sigma
+    \param  M1                 [in]    H(curl) mass matrix w/o sigma
     \param  xh                 [out]   solution vector
     \param  b                  [in]    right-hand-side vector
     \param  TotalErrorResidual [out]   error residual
@@ -289,6 +294,7 @@ void TestMultiLevelPreconditioner_Stratimikos(char ProblemType[],
                                               Epetra_CrsMatrix   & CurlCurl,
                                               Epetra_CrsMatrix   & D0clean,
                                               Epetra_CrsMatrix   & M0inv,
+                                              Epetra_CrsMatrix   & Ms,
                                               Epetra_CrsMatrix   & M1,
                                               Epetra_MultiVector & xh,
                                               Epetra_MultiVector & b,
@@ -303,24 +309,29 @@ void TestMultiLevelPreconditioner_Stratimikos(char ProblemType[],
     \param  CurlCurl           [in]    H(curl) stiffness matrix
     \param  D0clean            [in]    Edge to node stiffness matrix
     \param  M0inv              [in]    H(grad) mass matrix inverse
-    \param  M1                 [in]    H(curl) mass matrix
+    \param  Ms                 [in]    H(curl) mass matrix w/ sigma
+    \param  M1                 [in]    H(curl) mass matrix w/o sigma
     \param  xh                 [out]   solution vector
     \param  b                  [in]    right-hand-side vector
     \param  TotalErrorResidual [out]   error residual
     \param  TotalErrorExactSol [out]   error in xh
 
 */
-void TestMueLuMultiLevelPreconditioner_Stratimikos(char ProblemType[],
-                                                   Teuchos::ParameterList   & MLList,
-                                                   Epetra_CrsMatrix   & CurlCurl,
-                                                   Epetra_CrsMatrix   & D0clean,
-                                                   Epetra_CrsMatrix   & M0inv,
-                                                   Epetra_CrsMatrix   & M1,
-                                                   Epetra_MultiVector & coords,
-                                                   Epetra_MultiVector & xh,
-                                                   Epetra_MultiVector & b,
-                                                   double & TotalErrorResidual,
-                                                   double & TotalErrorExactSol);
+void TestPreconditioner_Stratimikos(char ProblemType[],
+                                    Teuchos::ParameterList & SList,
+                                    Epetra_CrsMatrix   & CurlCurl,
+                                    Epetra_CrsMatrix   & D0clean,
+                                    Epetra_CrsMatrix   & M0inv,
+                                    Epetra_CrsMatrix   & Ms,
+                                    Epetra_CrsMatrix   & M1,
+                                    Epetra_MultiVector & coords,
+                                    Epetra_Vector      & Nx,
+                                    Epetra_Vector      & Ny,
+                                    Epetra_Vector      & Nz,
+                                    Epetra_MultiVector & xh,
+                                    Epetra_MultiVector & b,
+                                    double & TotalErrorResidual,
+                                    double & TotalErrorExactSol);
   #endif
 #endif
 
@@ -418,7 +429,7 @@ int main(int argc, char *argv[]) {
   bool printedHelp = false;
   // Values of command-line arguments.
   int nx, ny, nz;
-  std::string xmlInFileName;
+  std::string xmlInFileName, xmlStratimikos;
   bool verbose, debug, jiggle, dump;
   std::string solverName;
   double scaling = 1.0;
@@ -428,7 +439,8 @@ int main(int argc, char *argv[]) {
   ny = 10;
   nz = 10;
   xmlInFileName = "Maxwell.xml";
-  solverName = "MueLu";
+  xmlStratimikos = "stratimikos.xml";
+  solverName = "default";
   verbose = false;
   debug = false;
   jiggle = false;
@@ -444,9 +456,10 @@ int main(int argc, char *argv[]) {
                   "std::string value as the Pamgen mesh specification.  "
                   "Otherwise, we tell Pamgen to make a cube, using "
                   "nx, ny, and nz.");
+  cmdp.setOption ("stratimikosParams", &xmlStratimikos, "XML file with Stratimikos inputs");
   cmdp.setOption ("solverName", &solverName, "Name of iterative linear solver "
                   "to use for solving the linear system.  Examples include "
-                  "\"ML\", \"MueLu\", \"ML-Stratimikos\" and \"MueLu-Stratimikos\".");
+                  "\"ML\", \"MueLu\", \"ML-Stratimikos\" and \"Stratimikos\".");
   cmdp.setOption ("verbose", "quiet", &verbose,
                   "Whether to print verbose status output.");
   cmdp.setOption ("debug", "release", &debug,
@@ -556,6 +569,17 @@ int main(int argc, char *argv[]) {
     "  end                        \n"
     "end                          \n";
   meshInput = inputList.get("meshInput", meshInput);
+
+  // Get the solver name from input deck or command line
+  if(solverName == "default") {
+    if(inputList.isParameter("Preconditioner")) 
+      solverName=inputList.get("Preconditioner","MueLu");
+    else
+      solverName="MueLu";
+  }  
+
+
+
 
 
   /**********************************************************************************/
@@ -699,9 +723,7 @@ int main(int argc, char *argv[]) {
   FieldContainer<int> elemToNode(numElems,numNodesPerElem);
   FieldContainer<double> muVal(numElems);
   FieldContainer<double> sigmaVal(numElems);
-  double l_max_sigma=0.0, l_max_mu = 0.0;
-  double l_min_sigma=std::numeric_limits<double>::max(), l_min_mu=std::numeric_limits<double>::max();
-  
+
   for(long long b = 0; b < numElemBlk; b++){
     for(long long el = 0; el < elements[b]; el++){
       for (int j=0; j<numNodesPerElem; j++) {
@@ -709,10 +731,7 @@ int main(int argc, char *argv[]) {
       }
       muVal(telct) = mu[b];
       sigmaVal(telct) = sigma[b];
-      l_max_sigma = std::max(l_max_sigma,sigma[b]);
-      l_min_sigma = std::min(l_min_sigma,sigma[b]);
-      l_max_mu    = std::max(l_max_mu,mu[b]);
-      l_min_mu    = std::min(l_min_mu,mu[b]);
+      
       telct ++;
     }
   }
@@ -1176,6 +1195,7 @@ int main(int argc, char *argv[]) {
 
   Epetra_FECrsMatrix StiffMatrixC(Copy, globalMapC, numFieldsC);
   Epetra_FECrsMatrix MassMatrixC (Copy, globalMapC, numFieldsC);
+  Epetra_FECrsMatrix MassMatrixC1 (Copy, globalMapC, numFieldsC);// No sigma
   Epetra_FECrsMatrix MassMatrixG (Copy, globalMapG, numFieldsG);
   Epetra_FEVector    rhsVector   (globalMapC);
 
@@ -1264,8 +1284,6 @@ int main(int argc, char *argv[]) {
   Epetra_FECrsMatrix DGrad(Copy, globalMapC, 2);
 
   // Estimate the global CFL based on minimum edge length and assumed dt=1"
-  double l_min_dx = std::numeric_limits<double>::max();
-  double l_max_dx = 0.0;
 
   // Grab edge coordinates (for dumping to disk)
   Epetra_Vector EDGE_X(globalMapC);
@@ -1284,9 +1302,6 @@ int main(int argc, char *argv[]) {
       EDGE_X[elid] = (nodeCoordx[edgeToNode(j,0)] + nodeCoordx[edgeToNode(j,1)])/2.0;
       EDGE_Y[elid] = (nodeCoordy[edgeToNode(j,0)] + nodeCoordy[edgeToNode(j,1)])/2.0;
       EDGE_Z[elid] = (nodeCoordz[edgeToNode(j,0)] + nodeCoordz[edgeToNode(j,1)])/2.0;
-      double my_dx = distance(nodeCoord,edgeToNode(j,0),edgeToNode(j,1));
-      l_min_dx = std::min(l_min_dx,my_dx);
-      l_max_dx = std::max(l_max_dx,my_dx);
       elid++;
     }
   }
@@ -1298,20 +1313,58 @@ int main(int argc, char *argv[]) {
   if(MyPID==0) {std::cout << "Building incidence matrix                   "
                           << Time.ElapsedTime() << " sec \n"  ; Time.ResetStartTime();}
 
+  // Local CFL Calculations
+  double DOUBLE_MAX = std::numeric_limits<double>::max();  
+  double l_max_sigma=0.0, l_max_mu = 0.0, l_max_cfl = 0.0, l_max_dx = 0.0, l_max_osm=0.0;
+  double l_min_sigma=DOUBLE_MAX, l_min_mu= DOUBLE_MAX, l_min_cfl = DOUBLE_MAX, l_min_dx = DOUBLE_MAX, l_min_osm=DOUBLE_MAX;
+
+  for(long long b = 0, idx=0; b < numElemBlk; b++){
+    for(long long el = 0; el < elements[b]; el++){
+      l_max_sigma = std::max(l_max_sigma,sigmaVal(idx));
+      l_min_sigma = std::min(l_min_sigma,sigmaVal(idx));
+      l_max_mu    = std::max(l_max_mu,muVal(idx));
+      l_min_mu    = std::min(l_min_mu,muVal(idx));  
+      l_max_osm   = std::max(l_max_osm,1/(sigmaVal(idx)*muVal(idx)));
+      l_min_osm   = std::min(l_min_osm,1/(sigmaVal(idx)*muVal(idx)));
+      
+      // We'll chose "dx" as the max/min edge length over the cell
+      double my_edge_min = DOUBLE_MAX, my_edge_max=0.0;
+      for(int j=0; j<numEdgesPerElem; j++) {
+        int edge = elemToEdge(idx,j);
+        double my_dx = distance(nodeCoord,edgeToNode(edge,0),edgeToNode(edge,1));
+        my_edge_max = std::max(my_edge_max,my_dx);
+        my_edge_min = std::min(my_edge_min,my_dx);
+      }
+
+      l_max_dx = std::max(l_max_dx,my_edge_max);
+      l_min_dx = std::min(l_min_dx,my_edge_min);
+
+      // Note: The max/min's switch here because they're in the denominator
+      double my_max_cfl = 1.0 / (sigmaVal(idx) * muVal(idx) * l_min_dx * l_min_dx);
+      double my_min_cfl = 1.0 / (sigmaVal(idx) * muVal(idx) * l_max_dx * l_max_dx);
+      l_max_cfl = std::max(l_max_cfl,my_max_cfl);
+      l_min_cfl = std::min(l_min_cfl,my_min_cfl);
+      
+      idx++;
+    }
+  }
 
   // CFL Range Calculations (assuming a timestep dt=1)
-  double g_max_dx, g_min_dx, g_max_mu, g_min_mu, g_max_sigma, g_min_sigma;
+  double g_max_dx, g_min_dx, g_max_mu, g_min_mu, g_max_sigma, g_min_sigma, g_max_cfl, g_min_cfl, g_max_osm, g_min_osm;
   Comm.MaxAll(&l_max_dx,&g_max_dx,1);       Comm.MinAll(&l_min_dx,&g_min_dx,1);
   Comm.MaxAll(&l_max_sigma,&g_max_sigma,1); Comm.MinAll(&l_min_sigma,&g_min_sigma,1);
   Comm.MaxAll(&l_max_mu,&g_max_mu,1);       Comm.MinAll(&l_min_mu,&g_min_mu,1);
+  Comm.MaxAll(&l_max_cfl,&g_max_cfl,1);     Comm.MinAll(&l_min_cfl,&g_min_cfl,1);
+  Comm.MaxAll(&l_max_osm,&g_max_osm,1);     Comm.MinAll(&l_min_osm,&g_min_osm,1);
 
   if(MyPID==0) {
     std::cout<<"*** Parameter Ranges ***"<<std::endl;
     std::cout<<"Edge dx Range      : "<<g_min_dx << " to "<<g_max_dx<<std::endl;
     std::cout<<"Sigma Range        : "<<g_min_sigma << " to "<<g_max_sigma<<std::endl;
     std::cout<<"Mu Range           : "<<g_min_mu << " to "<<g_max_mu<<std::endl;
-    std::cout<<"Diffusive CFL Range: " << 1.0/(g_max_sigma * g_max_mu * g_max_dx * g_max_dx) <<
-      " to "<< 1.0/(g_min_sigma * g_min_mu * g_min_dx * g_min_dx) <<std::endl;
+    std::cout<<"1/(Sigma Mu) Range : "<<g_min_osm << " to "<<g_max_osm<<std::endl;
+    std::cout<<"Diffusive CFL Range: "<<g_min_cfl<< " to "<<g_max_cfl<<std::endl;
+
   }
 
 
@@ -1517,9 +1570,11 @@ int main(int argc, char *argv[]) {
 
     // Containers for element HCURL mass matrix
     FieldContainer<double> massMatrixHCurl           (worksetSize, numFieldsC, numFieldsC);
+    FieldContainer<double> massMatrixHCurlNoSigma    (worksetSize, numFieldsC, numFieldsC);
     FieldContainer<double> weightedMeasureSigma      (worksetSize, numCubPoints);
     FieldContainer<double> HCValsTransformed         (worksetSize, numFieldsC, numCubPoints, spaceDim);
     FieldContainer<double> HCValsTransformedWeighted (worksetSize, numFieldsC, numCubPoints, spaceDim);
+    FieldContainer<double> HCValsTransformedWeightedNoSigma (worksetSize, numFieldsC, numCubPoints, spaceDim);
 
     // Containers for element HCURL stiffness matrix
     FieldContainer<double> stiffMatrixHCurl          (worksetSize, numFieldsC, numFieldsC);
@@ -1624,6 +1679,16 @@ int main(int argc, char *argv[]) {
     // apply edge signs
     IntrepidFSTools::applyLeftFieldSigns<double> (massMatrixHCurl, worksetEdgeSigns);
     IntrepidFSTools::applyRightFieldSigns<double>(massMatrixHCurl, worksetEdgeSigns);
+
+
+    // Now for the no-sigma version
+    IntrepidFSTools::multiplyMeasure<double>(HCValsTransformedWeightedNoSigma,
+                                             weightedMeasure, HCValsTransformed);
+
+    // integrate to compute element mass matrix
+    IntrepidFSTools::integrate<double>(massMatrixHCurlNoSigma,
+                                       HCValsTransformed, HCValsTransformedWeightedNoSigma,
+                                       COMP_BLAS);
 
     if(MyPID==0) {std::cout << "Compute HCURL Mass Matrix                   "
                             << Time.ElapsedTime() << " sec \n"; Time.ResetStartTime();}
@@ -1848,7 +1913,11 @@ int main(int argc, char *argv[]) {
           double massCContribution  = massMatrixHCurl (worksetCellOrdinal, cellEdgeRow, cellEdgeCol);
           double stiffCContribution = stiffMatrixHCurl(worksetCellOrdinal, cellEdgeRow, cellEdgeCol);
 
+          double massCContribution1  = massMatrixHCurlNoSigma (worksetCellOrdinal, cellEdgeRow, cellEdgeCol);
+
           MassMatrixC.InsertGlobalValues (1, &globalEdgeRow, 1, &globalEdgeCol, &massCContribution);
+          MassMatrixC1.InsertGlobalValues (1, &globalEdgeRow, 1, &globalEdgeCol, &massCContribution1);
+
           StiffMatrixC.InsertGlobalValues(1, &globalEdgeRow, 1, &globalEdgeCol, &stiffCContribution);
 
 
@@ -1870,6 +1939,7 @@ int main(int argc, char *argv[]) {
   MassMatrixG.GlobalAssemble();  MassMatrixG.FillComplete();
   StiffMatrixC.GlobalAssemble(); StiffMatrixC.FillComplete();
   MassMatrixC.GlobalAssemble();  MassMatrixC.FillComplete();
+  MassMatrixC1.GlobalAssemble(); MassMatrixC1.FillComplete();
   rhsVector.GlobalAssemble();
 
 #ifdef HAVE_XPETRA_EPETRA
@@ -1895,7 +1965,8 @@ int main(int argc, char *argv[]) {
     EpetraExt::MultiVectorToMatrixMarketFile("edge_signs.dat",edgeSign,0,0,false);
 
     EpetraExt::RowMatrixToMatrixMarketFile("mag_k1_matrix.mat",StiffMatrixC);
-    EpetraExt::RowMatrixToMatrixMarketFile("mag_m1_matrix.mat",MassMatrixC);
+    EpetraExt::RowMatrixToMatrixMarketFile("mag_ms_matrix.mat",MassMatrixC);
+    EpetraExt::RowMatrixToMatrixMarketFile("mag_m1_matrix.mat",MassMatrixC1);
     EpetraExt::RowMatrixToMatrixMarketFile("mag_t_matrix.mat",DGrad);
   }
   
@@ -2013,6 +2084,11 @@ int main(int argc, char *argv[]) {
   List11.set("y-coordinates",&Ny[0]);
   List11.set("z-coordinates",&Nz[0]);
 
+  Teuchos::ParameterList &List22=MLList.sublist("refmaxwell: 22list");
+  List22.set("x-coordinates",&Nx[0]);
+  List22.set("y-coordinates",&Ny[0]);
+  List22.set("z-coordinates",&Nz[0]);
+
   // Parameter list for MueLu
   Teuchos::ParameterList MueLuList;
   Teuchos::RCP<const Teuchos::Comm<int> > comm = Teuchos::DefaultComm<int>::getComm();
@@ -2071,7 +2147,8 @@ int main(int argc, char *argv[]) {
 
   Epetra_FEVector xh(rhsVector);
 
-  MassMatrixC.SetLabel("M1");
+  MassMatrixC.SetLabel("Ms");
+  MassMatrixC1.SetLabel("M1");
   StiffMatrixC.SetLabel("K1");
   DGrad.SetLabel("D0");
   MassMatrixGinv.SetLabel("M0^{-1}");
@@ -2086,7 +2163,7 @@ int main(int argc, char *argv[]) {
     // ML version
     if(MyPID==0) {std::cout << "\n\nML solve \n";}
     TestMultiLevelPreconditioner_Maxwell(probType,MLList,StiffMatrixC,
-                                         DGrad,MassMatrixGinv,MassMatrixC,
+                                         DGrad,MassMatrixGinv,MassMatrixC,MassMatrixC1,
                                          xh,rhsVector,
                                          TotalErrorResidual, TotalErrorExactSol);
   }
@@ -2095,14 +2172,14 @@ int main(int argc, char *argv[]) {
   if (solverName == "ML-Stratimikos") {
     if(MyPID==0) {std::cout << "\n\nML Stratimikos solve \n";}
     TestMultiLevelPreconditioner_Stratimikos(probType,MLList,StiffMatrixC,
-                                             DGrad,MassMatrixGinv,MassMatrixC,
+                                             DGrad,MassMatrixGinv,MassMatrixC,MassMatrixC1,
                                              xh,rhsVector,
                                              TotalErrorResidual, TotalErrorExactSol);
   }
 #endif
 
   Epetra_MultiVector coords(MassMatrixGinv.RowMap(),3);
-  if (solverName == "MueLu" || solverName == "MueLu-Stratimikos") {
+  if (solverName == "MueLu" || solverName == "Stratimikos") {
     // build coordinates multivector
 
     double* xx = coords[0];
@@ -2121,20 +2198,22 @@ int main(int argc, char *argv[]) {
     // MueLu RefMaxwell
     if(MyPID==0) {std::cout << "\n\nMueLu solve \n";}
     TestMueLuMultiLevelPreconditioner_Maxwell(probType,MueLuList,StiffMatrixC,
-                                              DGrad,MassMatrixGinv,MassMatrixC,
+                                              DGrad,MassMatrixGinv,MassMatrixC,MassMatrixC1,
                                               coords,
                                               xh,rhsVector,
                                               TotalErrorResidual, TotalErrorExactSol);
   }
 
   #ifdef HAVE_TRILINOSCOUPLINGS_STRATIMIKOS
-  if (solverName == "MueLu-Stratimikos") {
-    if(MyPID==0) {std::cout << "\n\nMueLu Stratimikos solve \n";}
-    TestMueLuMultiLevelPreconditioner_Stratimikos(probType,MueLuList,StiffMatrixC,
-                                                  DGrad,MassMatrixGinv,MassMatrixC,
-                                                  coords,
-                                                  xh,rhsVector,
-                                                  TotalErrorResidual, TotalErrorExactSol);
+  if (solverName == "Stratimikos") {
+    if(MyPID==0) {std::cout << "\n\nStratimikos solve \n";}
+    Teuchos::ParameterList SList;
+    Teuchos::updateParametersFromXmlFile(xmlStratimikos,Teuchos::ptr (&SList));
+    TestPreconditioner_Stratimikos(probType,SList,StiffMatrixC,
+                                   DGrad,MassMatrixGinv,MassMatrixC,MassMatrixC1,
+                                   coords,Nx,Ny,Nz,
+                                   xh,rhsVector,
+                                   TotalErrorResidual, TotalErrorExactSol);
   }
   #endif
 #endif
@@ -2479,6 +2558,7 @@ void TestMueLuMultiLevelPreconditioner_Maxwell(char ProblemType[],
                                                Epetra_CrsMatrix   & CurlCurl,
                                                Epetra_CrsMatrix   & D0clean,
                                                Epetra_CrsMatrix   & M0inv,
+                                               Epetra_CrsMatrix   & Ms,
                                                Epetra_CrsMatrix   & M1,
                                                Epetra_MultiVector & coords,
                                                Epetra_MultiVector & xh,
@@ -2520,6 +2600,10 @@ void TestMueLuMultiLevelPreconditioner_Maxwell(char ProblemType[],
   Teuchos::RCP<CrsMatrixWrap> m1Op = Teuchos::rcp(new CrsMatrixWrap(m1Mat));
   Teuchos::RCP<Matrix> M1Op = Teuchos::rcp_dynamic_cast<Matrix>(m1Op);
 
+  Teuchos::RCP<CrsMatrix> msMat = Teuchos::rcp(new EpetraCrsMatrix(Teuchos::rcpFromRef(Ms)));
+  Teuchos::RCP<CrsMatrixWrap> msOp = Teuchos::rcp(new CrsMatrixWrap(msMat));
+  Teuchos::RCP<Matrix> MsOp = Teuchos::rcp_dynamic_cast<Matrix>(msOp);
+
   Teuchos::RCP<MultiVector> xxh = Teuchos::rcp(new EpetraMultiVector(Teuchos::rcpFromRef(xh)));
   Teuchos::RCP<MultiVector> xb  = Teuchos::rcp(new EpetraMultiVector(Teuchos::rcpFromRef(b)));
 
@@ -2529,7 +2613,7 @@ void TestMueLuMultiLevelPreconditioner_Maxwell(char ProblemType[],
 
   // construct preconditioner
   Teuchos::RCP<MueLu::RefMaxwell<SC,LO,GO,NO> > preconditioner
-    = Teuchos::rcp( new MueLu::RefMaxwell<SC,LO,GO,NO>(curlcurlOp,d0cOp,M0invOp,
+  = Teuchos::rcp( new MueLu::RefMaxwell<SC,LO,GO,NO>(curlcurlOp,d0cOp,MsOp,M0invOp,
                                                        M1Op,Teuchos::null,xcoords,MLList) );
 
   MueLu::AztecEpetraOperator prec(preconditioner);
@@ -2570,6 +2654,7 @@ void TestMultiLevelPreconditioner_Maxwell(char ProblemType[],
                                           Epetra_CrsMatrix   & CurlCurl,
                                           Epetra_CrsMatrix   & D0clean,
                                           Epetra_CrsMatrix   & M0inv,
+                                          Epetra_CrsMatrix   & Ms,
                                           Epetra_CrsMatrix   & M1,
                                           Epetra_MultiVector & xh,
                                           Epetra_MultiVector & b,
@@ -2579,7 +2664,7 @@ void TestMultiLevelPreconditioner_Maxwell(char ProblemType[],
 
   Epetra_Time SetupTime(CurlCurl.Comm());
 
-  ML_Epetra::RefMaxwellPreconditioner RMP(CurlCurl,D0clean,M1,M0inv,M1,MLList);
+  ML_Epetra::RefMaxwellPreconditioner RMP(CurlCurl,D0clean,Ms,M0inv,M1,MLList);
 
   if(CurlCurl.Comm().MyPID()==0) {std::cout << "Setup time: " << SetupTime.ElapsedTime()
                                             << " sec \n"; SetupTime.ResetStartTime();}
@@ -2621,6 +2706,7 @@ void TestMultiLevelPreconditioner_Stratimikos(char ProblemType[],
                                               Epetra_CrsMatrix   & CurlCurl,
                                               Epetra_CrsMatrix   & D0clean,
                                               Epetra_CrsMatrix   & M0inv,
+                                              Epetra_CrsMatrix   & Ms,
                                               Epetra_CrsMatrix   & M1,
                                               Epetra_MultiVector & xh,
                                               Epetra_MultiVector & b,
@@ -2633,9 +2719,7 @@ void TestMultiLevelPreconditioner_Stratimikos(char ProblemType[],
   MLList.set("D0",rcp((const Epetra_CrsMatrix*) &D0clean,false));
   MLList.set("M0inv",rcp((const Epetra_CrsMatrix*) &M0inv,false));
   MLList.set("M1",rcp((const Epetra_CrsMatrix*) &M1,false));
-
-  // Double up with Ms = M1
-  MLList.set("Ms",rcp((const Epetra_CrsMatrix*) &M1,false));
+  MLList.set("Ms",rcp((const Epetra_CrsMatrix*) &Ms,false));
 
 
   /* Build the rest of the Stratimikos list */
@@ -2683,51 +2767,94 @@ void TestMultiLevelPreconditioner_Stratimikos(char ProblemType[],
 /*************************************************************************************/
 /*************************** MueLu PRECONDITIONER ************************************/
 /*************************************************************************************/
-void TestMueLuMultiLevelPreconditioner_Stratimikos(char ProblemType[],
-                                                   Teuchos::ParameterList   & MLList,
-                                                   Epetra_CrsMatrix   & CurlCurl,
-                                                   Epetra_CrsMatrix   & D0clean,
-                                                   Epetra_CrsMatrix   & M0inv,
-                                                   Epetra_CrsMatrix   & M1,
-                                                   Epetra_MultiVector & coords,
-                                                   Epetra_MultiVector & xh,
-                                                   Epetra_MultiVector & b,
-                                                   double & TotalErrorResidual,
-                                                   double & TotalErrorExactSol){
-#if defined(HAVE_MUELU_EPETRA) and defined(HAVE_TRILINOSCOUPLINGS_MUELU)
-  // typedef double Scalar;
-  typedef int LocalOrdinal;
-  typedef int GlobalOrdinal;
-  typedef LocalOrdinal LO;
-  typedef GlobalOrdinal GO;
-  typedef Xpetra::EpetraNode Node;
-
+void TestPreconditioner_Stratimikos(char ProblemType[],
+                                    Teuchos::ParameterList & SList,
+                                    Epetra_CrsMatrix   & CurlCurl,
+                                    Epetra_CrsMatrix   & D0clean,
+                                    Epetra_CrsMatrix   & M0inv,
+                                    Epetra_CrsMatrix   & Ms,
+                                    Epetra_CrsMatrix   & M1,
+                                    Epetra_MultiVector & coords,
+                                    Epetra_Vector      & Nx,
+                                    Epetra_Vector      & Ny,
+                                    Epetra_Vector      & Nz,
+                                    Epetra_MultiVector & xh,
+                                    Epetra_MultiVector & b,
+                                    double & TotalErrorResidual,
+                                    double & TotalErrorExactSol){
   using Teuchos::rcp;
   using Teuchos::RCP;
 
   Epetra_Time SetupTime(CurlCurl.Comm());
 
   /* Build the rest of the Stratimikos list */
-  Teuchos::ParameterList SList;
-  SList.set("Linear Solver Type","Belos");
-  SList.sublist("Linear Solver Types").sublist("Belos").set("Solver Type", "Pseudo Block CG");
-  SList.sublist("Linear Solver Types").sublist("Belos").sublist("Solver Types").sublist("Pseudo Block CG").set("Output Frequency",10);
-  SList.sublist("Linear Solver Types").sublist("Belos").sublist("Solver Types").sublist("Pseudo Block CG").set("Maximum Iterations",500);
-  SList.sublist("Linear Solver Types").sublist("Belos").sublist("Solver Types").sublist("Pseudo Block CG").set("Convergence Tolerance",1e-10);
-  SList.sublist("Linear Solver Types").sublist("Belos").sublist("Solver Types").sublist("Pseudo Block CG").set("Output Style",1);
-  SList.sublist("Linear Solver Types").sublist("Belos").sublist("Solver Types").sublist("Pseudo Block CG").set("Verbosity",33);
-  SList.sublist("Linear Solver Types").sublist("Belos").sublist("VerboseObject").set("Verbosity Level", "medium");
+  SList.sublist("Preconditioner Types").sublist("ML").set("Base Method Defaults","refmaxwell");
 
-  SList.set("Preconditioner Type","MueLuRefMaxwell");
-  MLList.set("parameterlist: syntax","muelu");
+  SList.sublist("Preconditioner Types").sublist("ML").sublist("ML Settings").set("D0","substitute const D0");
+  SList.sublist("Preconditioner Types").sublist("ML").sublist("ML Settings").set("M0inv","substitute const M0inv");
+  SList.sublist("Preconditioner Types").sublist("ML").sublist("ML Settings").set("M1","substitute const M1");
+  SList.sublist("Preconditioner Types").sublist("ML").sublist("ML Settings").set("Ms","substitute const Ms");
+  SList.sublist("Preconditioner Types").sublist("ML").sublist("ML Settings").sublist("refmaxwell: 11list").set("x-coordinates","substitute x-coordinates");
+  SList.sublist("Preconditioner Types").sublist("ML").sublist("ML Settings").sublist("refmaxwell: 11list").set("y-coordinates","substitute y-coordinates");
+  SList.sublist("Preconditioner Types").sublist("ML").sublist("ML Settings").sublist("refmaxwell: 11list").set("z-coordinates","substitute z-coordinates");
+  SList.sublist("Preconditioner Types").sublist("ML").sublist("ML Settings").sublist("refmaxwell: 22list").set("x-coordinates","substitute x-coordinates");
+  SList.sublist("Preconditioner Types").sublist("ML").sublist("ML Settings").sublist("refmaxwell: 22list").set("y-coordinates","substitute y-coordinates");
+  SList.sublist("Preconditioner Types").sublist("ML").sublist("ML Settings").sublist("refmaxwell: 22list").set("z-coordinates","substitute z-coordinates");
 
-  SList.sublist("Preconditioner Types").set("MueLuRefMaxwell",MLList);
+  SList.sublist("Preconditioner Types").sublist("MueLuRefMaxwell").set("D0","substitute D0");
+  SList.sublist("Preconditioner Types").sublist("MueLuRefMaxwell").set("M0inv","substitute M0inv");
+  SList.sublist("Preconditioner Types").sublist("MueLuRefMaxwell").set("M1","substitute M1");
+  SList.sublist("Preconditioner Types").sublist("MueLuRefMaxwell").set("Ms","substitute Ms");
+  SList.sublist("Preconditioner Types").sublist("MueLuRefMaxwell").set("Coordinates","substitute Coordinates");
+
   /* Add matrices to parameterlist */
-  SList.sublist("Preconditioner Types").sublist("MueLuRefMaxwell").set("D0",rcp((Epetra_CrsMatrix*) &D0clean,false));
-  SList.sublist("Preconditioner Types").sublist("MueLuRefMaxwell").set("M0inv",rcp((Epetra_CrsMatrix*) &M0inv,false));
-  SList.sublist("Preconditioner Types").sublist("MueLuRefMaxwell").set("M1",rcp((Epetra_CrsMatrix*) &M1,false));
-  SList.sublist("Preconditioner Types").sublist("MueLuRefMaxwell").set("Coordinates",rcp((Epetra_MultiVector*) &coords,false));
-
+  Teuchos::ParameterList& precTypesPL = SList.sublist("Preconditioner Types");
+  std::list<Teuchos::ParameterList*> sublists;
+  sublists.push_back(&precTypesPL);
+  while (sublists.size() > 0) {
+    Teuchos::ParameterList* sublist = sublists.front();
+    sublists.pop_front();
+    std::list<std::string> keys;
+    for (Teuchos::ParameterList::ConstIterator it = sublist->begin(); it != sublist->end(); ++it) {
+      const std::string &entryName = sublist->name(it);
+      const Teuchos::ParameterEntry &theEntry = sublist->entry(it);
+      if (theEntry.isList()) {
+        Teuchos::ParameterList& sl = sublist->sublist(entryName);
+        sublists.push_back(&sl);
+      } else if (theEntry.isType<std::string>() && Teuchos::getValue<std::string>(theEntry).find("substitute ") != std::string::npos) {
+        keys.push_back(entryName);
+      }
+    }
+    for (auto key_it = keys.begin(); key_it != keys.end(); ++key_it) {
+      std::string value = sublist->get<std::string>(*key_it).substr(11, std::string::npos);
+      if (value == "D0")
+        sublist->set(*key_it, rcp((Epetra_CrsMatrix*) &D0clean,false));
+      else if (value == "M0inv")
+        sublist->set(*key_it, rcp((Epetra_CrsMatrix*) &M0inv,false));
+      else if (value == "M1")
+        sublist->set(*key_it, rcp((Epetra_CrsMatrix*) &M1,false));
+      else if (value == "Ms")
+        sublist->set(*key_it, rcp((Epetra_CrsMatrix*) &Ms,false));
+      else if (value == "Coordinates")
+        sublist->set(*key_it, rcp((Epetra_MultiVector*) &coords,false));
+      else if (value == "const D0")
+        sublist->set(*key_it, rcp((const Epetra_CrsMatrix*) &D0clean,false));
+      else if (value == "const M0inv")
+        sublist->set(*key_it, rcp((const Epetra_CrsMatrix*) &M0inv,false));
+      else if (value == "const M1")
+        sublist->set(*key_it, rcp((const Epetra_CrsMatrix*) &M1,false));
+      else if (value == "const Ms")
+        sublist->set(*key_it, rcp((const Epetra_CrsMatrix*) &Ms,false));
+      else if (value == "const Coordinates")
+        sublist->set(*key_it, rcp((const Epetra_MultiVector*) &coords,false));
+      else if (value == "x-coordinates")
+        sublist->set(*key_it, &Nx[0]);
+      else if (value == "y-coordinates")
+        sublist->set(*key_it, &Ny[0]);
+      else if (value == "z-coordinates")
+        sublist->set(*key_it, &Nz[0]);
+    }
+  }
 
   Epetra_Time Time(CurlCurl.Comm());
 
@@ -2741,7 +2868,15 @@ void TestMueLuMultiLevelPreconditioner_Stratimikos(char ProblemType[],
 
   /* Stratimikos setup */
   Stratimikos::DefaultLinearSolverBuilder linearSolverBuilder;
+#if defined(HAVE_MUELU_EPETRA) and defined(HAVE_TRILINOSCOUPLINGS_MUELU)
+  // typedef double Scalar;
+  typedef int LocalOrdinal;
+  typedef int GlobalOrdinal;
+  typedef LocalOrdinal LO;
+  typedef GlobalOrdinal GO;
+  typedef Xpetra::EpetraNode Node;
   Stratimikos::enableMueLuRefMaxwell<LO,GO,Node>(linearSolverBuilder);                // Register MueLu as a Stratimikos preconditioner strategy.
+#endif
   linearSolverBuilder.setParameterList(rcp(&SList,false));
   RCP<Thyra::LinearOpWithSolveFactoryBase<double> > lowsFactory = createLinearSolveStrategy(linearSolverBuilder);
   RCP<Thyra::LinearOpWithSolveBase<double> > lows = Thyra::linearOpWithSolve<double>(*lowsFactory,At);
@@ -2756,7 +2891,6 @@ void TestMueLuMultiLevelPreconditioner_Stratimikos(char ProblemType[],
   solution_test(msg,CurlCurl,x,b,xexact,Time,TotalErrorExactSol,TotalErrorResidual);
 
   xh = x;
-#endif
 }
 
 #endif  // HAVE_TRILINOSCOUPLINGS_STRATIMIKOS
