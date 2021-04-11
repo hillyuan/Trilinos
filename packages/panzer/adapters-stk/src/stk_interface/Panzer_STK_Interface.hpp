@@ -421,12 +421,31 @@ public:
      * to be in a particular element block. The Entites in the vector should be of dimension
      * <code>0</code>.
      *
-     * \param[in] sideName Name of side set
+     * \param[in] nodeName Name of node set
      * \param[in] blockName Name of block
      * \param[in,out] nodes Vector of entities containing the requested nodes.
      */
 
-   void getMyNodes(const std::string & sideName,const std::string & blockName,std::vector<stk::mesh::Entity> & nodes) const;
+   void getMyNodeSet(const std::string & nodeName,const std::string & blockName,std::vector<stk::mesh::Entity> & nodes) const;
+   void getMyNodeSetIds(const std::string & nodesetName,const std::string & blockName,std::vector<stk::mesh::EntityId> & nodes) const;
+	
+   /** Get Entities corresponding to the node set requested. The Entites in the vector should be of dimension
+     * <code>0</code>.
+     *
+     * \param[in] nodesetName Name of node set
+     * \param[out] nodes Vector of entities containing the requested nodes.
+     */
+   void getOwnedNodeSets(const std::string & nodesetName, std::vector<stk::mesh::Entity> & nodes) const;
+   void getOwnedNodeSetsId(const std::string & nodesetName, std::vector<stk::mesh::EntityId> & nodeIds) const;
+	
+   /** Get Entities corresponding to the node set requested. The Entites in the vector should be of dimension
+     * <code>0</code>.
+     *
+     * \param[in] nodesetName Name of node set
+     * \param[out] nodes Vector of entities containing the requested nodes.
+     */
+   void getAllNodeSets(const std::string & nodesetName, std::vector<stk::mesh::Entity> & nodes) const;
+   void getAllNodeSetsId(const std::string & nodesetName, std::vector<stk::mesh::EntityId> & nodeIds) const;
 
    /**
     * Searches for connected entity by rank and relation id. Returns
