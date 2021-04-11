@@ -107,6 +107,7 @@ void STKConnManager::buildLocalElementMapping()
    // defines ordering of blocks
    std::vector<std::string> blockIds;
    stkMeshDB_->getElementBlockNames(blockIds);
+   stk::mesh::BulkData& bulkData = *stkMeshDB_->getBulkData();
 
    std::size_t blockIndex=0;
    for(std::vector<std::string>::const_iterator idItr=blockIds.begin();
@@ -127,10 +128,15 @@ void STKConnManager::buildLocalElementMapping()
    }
 
    ownedElementCount_ = elements_->size();
+   owned_cell_global_ids_ = PHX::View<panzer::GlobalOrdinal*>("owned_global_cells",ownedElementCount_);
 
-   blockIndex=0;
+   for( std::size_t id=0; id<ownedElementCount_; ++id ) {
+     owned_cell_global_ids_(id) = bulkData.identifier( elements_->at(id) ) -1;
+   }
+
+   std::vector<std::size_t> ghost_id;
    for(std::vector<std::string>::const_iterator idItr=blockIds.begin();
-       idItr!=blockIds.end();++idItr,++blockIndex) {
+       idItr!=blockIds.end();++idItr) {
       std::string blockId = *idItr;
 
       // grab elements on this block
@@ -142,12 +148,26 @@ void STKConnManager::buildLocalElementMapping()
 
       // build block to LID map
       neighborElementBlocks_[blockId] = Teuchos::rcp(new std::vector<LocalOrdinal>);
-      for(std::size_t i=0;i<blockElmts.size();i++)
+      for(std::size_t i=0;i<blockElmts.size();i++) {
          neighborElementBlocks_[blockId]->push_back(stkMeshDB_->elementLocalId(blockElmts[i]));
+		 ghost_id.emplace_back( bulkData.identifier( blockElmts[i] ) -1 );
+	  }
+   }
+	
+   std::size_t ghostElementCount = ghost_id.size();
+   ghost_cell_global_ids_ = PHX::View<panzer::GlobalOrdinal*>("ghost_global_cells",ghostElementCount);
+   for( std::size_t id=0; id<ghostElementCount; ++id ) {
+     ghost_cell_global_ids_(id) = ghost_id[id];
    }
 
    // this expensive operation gurantees ordering of local IDs
    std::sort(elements_->begin(),elements_->end(),LocalIdCompare(stkMeshDB_));
+	
+   std::size_t allElementCount = elements_->size();
+   cell_global_ids_ = PHX::View<panzer::GlobalOrdinal*>("global_cells",allElementCount);
+   for( std::size_t id=0; id<allElementCount; ++id ) {
+     cell_global_ids_(id) = bulkData.identifier( elements_->at(id) ) -1 ;
+   }
 
    // allocate space for element LID to Connectivty map
    // connectivity size
