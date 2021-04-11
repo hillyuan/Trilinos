@@ -294,6 +294,14 @@ public:
    /** Get a vector of elements not owned by this processor but in a particular block
      */
    void getNeighborElements(const std::string & blockID,std::vector<stk::mesh::Entity> & elements) const;
+	
+   /** Get a vector of nodes owned by this processor
+     */
+   void getMyNodes(std::vector<stk::mesh::Entity> & nodes) const;
+	
+   /** Get a vector of nodes in this processor
+     */
+   void getAllNodes(std::vector<stk::mesh::Entity> & nodes) const;
 
    /** Get a vector of edges owned by this processor
      */
@@ -435,8 +443,8 @@ public:
      * \param[in,out] nodes Vector of entities containing the requested nodes.
      */
 
-   void getMyNodes(const std::string & nodesetName,const std::string & blockName,std::vector<stk::mesh::Entity> & nodes) const;
-   void getMyNodesId(const std::string & nodesetName,const std::string & blockName,std::vector<stk::mesh::EntityId> & nodes) const;
+   void getMyNodeSets(const std::string & nodesetName,const std::string & blockName,std::vector<stk::mesh::Entity> & nodes) const;
+   void getMyNodeSetsId(const std::string & nodesetName,const std::string & blockName,std::vector<stk::mesh::EntityId> & nodes) const;
 
    /** Get Entities corresponding to the node set requested. The Entites in the vector should be of dimension
      * <code>0</code>.

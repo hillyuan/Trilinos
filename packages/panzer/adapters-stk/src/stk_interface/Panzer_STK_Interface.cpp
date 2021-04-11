@@ -1155,6 +1155,26 @@ void STK_Interface::getMyElements(const std::string & blockID,std::vector<stk::m
    stk::mesh::EntityRank elementRank = getElementRank();
    stk::mesh::get_selected_entities(ownedBlock,bulkData_->buckets(elementRank),elements);
 }
+	
+void STK_Interface::getMyNodes(std::vector<stk::mesh::Entity> & nodes) const
+{
+   // setup local ownership
+   stk::mesh::Selector ownedPart = metaData_->locally_owned_part();
+
+   // grab elements
+   stk::mesh::EntityRank nodeRank = getNodeRank();
+   stk::mesh::get_selected_entities(ownedPart,bulkData_->buckets(nodeRank),nodes);
+}
+
+void STK_Interface::getAllNodes(std::vector<stk::mesh::Entity> & nodes) const
+{
+   // setup local ownership
+   stk::mesh::Selector ownedPart = (metaData_->locally_owned_part() | metaData_->globally_shared_part());
+
+   // grab elements
+   stk::mesh::EntityRank nodeRank = getNodeRank();
+   stk::mesh::get_selected_entities(ownedPart,bulkData_->buckets(nodeRank),nodes);
+}
 
 void STK_Interface::getNeighborElements(std::vector<stk::mesh::Entity> & elements) const
 {
@@ -1434,7 +1454,7 @@ void STK_Interface::getAllSides(const std::string & sideName,const std::string &
    stk::mesh::get_selected_entities(sideBlock,bulkData_->buckets(getSideRank()),sides);
 }
 
-void STK_Interface::getMyNodes(const std::string & nodesetName,const std::string & blockName,std::vector<stk::mesh::Entity> & nodes) const
+void STK_Interface::getMyNodeSets(const std::string & nodesetName,const std::string & blockName,std::vector<stk::mesh::Entity> & nodes) const
 {
    stk::mesh::Part * nodePart = getNodeset(nodesetName);
    stk::mesh::Part * elmtPart = getElementBlockPart(blockName);
@@ -1451,7 +1471,7 @@ void STK_Interface::getMyNodes(const std::string & nodesetName,const std::string
    stk::mesh::get_selected_entities(ownedBlock,bulkData_->buckets(getNodeRank()),nodes);
 }
 
-void STK_Interface::getMyNodesId(const std::string & nodesetName,const std::string & blockName,std::vector<stk::mesh::EntityId> & nodeIds) const
+void STK_Interface::getMyNodeSetsId(const std::string & nodesetName,const std::string & blockName,std::vector<stk::mesh::EntityId> & nodeIds) const
 {
    stk::mesh::Part * nodePart = getNodeset(nodesetName);
    stk::mesh::Part * elmtPart = getElementBlockPart(blockName);

@@ -162,11 +162,11 @@ class FieldPattern; // from DOFManager
     virtual bool hasAssociatedNeighbors() const = 0;
 
     /// Get the local cell IDs for the workset getLocalCellIDs
-    Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getGlobalCellIDs() const
+    Kokkos::View<panzer::GlobalOrdinal*> getGlobalCellIDs() const
     {return cell_global_ids_;}
-    Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getOwnedGlobalCellIDs() const
+    Kokkos::View<const panzer::GlobalOrdinal*> getOwnedGlobalCellIDs() const
     {return owned_cell_global_ids_;}
-    Kokkos::View<const panzer::GlobalOrdinal*,PHX::Device> getGhostGlobalCellIDs() const
+    Kokkos::View<const panzer::GlobalOrdinal*> getGhostGlobalCellIDs() const
     {return ghost_cell_global_ids_;}
 
   protected:

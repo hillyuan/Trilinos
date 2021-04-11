@@ -293,10 +293,6 @@ void SquareQuadMeshFactory::buildMetaData(stk::ParallelMachine /* parallelMach *
    // add nodesets
    mesh.addNodeset("lower_left");
    mesh.addNodeset("origin");
-   mesh.addNodeset("left");
-   mesh.addNodeset("right");
-   mesh.addNodeset("top");
-   mesh.addNodeset("bottom");
 }
 
 void SquareQuadMeshFactory::buildElements(stk::ParallelMachine parallelMach,STK_Interface & mesh) const
@@ -545,10 +541,6 @@ void SquareQuadMeshFactory::addNodeSets(STK_Interface & mesh) const
    // get all part vectors
    stk::mesh::Part * lower_left = mesh.getNodeset("lower_left");
    stk::mesh::Part * origin = mesh.getNodeset("origin");
-   stk::mesh::Part * left = mesh.getNodeset("left");
-   stk::mesh::Part * right = mesh.getNodeset("right");
-   stk::mesh::Part * top = mesh.getNodeset("top");
-   stk::mesh::Part * bottom = mesh.getNodeset("bottom");
 
    // std::vector<stk::mesh::Entity> localElmts;
    // mesh.getMyElements(localElmts);
@@ -562,10 +554,6 @@ void SquareQuadMeshFactory::addNodeSets(STK_Interface & mesh) const
 
       // add zero node to origin node set
       mesh.addEntityToNodeset(node,origin);
-	  mesh.addEntityToNodeset(node,left);
-	  mesh.addEntityToNodeset(node,right);
-	  mesh.addEntityToNodeset(node,top);
-	  mesh.addEntityToNodeset(node,bottom);
    }
 
    mesh.endModification();
