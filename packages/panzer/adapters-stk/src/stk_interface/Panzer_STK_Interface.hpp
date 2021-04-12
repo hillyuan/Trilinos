@@ -278,6 +278,12 @@ public:
    void getSubcellIndices(unsigned entityRank,stk::mesh::EntityId elementId,
                           std::vector<stk::mesh::EntityId> & subcellIds) const;
 
+   /** Get a vector of nodes owned by this processor */
+   void getMyNodes(std::vector<stk::mesh::Entity> & nodes) const;
+
+   /** Get a vector of nodes in this processor */
+   void getAllNodes(std::vector<stk::mesh::Entity> & nodes) const;
+
    /** Get a vector of elements owned by this processor
      */
    void getMyElements(std::vector<stk::mesh::Entity> & elements) const;

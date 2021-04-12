@@ -109,11 +109,7 @@ void STKConnManager::buildLocalElementMapping()
    stkMeshDB_->getElementBlockNames(blockIds);
    stk::mesh::BulkData& bulkData = *stkMeshDB_->getBulkData();
 
-   std::size_t blockIndex=0;
-   for(std::vector<std::string>::const_iterator idItr=blockIds.begin();
-       idItr!=blockIds.end();++idItr,++blockIndex) {
-      std::string blockId = *idItr;
-
+   for(std::string blockId : blockIds) {
       // grab elements on this block
       std::vector<stk::mesh::Entity> blockElmts;
       stkMeshDB_->getMyElements(blockId,blockElmts);
@@ -135,10 +131,7 @@ void STKConnManager::buildLocalElementMapping()
    }
 
    std::vector<std::size_t> ghost_id;
-   for(std::vector<std::string>::const_iterator idItr=blockIds.begin();
-       idItr!=blockIds.end();++idItr) {
-      std::string blockId = *idItr;
-
+   for(std::string blockId : blockIds) {
       // grab elements on this block
       std::vector<stk::mesh::Entity> blockElmts;
       stkMeshDB_->getNeighborElements(blockId,blockElmts);
@@ -149,9 +142,9 @@ void STKConnManager::buildLocalElementMapping()
       // build block to LID map
       neighborElementBlocks_[blockId] = Teuchos::rcp(new std::vector<LocalOrdinal>);
       for(std::size_t i=0;i<blockElmts.size();i++) {
-         neighborElementBlocks_[blockId]->push_back(stkMeshDB_->elementLocalId(blockElmts[i]));
-		 ghost_id.emplace_back( bulkData.identifier( blockElmts[i] ) -1 );
-	  }
+        neighborElementBlocks_[blockId]->push_back(stkMeshDB_->elementLocalId(blockElmts[i]));
+		    ghost_id.emplace_back( bulkData.identifier( blockElmts[i] ) -1 );
+	    }
    }
 	
    std::size_t ghostElementCount = ghost_id.size();

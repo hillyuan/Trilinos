@@ -1131,6 +1131,26 @@ void STK_Interface::getSubcellIndices(unsigned entityRank,stk::mesh::EntityId el
    }
 }
 
+void STK_Interface::getMyNodes(std::vector<stk::mesh::Entity> & nodes) const
+{
+   // setup local ownership
+   stk::mesh::Selector ownedPart = metaData_->locally_owned_part();
+
+   // grab elements
+   stk::mesh::EntityRank nodeRank = getNodeRank();
+   stk::mesh::get_selected_entities(ownedPart,bulkData_->buckets(nodeRank),nodes);
+}
+
+void STK_Interface::getAllNodes(std::vector<stk::mesh::Entity> & nodes) const
+{
+   // setup local ownership
+   stk::mesh::Selector ownedPart = (metaData_->locally_owned_part() | metaData_->globally_shared_part());
+
+   // grab elements
+   stk::mesh::EntityRank nodeRank = getNodeRank();
+   stk::mesh::get_selected_entities(ownedPart,bulkData_->buckets(nodeRank),nodes);
+}
+
 void STK_Interface::getMyElements(std::vector<stk::mesh::Entity> & elements) const
 {
    // setup local ownership
