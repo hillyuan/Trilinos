@@ -133,7 +133,7 @@ buildGhostedVertices(const Tpetra::Import<int,panzer::GlobalOrdinal,panzer::Tpet
 
 void
 setupLocalMeshBlockInfo(const panzer_stk::STK_Interface & mesh,
-                        panzer::ConnManager & conn,
+                        Teuchos::RCP<panzer::ConnManager> & conn,
                         const panzer::LocalMeshInfo & mesh_info,
                         const std::string & element_block_name,
                         panzer::LocalMeshBlockInfo & block_info)
@@ -158,14 +158,14 @@ setupLocalMeshBlockInfo(const panzer_stk::STK_Interface & mesh,
 
     {
       PANZER_FUNC_TIME_MONITOR("Build connectivity");
-      conn.buildConnectivity(*cell_pattern);
+      conn->buildConnectivity(*cell_pattern);
     }
   }
 
   std::vector<panzer::LocalOrdinal> owned_block_cells;
   for(int parent_owned_cell=0;parent_owned_cell<num_parent_owned_cells;++parent_owned_cell){
     const panzer::LocalOrdinal local_cell = mesh_info.local_cells(parent_owned_cell);
-    const bool is_in_block = conn.getBlockId(local_cell) == element_block_name;
+    const bool is_in_block = conn->getBlockId(local_cell) == element_block_name;
 
     if(is_in_block){
       owned_block_cells.push_back(parent_owned_cell);
@@ -704,7 +704,7 @@ generateLocalMeshInfo(const panzer_stk::STK_Interface & mesh)
   for(const std::string & element_block_name : element_block_names){
     PANZER_FUNC_TIME_MONITOR_DIFF("Set up setupLocalMeshBlockInfo",SetupLocalMeshBlockInfo);
     panzer::LocalMeshBlockInfo & block_info = mesh_info.element_blocks[element_block_name];
-    setupLocalMeshBlockInfo(mesh, conn, mesh_info, element_block_name, block_info);
+    setupLocalMeshBlockInfo(mesh, conn_rcp, mesh_info, element_block_name, block_info);
     block_info.subcell_dimension = space_dim;
     block_info.subcell_index = -1;
     block_info.has_connectivity = true;
