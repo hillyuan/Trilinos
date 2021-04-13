@@ -416,7 +416,7 @@ void MetaData::declare_part_subset( Part & superset , Part & subset, bool verify
 
 void MetaData::internal_declare_part_subset( Part & superset , Part & subset, bool verifyFieldRestrictions )
 {
-  require_not_committed();
+//  require_not_committed();
   require_same_mesh_meta_data( MetaData::get(superset) );
   require_same_mesh_meta_data( MetaData::get(subset) );
 
@@ -1404,6 +1404,17 @@ void MetaData::dump_all_meta_info(std::ostream& out) const
   const FieldVector& all_fields = m_field_repo.get_fields();
   for(const FieldBase* field : all_fields) {
      print(out, "    ", *field);
+  }
+}
+
+void sync_to_host_and_mark_modified(const MetaData& meta)
+{
+  const std::vector<FieldBase*>& fields = meta.get_fields();
+  for(FieldBase* field : fields) {
+    if (field->number_of_states() > 1) {
+      field->sync_to_host();
+      field->modify_on_host();
+    }
   }
 }
 

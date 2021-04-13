@@ -62,15 +62,15 @@ IF(${PACKAGE_NAME}_ENABLE_Stratimikos AND ${PACKAGE_NAME}_ENABLE_Thyra)
     SOURCE_FILES stratimikos_ParameterList.xml stratimikos_ParameterList.yaml stratimikos_ParameterList2.xml
     set1-gmres.xml set1-cg.xml
     set2-sgs1.xml set2-sgs3.xml
-    set3-mg-jacobi.xml set3-mg-sgs.xml set3-mg-gs.xml set3-mg-chebyshev.xml
+    set3-mg-jacobi.xml set3-mg-sgs.xml set3-mg-gs.xml set3-mg-chebyshev.xml set3-mg-sgs-reuse.xml
     mg-gpu.xml
     )
 
   IF (${PACKAGE_NAME}_HAVE_EPETRA_SOLVER_STACK)
 
-    TRIBITS_ADD_TEST(
+    MUELU_ADD_SERIAL_AND_MPI_TEST(
       Stratimikos
-      NAME Stratimikos
+      NAME Stratimikos_Epetra
       ARGS "--xml=stratimikos_ParameterList2.xml --linAlgebra=Epetra"
       NUM_MPI_PROCS 4
       COMM serial mpi
@@ -80,9 +80,9 @@ IF(${PACKAGE_NAME}_ENABLE_Stratimikos AND ${PACKAGE_NAME}_ENABLE_Thyra)
 
   IF (${PACKAGE_NAME}_HAVE_TPETRA_SOLVER_STACK)
 
-    TRIBITS_ADD_TEST(
+    MUELU_ADD_SERIAL_AND_MPI_TEST(
       Stratimikos
-      NAME Stratimikos
+      NAME Stratimikos_Tpetra
       ARGS "--xml=stratimikos_ParameterList2.xml --linAlgebra=Tpetra"
       NUM_MPI_PROCS 4
       COMM serial mpi

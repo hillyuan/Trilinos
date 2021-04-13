@@ -1,7 +1,8 @@
 # based on experimental code
 IF (${PACKAGE_NAME}_ENABLE_Experimental)
+  TRIBITS_ADD_EXAMPLE_DIRECTORIES(example)
   ADD_SUBDIRECTORY(src)
-  ADD_SUBDIRECTORY(test)
+  TRIBITS_ADD_EXAMPLE_DIRECTORIES(test)
 ENDIF()
 
 

@@ -138,7 +138,6 @@ TEUCHOS_UNIT_TEST(HHTAlpha, ConstructingFromDefaults)
   auto timeStepControl = rcp(new Tempus::TimeStepControl<double>());
   ParameterList tscPL = pl->sublist("Default Integrator")
                            .sublist("Time Step Control");
-  timeStepControl->setStepType (tscPL.get<std::string>("Integrator Step Type"));
   timeStepControl->setInitIndex(tscPL.get<int>   ("Initial Time Index"));
   timeStepControl->setInitTime (tscPL.get<double>("Initial Time"));
   timeStepControl->setFinalTime(tscPL.get<double>("Final Time"));
@@ -319,7 +318,7 @@ TEUCHOS_UNIT_TEST(HHTAlpha, SinCos_SecondOrder)
     Thyra::copy(*(integrator->getX()),solution.ptr());
     solutions.push_back(solution);
     auto solutionDot = Thyra::createMember(model->get_x_space());
-    Thyra::copy(*(integrator->getXdot()),solutionDot.ptr());
+    Thyra::copy(*(integrator->getXDot()),solutionDot.ptr());
     solutionsDot.push_back(solutionDot);
     if (n == nTimeStepSizes-1) {  // Add exact solution last in vector.
       StepSize.push_back(0.0);
@@ -464,7 +463,7 @@ TEUCHOS_UNIT_TEST(HHTAlpha, SinCos_FirstOrder)
     Thyra::copy(*(integrator->getX()),solution.ptr());
     solutions.push_back(solution);
     auto solutionDot = Thyra::createMember(model->get_x_space());
-    Thyra::copy(*(integrator->getXdot()),solutionDot.ptr());
+    Thyra::copy(*(integrator->getXDot()),solutionDot.ptr());
     solutionsDot.push_back(solutionDot);
     if (n == nTimeStepSizes-1) {  // Add exact solution last in vector.
       StepSize.push_back(0.0);
@@ -610,7 +609,7 @@ TEUCHOS_UNIT_TEST(HHTAlpha, SinCos_CD)
     Thyra::copy(*(integrator->getX()),solution.ptr());
     solutions.push_back(solution);
     auto solutionDot = Thyra::createMember(model->get_x_space());
-    Thyra::copy(*(integrator->getXdot()),solutionDot.ptr());
+    Thyra::copy(*(integrator->getXDot()),solutionDot.ptr());
     solutionsDot.push_back(solutionDot);
     if (n == nTimeStepSizes-1) {  // Add exact solution last in vector.
       StepSize.push_back(0.0);

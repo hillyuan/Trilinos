@@ -45,7 +45,7 @@ if [[ "$ATDM_CONFIG_COMPILER" == "ARM-20.0_OPENMPI-4.0.2" ]]; then
   module load devpack-arm
   module unload yaml-cpp
   # provides numpy module for empire
-  module load python/3.6.8
+  module load python/3.6.8-arm
   module load arm/20.0
   # Check if openmpi is already loaded. If it is, swap it. Otherwise, just load ompi4.
   if [[ ! -z $(module list openmpi | grep '1)' | awk -F ' ' '{print $2}') ]]; then
@@ -115,7 +115,7 @@ fi
 
 # Common modules for all builds
 module load ninja
-module load cmake/3.12.2
+module load cmake/3.17.1
 
 export ATDM_CONFIG_USE_HWLOC=OFF
 export HWLOC_LIBS=

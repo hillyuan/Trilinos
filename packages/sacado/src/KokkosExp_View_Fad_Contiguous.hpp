@@ -374,7 +374,6 @@ struct SacadoViewFill<
       team_policy policy( (output.extent(0)+team_size-1)/team_size ,
                           team_size , stride );
       Kokkos::parallel_for( policy, *this );
-      execution_space().fence();
     }
 };
 #endif
@@ -1207,10 +1206,10 @@ public:
         "View assignment must have compatible layout" );
 
       static_assert(
-        std::is_same< typename DstTraits::scalar_array_type
-                    , typename SrcTraits::scalar_array_type >::value ||
-        std::is_same< typename DstTraits::scalar_array_type
-                    , typename SrcTraits::const_scalar_array_type >::value ,
+        std::is_same< typename DstTraits::value_type
+                    , typename SrcTraits::value_type >::value ||
+        std::is_same< typename DstTraits::value_type
+                    , typename SrcTraits::const_value_type >::value ,
         "View assignment must have same value type or const = non-const" );
 
       static_assert(
