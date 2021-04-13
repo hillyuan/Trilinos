@@ -61,6 +61,7 @@
 
 #include <PanzerAdaptersSTK_config.hpp>
 #include <Kokkos_ViewFactory.hpp>
+#include "Panzer_AbstractMesh.hpp"
 
 #include <unordered_map>
 
@@ -101,7 +102,7 @@ protected:
 Teuchos::RCP<ElementDescriptor>
 buildElementDescriptor(stk::mesh::EntityId elmtId,std::vector<stk::mesh::EntityId> & nodes);
 
-class STK_Interface {
+class STK_Interface : public panzer::AbstractMeshStruct  {
 public:
    typedef double ProcIdData; // ECC: Not sure why?
    typedef stk::mesh::Field<double> SolutionFieldType;
@@ -278,9 +279,17 @@ public:
    void getSubcellIndices(unsigned entityRank,stk::mesh::EntityId elementId,
                           std::vector<stk::mesh::EntityId> & subcellIds) const;
 
-   /** Get a vector of elements owned by this processor
-     */
+   /** Get a vector of nodes owned by this processor */
+   void getMyNodes(std::vector<stk::mesh::Entity> & nodes) const;
+
+   /** Get a vector of nodes in this processor */
+   void getAllNodes(std::vector<stk::mesh::Entity> & nodes) const;
+
+   /** Get a vector of elements owned by this processor */
    void getMyElements(std::vector<stk::mesh::Entity> & elements) const;
+   virtual Kokkos::View<panzer::GlobalOrdinal*> getOwnedGlobalCellIDs() const final;
+   virtual Kokkos::View<panzer::GlobalOrdinal*> getGhostGlobalCellIDs() const final;
+   virtual Kokkos::View<panzer::GlobalOrdinal*> getGlobalCellIDs() const final;
 
    /** Get a vector of elements owned by this processor on a particular block ID
      */
@@ -290,7 +299,7 @@ public:
      * are not owned.
      */
    void getNeighborElements(std::vector<stk::mesh::Entity> & elements) const;
-
+   
    /** Get a vector of elements not owned by this processor but in a particular block
      */
    void getNeighborElements(const std::string & blockID,std::vector<stk::mesh::Entity> & elements) const;
@@ -426,7 +435,7 @@ public:
      * \param[in,out] nodes Vector of entities containing the requested nodes.
      */
 
-   void getMyNodes(const std::string & sideName,const std::string & blockName,std::vector<stk::mesh::Entity> & nodes) const;
+   void getMyNodeSet(const std::string & sideName,const std::string & blockName,std::vector<stk::mesh::Entity> & nodes) const;
 
    /**
     * Searches for connected entity by rank and relation id. Returns

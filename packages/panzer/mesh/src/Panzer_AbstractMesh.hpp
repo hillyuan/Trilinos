@@ -53,17 +53,11 @@ namespace panzer {
 class AbstractMeshStruct 
 {
 public:
-    Kokkos::View<panzer::GlobalOrdinal*> getGlobalCellIDs() const
-    {return cell_global_ids_;}
-    Kokkos::View<panzer::GlobalOrdinal*> getOwnedGlobalCellIDs() const
-    {return owned_cell_global_ids_;}
-    Kokkos::View<panzer::GlobalOrdinal*> getGhostGlobalCellIDs() const
-    {return ghost_cell_global_ids_;}
+    virtual Kokkos::View<panzer::GlobalOrdinal*> getGlobalCellIDs() const = 0;
+    virtual Kokkos::View<panzer::GlobalOrdinal*> getOwnedGlobalCellIDs() const = 0;
+    virtual Kokkos::View<panzer::GlobalOrdinal*> getGhostGlobalCellIDs() const = 0;
+};
 
-protected:
-    PHX::View<panzer::GlobalOrdinal*> cell_global_ids_;
-    PHX::View<panzer::GlobalOrdinal*> owned_cell_global_ids_;
-    PHX::View<panzer::GlobalOrdinal*> ghost_cell_global_ids_;
-}
+} 
 
 #endif
