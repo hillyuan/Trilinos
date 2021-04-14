@@ -70,7 +70,7 @@ namespace panzer_stk
   setupSubLocalMeshInfo( const panzer_stk::STK_Interface & mesh,
                       const panzer::LocalMeshInfoBase & parent_info,
                       const std::vector<panzer::LocalOrdinal> & owned_parent_cells,
-                      panzer::LocalMeshInfoBase & child_info);
+                      panzer::LocalMeshBlockInfo & child_info);
 }
 
 #endif

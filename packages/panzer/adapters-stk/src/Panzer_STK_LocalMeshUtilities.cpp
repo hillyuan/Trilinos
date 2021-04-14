@@ -729,7 +729,7 @@ void
 setupSubLocalMeshInfo( const panzer_stk::STK_Interface & mesh,
                       const panzer::LocalMeshInfoBase & parent_info,
                       const std::vector<panzer::LocalOrdinal> & owned_parent_cells,
-                      panzer::LocalMeshInfoBase & sub_info)
+                      panzer::LocalMeshBlockInfo & sub_info)
 {
   using GO = panzer::GlobalOrdinal;
   using LO = panzer::LocalOrdinal;
@@ -856,23 +856,28 @@ setupSubLocalMeshInfo( const panzer_stk::STK_Interface & mesh,
   TEUCHOS_ASSERT(static_cast<int>(parent_info.local_cells.extent(0)) == num_parent_total_cells);
   TEUCHOS_ASSERT(static_cast<int>(parent_info.global_cells.extent(0)) == num_parent_total_cells);
 
-  const int num_vertices_per_cell = parent_info.cell_vertices.extent(1);
-  const int num_dims = parent_info.cell_vertices.extent(2);
+  //const int num_vertices_per_cell = parent_info.cell_vertices.extent(1);
+  //const int num_dims = parent_info.cell_vertices.extent(2);
+  const int num_vertices_per_cell = sub_info.cell_topology->getVertexCount();
+  const int num_dims = sub_info.cell_topology->getDimension();
 
   // Fill owned, ghstd, and virtual cells: global indexes, local indexes and vertices
   sub_info.global_cells = PHX::View<GO*>("global_cells", num_total_cells);
   sub_info.local_cells = PHX::View<LO*>("local_cells", num_total_cells);
   sub_info.cell_vertices = PHX::View<double***>("cell_vertices", num_total_cells, num_vertices_per_cell, num_dims);
+  std::vector<std::size_t> cellids;
   for(int cell=0;cell<num_total_cells;++cell){
     const LO parent_cell = all_parent_cells[cell].first;
     sub_info.global_cells(cell) = parent_info.global_cells(parent_cell);
     sub_info.local_cells(cell) = parent_info.local_cells(parent_cell);
-    for(int vertex=0;vertex<num_vertices_per_cell;++vertex){
-      for(int dim=0;dim<num_dims;++dim){
-        sub_info.cell_vertices(cell,vertex,dim) = parent_info.cell_vertices(parent_cell,vertex,dim);
-      }
-    }
+	cellids.emplace_back( parent_info.local_cells(parent_cell) );
+   // for(int vertex=0;vertex<num_vertices_per_cell;++vertex){
+   //   for(int dim=0;dim<num_dims;++dim){
+   //     sub_info.cell_vertices(cell,vertex,dim) = parent_info.cell_vertices(parent_cell,vertex,dim);
+   //   }
+   // }
   }
+  mesh.getElementVerticesNoResize( cellids, sub_info.cell_vertices );
 
   // Now for the difficult part
 
