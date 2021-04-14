@@ -75,7 +75,7 @@ buildParallelLocalMeshInfo(const std::vector<int> & N,   // Cells per dimension
                            const std::vector<int> periodic_dims) // Periodic dimensions
 {
   Teuchos::RCP<panzer_stk::STK_Interface> mesh = buildParallelMesh(N,B,P,L,periodic_dims);
-  return generateLocalMeshInfo(*mesh);
+  return generateLocalMeshInfo(mesh);
 }
 
 void
@@ -93,7 +93,7 @@ runConnectivityTest(const std::vector<int> & N,   // Cells per dimension
   // Note the ConnManager does not contain all of the connectivity found in the LocalMeshInfo (associated with periodic boundary conditions)
 
   Teuchos::RCP<panzer_stk::STK_Interface> mesh = buildParallelMesh(N, B, P, L, periodic_dims);
-  auto mesh_info = generateLocalMeshInfo(*mesh);
+  auto mesh_info = generateLocalMeshInfo(mesh);
 
   auto conn = Teuchos::rcp(new panzer_stk::STKConnManager(mesh));
 

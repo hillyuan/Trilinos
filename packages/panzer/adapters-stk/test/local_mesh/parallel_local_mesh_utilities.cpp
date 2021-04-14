@@ -74,7 +74,7 @@ buildParallelLocalMeshInfo(const std::vector<int> & N,   // Cells per dimension
 //  for(unsigned int i=0; i<N.size(); ++i)
 //    p.push_back(i);
   Teuchos::RCP<panzer_stk::STK_Interface> mesh = buildParallelMesh(N,B,P,L,p);
-  return generateLocalMeshInfo(*mesh);
+  return generateLocalMeshInfo(mesh);
 }
 
 }
@@ -82,7 +82,7 @@ buildParallelLocalMeshInfo(const std::vector<int> & N,   // Cells per dimension
 TEUCHOS_UNIT_TEST(parallelLocalMeshUtilities, no_mesh)
 {
   // Make sure if fails when you pass in a null mesh
-  panzer_stk::STK_Interface mesh;
+  Teuchos::RCP<panzer_stk::STK_Interface> mesh;
   TEST_THROW((generateLocalMeshInfo(mesh)),std::logic_error);
 }
 

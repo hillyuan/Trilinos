@@ -132,7 +132,7 @@ buildGhostedVertices(const Tpetra::Import<int,panzer::GlobalOrdinal,panzer::Tpet
 } // end build ghstd vertices
 
 void
-setupLocalMeshBlockInfo(Teuchos::RCP<const panzer_stk::STK_Interface> & mesh,
+setupLocalMeshBlockInfo(const Teuchos::RCP<const panzer_stk::STK_Interface> & mesh,
                         panzer::ConnManager & conn,
                         const panzer::LocalMeshInfo & mesh_info,
                         const std::string & element_block_name,
@@ -432,7 +432,7 @@ setupLocalMeshSidesetInfo(const panzer_stk::STK_Interface & mesh,
 } // namespace
 
 Teuchos::RCP<panzer::LocalMeshInfo>
-generateLocalMeshInfo(const panzer_stk::STK_Interface & mesh)
+generateLocalMeshInfo(const Teuchos::RCP<const panzer_stk::STK_Interface> & mesh)
 {
   using Teuchos::RCP;
   using Teuchos::rcp;
@@ -447,21 +447,21 @@ generateLocalMeshInfo(const panzer_stk::STK_Interface & mesh)
   auto & mesh_info = *mesh_info_rcp;
 
   // Make sure the STK interface is valid
-  TEUCHOS_ASSERT(mesh.isInitialized());
+  TEUCHOS_ASSERT(mesh->isInitialized());
 
   // This is required by some of the STK stuff
   TEUCHOS_ASSERT(typeid(panzer::LocalOrdinal) == typeid(int));
 
-  Teuchos::RCP<const Teuchos::Comm<int> > comm = mesh.getComm();
+  Teuchos::RCP<const Teuchos::Comm<int> > comm = mesh->getComm();
 
   TEUCHOS_FUNC_TIME_MONITOR_DIFF("panzer_stk::generateLocalMeshInfo",GenerateLocalMeshInfo);
 
   // This horrible line of code is required since the connection manager only takes rcps of a mesh
-  RCP<const panzer_stk::STK_Interface> mesh_rcp = Teuchos::rcpFromRef(mesh);
+  //RCP<const panzer_stk::STK_Interface> mesh_rcp = Teuchos::rcpFromRef(mesh);
   // We're allowed to do this since the connection manager only exists in this scope... even though it is also an RCP...
 
   // extract topology handle
-  RCP<panzer::ConnManager> conn_rcp = rcp(new panzer_stk::STKConnManager(mesh_rcp));
+  RCP<panzer::ConnManager> conn_rcp = rcp(new panzer_stk::STKConnManager(mesh));
   panzer::ConnManager & conn = *conn_rcp;
 
   PHX::View<panzer::GlobalOrdinal*> owned_cells, ghost_cells, virtual_cells;
@@ -481,9 +481,9 @@ generateLocalMeshInfo(const panzer_stk::STK_Interface & mesh)
 
   // TODO: This all needs to be rewritten for when element blocks have different cell topologies
   std::vector<std::string> element_block_names;
-  mesh.getElementBlockNames(element_block_names);
+  mesh->getElementBlockNames(element_block_names);
 
-  const shards::CellTopology & cell_topology = *(mesh.getCellTopology(element_block_names[0]));
+  const shards::CellTopology & cell_topology = *(mesh->getCellTopology(element_block_names[0]));
 
   const int space_dim = cell_topology.getDimension();
   const int vertices_per_cell = cell_topology.getVertexCount();
@@ -495,7 +495,7 @@ generateLocalMeshInfo(const panzer_stk::STK_Interface & mesh)
     std::vector<std::size_t> localCells(owned_cells.extent(0),Teuchos::OrdinalTraits<std::size_t>::invalid());
     for(size_t i=0;i<localCells.size();i++)
       localCells[i] = i;
-    mesh.getElementVerticesNoResize(localCells,owned_vertices);
+    mesh->getElementVerticesNoResize(localCells,owned_vertices);
   }
 
   // this builds a ghstd vertex array
@@ -699,12 +699,12 @@ generateLocalMeshInfo(const panzer_stk::STK_Interface & mesh)
 
   // Setup element blocks and sidesets
   std::vector<std::string> sideset_names;
-  mesh.getSidesetNames(sideset_names);
+  mesh->getSidesetNames(sideset_names);
 
   for(const std::string & element_block_name : element_block_names){
     PANZER_FUNC_TIME_MONITOR_DIFF("Set up setupLocalMeshBlockInfo",SetupLocalMeshBlockInfo);
     panzer::LocalMeshBlockInfo & block_info = mesh_info.element_blocks[element_block_name];
-    setupLocalMeshBlockInfo(mesh_rcp, conn, mesh_info, element_block_name, block_info);
+    setupLocalMeshBlockInfo(mesh, conn, mesh_info, element_block_name, block_info);
     block_info.subcell_dimension = space_dim;
     block_info.subcell_index = -1;
     block_info.has_connectivity = true;
@@ -713,7 +713,7 @@ generateLocalMeshInfo(const panzer_stk::STK_Interface & mesh)
     for(const std::string & sideset_name : sideset_names){
       PANZER_FUNC_TIME_MONITOR_DIFF("Setup LocalMeshSidesetInfo",SetupLocalMeshSidesetInfo);
       panzer::LocalMeshSidesetInfo & sideset_info = mesh_info.sidesets[element_block_name][sideset_name];
-      setupLocalMeshSidesetInfo(mesh, conn, mesh_info, element_block_name, sideset_name, sideset_info);
+      setupLocalMeshSidesetInfo(*mesh, conn, mesh_info, element_block_name, sideset_name, sideset_info);
       sideset_info.subcell_dimension = space_dim;
       sideset_info.subcell_index = -1;
       sideset_info.has_connectivity = true;
