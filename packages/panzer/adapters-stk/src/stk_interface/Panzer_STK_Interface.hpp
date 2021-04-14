@@ -1065,6 +1065,9 @@ public:
    template <typename ArrayT>
    void getElementVerticesNoResize(const std::vector<stk::mesh::Entity> & elements,const std::string & eBlock, ArrayT & vertices) const;
 
+
+   virtual void getElementVerticesNoResize(const std::vector<std::size_t> &, Kokkos::DynRankView<double,PHX::Device>&) const final;
+
    // const stk::mesh::FEMInterface & getFEMInterface() const
    // { return *femPtr_; }
 

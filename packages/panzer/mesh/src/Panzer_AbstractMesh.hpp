@@ -56,6 +56,8 @@ public:
     virtual Kokkos::View<panzer::GlobalOrdinal*> getGlobalCellIDs() const = 0;
     virtual Kokkos::View<panzer::GlobalOrdinal*> getOwnedGlobalCellIDs() const = 0;
     virtual Kokkos::View<panzer::GlobalOrdinal*> getGhostGlobalCellIDs() const = 0;
+
+    virtual void getElementVerticesNoResize(const std::vector<std::size_t> &, Kokkos::DynRankView<double,PHX::Device>&) const =0;
 };
 
 } 

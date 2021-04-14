@@ -2101,5 +2101,11 @@ void STK_Interface::refineMesh(const int numberOfLevels, const bool deleteParent
 #endif
 }
 
+void STK_Interface::getElementVerticesNoResize(const std::vector<std::size_t> & localElementIds, 
+         Kokkos::DynRankView<double,PHX::Device>& vertices) const
+{
+   this->getElementVerticesNoResize(localElementIds, vertices);
+}
+
 
 } // end namespace panzer_stk
