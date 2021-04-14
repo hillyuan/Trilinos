@@ -179,8 +179,8 @@ setupLocalMeshBlockInfo(const panzer_stk::STK_Interface & mesh,
   block_info.element_block_name = element_block_name;
   block_info.cell_topology = mesh.getCellTopology(element_block_name);
   {
-    PANZER_FUNC_TIME_MONITOR("panzer::partitioning_utilities::setupSubLocalMeshInfo");
-    panzer::partitioning_utilities::setupSubLocalMeshInfo(mesh_info, owned_block_cells, block_info);
+    PANZER_FUNC_TIME_MONITOR("panzer_stk::setupSubLocalMeshInfo");
+    panzer_stk::setupSubLocalMeshInfo(mesh, mesh_info, owned_block_cells, block_info);
   }
 }
 
@@ -734,7 +734,7 @@ setupSubLocalMeshInfo( const panzer_stk::STK_Interface & mesh,
   using GO = panzer::GlobalOrdinal;
   using LO = panzer::LocalOrdinal;
 
-  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::partitioning_utilities::setupSubLocalMeshInfo",setupSLMI);
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer_stk::setupSubLocalMeshInfo",setupSLMI);
   // The goal of this function is to fill a LocalMeshInfoBase (sub_info) with
   // a subset of cells from a given parent LocalMeshInfoBase (parent_info)
 
@@ -749,10 +749,10 @@ setupSubLocalMeshInfo( const panzer_stk::STK_Interface & mesh,
   // Note: This function works with inter-face connectivity. NOT node connectivity.
 
   const int num_owned_cells = owned_parent_cells.size();
-  TEUCHOS_TEST_FOR_EXCEPT_MSG(num_owned_cells == 0, "panzer::partitioning_utilities::setupSubLocalMeshInfo : Input parent subcells must exist (owned_parent_cells)");
+  TEUCHOS_TEST_FOR_EXCEPT_MSG(num_owned_cells == 0, "panzer_stk::setupSubLocalMeshInfo : Input parent subcells must exist (owned_parent_cells)");
 
   const int num_parent_owned_cells = parent_info.num_owned_cells;
-  TEUCHOS_TEST_FOR_EXCEPT_MSG(num_parent_owned_cells <= 0, "panzer::partitioning_utilities::setupSubLocalMeshInfo : Input parent info must contain owned cells");
+  TEUCHOS_TEST_FOR_EXCEPT_MSG(num_parent_owned_cells <= 0, "panzer_stk::setupSubLocalMeshInfo : Input parent info must contain owned cells");
 
   const int num_parent_ghstd_cells = parent_info.num_ghstd_cells;
 
