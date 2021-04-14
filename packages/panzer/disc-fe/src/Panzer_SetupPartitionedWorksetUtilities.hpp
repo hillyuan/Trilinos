@@ -44,7 +44,6 @@
 #define PANZER_SETUP_PARTITIONED_WORKSET_UTILITIES_HPP
 
 #include "Panzer_Workset.hpp"
-
 #include "Teuchos_RCP.hpp"
 
 #include <vector>
@@ -54,6 +53,11 @@ namespace panzer
   class WorksetDescriptor;
   struct WorksetNeeds;
   struct LocalMeshInfo;
+}
+
+namespace panzer_stk
+{
+  class STK_Interface;
 }
 
 namespace panzer
@@ -69,6 +73,7 @@ namespace panzer
    */
   Teuchos::RCP<std::vector<panzer::Workset> >
   buildPartitionedWorksets(const panzer::LocalMeshInfo & mesh_info,
+                           const Teuchos::RCP<const panzer_stk::STK_Interface> & mesh,
                            const panzer::WorksetDescriptor & description,
                            const Teuchos::RCP<const OrientationsInterface> & orientations = Teuchos::null);
 

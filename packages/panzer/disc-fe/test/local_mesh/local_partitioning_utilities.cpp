@@ -62,16 +62,17 @@ namespace panzer {
 
 TEUCHOS_UNIT_TEST(localMeshPartitioningUtilities, basic)
 {
+  Teuchos::RCP<const panzer_stk::STK_Interface> empty_mesh;
 
   // Test empty mesh
   {
-    panzer::LocalMeshInfo empty_mesh;
+    panzer::LocalMeshInfo empty_meshinfo;
 
     panzer::WorksetDescriptor description("block",panzer::WorksetSizeType::ALL_ELEMENTS,true);
     std::vector<panzer::LocalMeshPartition> partitions;
 
     // It should not return any partitions
-    generateLocalMeshPartitions(empty_mesh, description, partitions);
+    generateLocalMeshPartitions(empty_meshinfo, empty_mesh, description, partitions);
 
     // Nothing should have been found
     TEST_EQUALITY(partitions.size(), 0);
@@ -86,21 +87,21 @@ TEUCHOS_UNIT_TEST(localMeshPartitioningUtilities, basic)
     std::vector<panzer::LocalMeshPartition> partitions;
 
     // It should throw an error
-    TEST_THROW(generateLocalMeshPartitions(*mesh_info, description, partitions), std::logic_error);
+    TEST_THROW(generateLocalMeshPartitions(*mesh_info, empty_mesh, description, partitions), std::logic_error);
   }
   {
     panzer::WorksetDescriptor description("block0",panzer::WorksetSizeType::NO_ELEMENTS,true);
     std::vector<panzer::LocalMeshPartition> partitions;
 
     // It should throw an error
-    TEST_THROW(generateLocalMeshPartitions(*mesh_info, description, partitions), std::logic_error);
+    TEST_THROW(generateLocalMeshPartitions(*mesh_info, empty_mesh, description, partitions), std::logic_error);
   }
   {
     panzer::WorksetDescriptor description("block0",panzer::WorksetSizeType::ALL_ELEMENTS,false);
     std::vector<panzer::LocalMeshPartition> partitions;
 
     // It should throw an error
-    TEST_THROW(generateLocalMeshPartitions(*mesh_info, description, partitions), std::logic_error);
+    TEST_THROW(generateLocalMeshPartitions(*mesh_info, empty_mesh, description, partitions), std::logic_error);
   }
 
   // Test the partitions
@@ -110,7 +111,7 @@ TEUCHOS_UNIT_TEST(localMeshPartitioningUtilities, basic)
     panzer::WorksetDescriptor description("block32",panzer::WorksetSizeType::ALL_ELEMENTS,true);
     std::vector<panzer::LocalMeshPartition> partitions;
 
-    generateLocalMeshPartitions(*mesh_info, description, partitions);
+    generateLocalMeshPartitions(*mesh_info, empty_mesh, description, partitions);
 
     // Nothing should have been found
     TEST_EQUALITY(partitions.size(), 0);
@@ -122,7 +123,7 @@ TEUCHOS_UNIT_TEST(localMeshPartitioningUtilities, basic)
     panzer::WorksetDescriptor description("block32","sideset0",panzer::WorksetSizeType::ALL_ELEMENTS,true);
     std::vector<panzer::LocalMeshPartition> partitions;
 
-    generateLocalMeshPartitions(*mesh_info, description, partitions);
+    generateLocalMeshPartitions(*mesh_info, empty_mesh, description, partitions);
 
     // Nothing should have been found
     TEST_EQUALITY(partitions.size(), 0);
@@ -132,7 +133,7 @@ TEUCHOS_UNIT_TEST(localMeshPartitioningUtilities, basic)
     panzer::WorksetDescriptor description("block0","sideset32",panzer::WorksetSizeType::ALL_ELEMENTS,true);
     std::vector<panzer::LocalMeshPartition> partitions;
 
-    generateLocalMeshPartitions(*mesh_info, description, partitions);
+    generateLocalMeshPartitions(*mesh_info, empty_mesh, description, partitions);
 
     // Nothing should have been found
     TEST_EQUALITY(partitions.size(), 0);
@@ -142,7 +143,7 @@ TEUCHOS_UNIT_TEST(localMeshPartitioningUtilities, basic)
     panzer::WorksetDescriptor description("block0","sideset1",panzer::WorksetSizeType::ALL_ELEMENTS,true);
     std::vector<panzer::LocalMeshPartition> partitions;
 
-    generateLocalMeshPartitions(*mesh_info, description, partitions);
+    generateLocalMeshPartitions(*mesh_info, empty_mesh, description, partitions);
 
     // Nothing should have been found
     TEST_EQUALITY(partitions.size(), 0);
@@ -154,7 +155,7 @@ TEUCHOS_UNIT_TEST(localMeshPartitioningUtilities, basic)
     panzer::WorksetDescriptor description("block0",panzer::WorksetSizeType::ALL_ELEMENTS,true);
     std::vector<panzer::LocalMeshPartition> partitions;
 
-    generateLocalMeshPartitions(*mesh_info, description, partitions);
+    generateLocalMeshPartitions(*mesh_info, empty_mesh, description, partitions);
 
     // Only one partition since we requested a full partition
     TEST_EQUALITY(partitions.size(), 1);
@@ -170,7 +171,7 @@ TEUCHOS_UNIT_TEST(localMeshPartitioningUtilities, basic)
     panzer::WorksetDescriptor description("block0","sideset0",panzer::WorksetSizeType::ALL_ELEMENTS,true);
     std::vector<panzer::LocalMeshPartition> partitions;
 
-    generateLocalMeshPartitions(*mesh_info, description, partitions);
+    generateLocalMeshPartitions(*mesh_info, empty_mesh, description, partitions);
 
     // Only one partition since we requested a full partition
     TEST_EQUALITY(partitions.size(), 1);
@@ -184,7 +185,7 @@ TEUCHOS_UNIT_TEST(localMeshPartitioningUtilities, basic)
     panzer::WorksetDescriptor description("block1","sideset2",panzer::WorksetSizeType::ALL_ELEMENTS,true);
     std::vector<panzer::LocalMeshPartition> partitions;
 
-    generateLocalMeshPartitions(*mesh_info, description, partitions);
+    generateLocalMeshPartitions(*mesh_info, empty_mesh, description, partitions);
 
     // Only one partition since we requested a full partition
     TEST_EQUALITY(partitions.size(), 1);
@@ -201,7 +202,7 @@ TEUCHOS_UNIT_TEST(localMeshPartitioningUtilities, basic)
     panzer::WorksetDescriptor description("block1",1,true);
     std::vector<panzer::LocalMeshPartition> partitions;
 
-    generateLocalMeshPartitions(*mesh_info, description, partitions);
+    generateLocalMeshPartitions(*mesh_info, empty_mesh, description, partitions);
 
     // Two partitions
     TEST_EQUALITY(partitions.size(), 2);
@@ -229,7 +230,7 @@ TEUCHOS_UNIT_TEST(localMeshPartitioningUtilities, basic)
     panzer::WorksetDescriptor description("block1","sideset1",1,true);
     std::vector<panzer::LocalMeshPartition> partitions;
 
-    generateLocalMeshPartitions(*mesh_info, description, partitions);
+    generateLocalMeshPartitions(*mesh_info, empty_mesh, description, partitions);
 
     // Only one partition should have been built
     TEST_EQUALITY(partitions.size(), 1);

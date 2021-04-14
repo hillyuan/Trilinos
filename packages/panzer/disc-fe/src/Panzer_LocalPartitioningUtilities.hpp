@@ -47,6 +47,11 @@
 
 #include <vector>
 
+namespace panzer_stk
+{
+  class STK_Interface;
+}
+
 namespace panzer
 {
 
@@ -92,6 +97,7 @@ fillLocalCellIDs(const Teuchos::RCP<const Teuchos::Comm<int>> & comm,
  */
 void
 generateLocalMeshPartitions(const panzer::LocalMeshInfo & mesh_info,
+                            const Teuchos::RCP<const panzer_stk::STK_Interface> & mesh,
                             const panzer::WorksetDescriptor & description,
                             std::vector<panzer::LocalMeshPartition> & partitions);
 
@@ -107,6 +113,7 @@ namespace partitioning_utilities
  */
 void
 setupSubLocalMeshInfo(const panzer::LocalMeshInfoBase & parent_info,
+                      const Teuchos::RCP<const panzer_stk::STK_Interface> & mesh,
                       const std::vector<panzer::LocalOrdinal> & owned_parent_cells,
                       panzer::LocalMeshInfoBase & child_info);
 }

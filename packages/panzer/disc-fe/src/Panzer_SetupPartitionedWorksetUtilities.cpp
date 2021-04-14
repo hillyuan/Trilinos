@@ -70,6 +70,7 @@ convertMeshPartitionToWorkset(const panzer::LocalMeshPartition & partition,
 
 Teuchos::RCP<std::vector<panzer::Workset> >  
 buildPartitionedWorksets(const panzer::LocalMeshInfo & mesh_info,
+                         const Teuchos::RCP<const panzer_stk::STK_Interface> & mesh,
                          const panzer::WorksetDescriptor & description,
                          const Teuchos::RCP<const OrientationsInterface> & orientations)
 {
@@ -80,7 +81,7 @@ buildPartitionedWorksets(const panzer::LocalMeshInfo & mesh_info,
 
   // Each partition represents a chunk of the mesh
   std::vector<panzer::LocalMeshPartition> partitions;
-  panzer::generateLocalMeshPartitions(mesh_info, description, partitions);
+  panzer::generateLocalMeshPartitions(mesh_info, mesh, description, partitions);
 
   int i=0;
   for(const auto & partition : partitions){

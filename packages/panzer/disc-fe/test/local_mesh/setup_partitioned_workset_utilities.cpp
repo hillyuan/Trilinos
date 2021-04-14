@@ -67,15 +67,16 @@ namespace panzer {
 
 TEUCHOS_UNIT_TEST(setupPartitionedWorksetUtilities, basic)
 {
+  Teuchos::RCP<const panzer_stk::STK_Interface> empty_mesh;
 
   // Test empty mesh
   {
-    panzer::LocalMeshInfo empty_mesh;
+    panzer::LocalMeshInfo empty_meshinfo;
 
     panzer::WorksetDescriptor description("block",panzer::WorksetSizeType::ALL_ELEMENTS,true);
 
     // It shouldn't return any worksets
-    auto worksets = buildPartitionedWorksets(empty_mesh, description);
+    auto worksets = buildPartitionedWorksets(empty_meshinfo, empty_mesh, description);
 
     TEST_INEQUALITY(worksets,Teuchos::null);
 
@@ -91,20 +92,20 @@ TEUCHOS_UNIT_TEST(setupPartitionedWorksetUtilities, basic)
     panzer::WorksetDescriptor description("block0",panzer::WorksetSizeType::CLASSIC_MODE,true);
 
     // Should throw an error
-    TEST_THROW(buildPartitionedWorksets(*mesh_info, description),std::logic_error);
+    TEST_THROW(buildPartitionedWorksets(*mesh_info, empty_mesh, description),std::logic_error);
 
   }
   {
     panzer::WorksetDescriptor description("block0",panzer::WorksetSizeType::NO_ELEMENTS,true);
 
     // It shouldn't return any worksets
-    TEST_THROW(buildPartitionedWorksets(*mesh_info, description),std::logic_error);
+    TEST_THROW(buildPartitionedWorksets(*mesh_info, empty_mesh, description),std::logic_error);
   }
   {
     panzer::WorksetDescriptor description("block0",panzer::WorksetSizeType::ALL_ELEMENTS,false);
 
     // This should trow an error since the description doesn't allow partitioning
-    TEST_THROW(buildPartitionedWorksets(*mesh_info, description),std::logic_error);
+    TEST_THROW(buildPartitionedWorksets(*mesh_info, empty_mesh, description),std::logic_error);
   }
 
   // Test the worksets
@@ -114,7 +115,7 @@ TEUCHOS_UNIT_TEST(setupPartitionedWorksetUtilities, basic)
     panzer::WorksetDescriptor description("block32",panzer::WorksetSizeType::ALL_ELEMENTS,true);
 
     // It shouldn't return any worksets
-    auto worksets = buildPartitionedWorksets(*mesh_info, description);
+    auto worksets = buildPartitionedWorksets(*mesh_info, empty_mesh, description);
 
     TEST_INEQUALITY(worksets,Teuchos::null);
 
@@ -128,7 +129,7 @@ TEUCHOS_UNIT_TEST(setupPartitionedWorksetUtilities, basic)
     panzer::WorksetDescriptor description("block32","sideset0",panzer::WorksetSizeType::ALL_ELEMENTS,true);
 
     // It shouldn't return any worksets
-    auto worksets = buildPartitionedWorksets(*mesh_info, description);
+    auto worksets = buildPartitionedWorksets(*mesh_info, empty_mesh, description);
 
     TEST_INEQUALITY(worksets,Teuchos::null);
 
@@ -140,7 +141,7 @@ TEUCHOS_UNIT_TEST(setupPartitionedWorksetUtilities, basic)
     panzer::WorksetDescriptor description("block0","sideset32",panzer::WorksetSizeType::ALL_ELEMENTS,true);
 
     // It shouldn't return any worksets
-    auto worksets = buildPartitionedWorksets(*mesh_info, description);
+    auto worksets = buildPartitionedWorksets(*mesh_info, empty_mesh, description);
 
     TEST_INEQUALITY(worksets,Teuchos::null);
 
@@ -152,7 +153,7 @@ TEUCHOS_UNIT_TEST(setupPartitionedWorksetUtilities, basic)
     panzer::WorksetDescriptor description("block0","sideset1",panzer::WorksetSizeType::ALL_ELEMENTS,true);
 
     // It shouldn't return any worksets
-    auto worksets = buildPartitionedWorksets(*mesh_info, description);
+    auto worksets = buildPartitionedWorksets(*mesh_info, empty_mesh, description);
 
     TEST_INEQUALITY(worksets,Teuchos::null);
 
@@ -165,7 +166,7 @@ TEUCHOS_UNIT_TEST(setupPartitionedWorksetUtilities, basic)
     panzer::WorksetDescriptor description("block0",panzer::WorksetSizeType::ALL_ELEMENTS,true);
 
     // It shouldn't return any worksets
-    auto worksets = buildPartitionedWorksets(*mesh_info, description);
+    auto worksets = buildPartitionedWorksets(*mesh_info, empty_mesh, description);
 
     TEST_INEQUALITY(worksets,Teuchos::null);
 
@@ -183,7 +184,7 @@ TEUCHOS_UNIT_TEST(setupPartitionedWorksetUtilities, basic)
     panzer::WorksetDescriptor description("block0","sideset0",panzer::WorksetSizeType::ALL_ELEMENTS,true);
 
     // It shouldn't return any worksets
-    auto worksets = buildPartitionedWorksets(*mesh_info, description);
+    auto worksets = buildPartitionedWorksets(*mesh_info, empty_mesh, description);
 
     TEST_INEQUALITY(worksets,Teuchos::null);
 
@@ -199,7 +200,7 @@ TEUCHOS_UNIT_TEST(setupPartitionedWorksetUtilities, basic)
     panzer::WorksetDescriptor description("block1","sideset2",panzer::WorksetSizeType::ALL_ELEMENTS,true);
 
     // It shouldn't return any worksets
-    auto worksets = buildPartitionedWorksets(*mesh_info, description);
+    auto worksets = buildPartitionedWorksets(*mesh_info, empty_mesh, description);
 
     TEST_INEQUALITY(worksets,Teuchos::null);
 
@@ -218,7 +219,7 @@ TEUCHOS_UNIT_TEST(setupPartitionedWorksetUtilities, basic)
     panzer::WorksetDescriptor description("block1",1,true);
 
     // It shouldn't return any worksets
-    auto worksets = buildPartitionedWorksets(*mesh_info, description);
+    auto worksets = buildPartitionedWorksets(*mesh_info, empty_mesh, description);
 
     TEST_INEQUALITY(worksets,Teuchos::null);
 
@@ -248,7 +249,7 @@ TEUCHOS_UNIT_TEST(setupPartitionedWorksetUtilities, basic)
     panzer::WorksetDescriptor description("block1","sideset1",1,true);
 
     // It shouldn't return any worksets
-    auto worksets = buildPartitionedWorksets(*mesh_info, description);
+    auto worksets = buildPartitionedWorksets(*mesh_info, empty_mesh, description);
 
     TEST_INEQUALITY(worksets,Teuchos::null);
 

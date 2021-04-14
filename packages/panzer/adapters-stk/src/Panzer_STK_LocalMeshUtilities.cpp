@@ -132,7 +132,7 @@ buildGhostedVertices(const Tpetra::Import<int,panzer::GlobalOrdinal,panzer::Tpet
 } // end build ghstd vertices
 
 void
-setupLocalMeshBlockInfo(const panzer_stk::STK_Interface & mesh,
+setupLocalMeshBlockInfo(Teuchos::RCP<const panzer_stk::STK_Interface> & mesh,
                         panzer::ConnManager & conn,
                         const panzer::LocalMeshInfo & mesh_info,
                         const std::string & element_block_name,
@@ -146,7 +146,7 @@ setupLocalMeshBlockInfo(const panzer_stk::STK_Interface & mesh,
 
   // Make sure connectivity is setup for interfaces between cells
   {
-    const shards::CellTopology & topology = *(mesh.getCellTopology(element_block_name));
+    const shards::CellTopology & topology = *(mesh->getCellTopology(element_block_name));
     Teuchos::RCP<panzer::FieldPattern> cell_pattern;
     if(topology.getDimension() == 1){
       cell_pattern = Teuchos::rcp(new panzer::EdgeFieldPattern(topology));
@@ -177,10 +177,10 @@ setupLocalMeshBlockInfo(const panzer_stk::STK_Interface & mesh,
     return;
   block_info.num_owned_cells = owned_block_cells.size();
   block_info.element_block_name = element_block_name;
-  block_info.cell_topology = mesh.getCellTopology(element_block_name);
+  block_info.cell_topology = mesh->getCellTopology(element_block_name);
   {
     PANZER_FUNC_TIME_MONITOR("panzer::partitioning_utilities::setupSubLocalMeshInfo");
-    panzer::partitioning_utilities::setupSubLocalMeshInfo(mesh_info, owned_block_cells, block_info);
+    panzer::partitioning_utilities::setupSubLocalMeshInfo(mesh_info, mesh, owned_block_cells, block_info);
   }
 }
 
@@ -704,7 +704,7 @@ generateLocalMeshInfo(const panzer_stk::STK_Interface & mesh)
   for(const std::string & element_block_name : element_block_names){
     PANZER_FUNC_TIME_MONITOR_DIFF("Set up setupLocalMeshBlockInfo",SetupLocalMeshBlockInfo);
     panzer::LocalMeshBlockInfo & block_info = mesh_info.element_blocks[element_block_name];
-    setupLocalMeshBlockInfo(mesh, conn, mesh_info, element_block_name, block_info);
+    setupLocalMeshBlockInfo(mesh_rcp, conn, mesh_info, element_block_name, block_info);
     block_info.subcell_dimension = space_dim;
     block_info.subcell_index = -1;
     block_info.has_connectivity = true;

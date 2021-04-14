@@ -96,7 +96,7 @@ getWorksets(const panzer::WorksetDescriptor & worksetDesc,
       mesh_info_ = panzer_stk::generateLocalMeshInfo(*mesh_);
     }
 
-    auto worksets = panzer::buildPartitionedWorksets(*mesh_info_, worksetDesc, this->getOrientationsInterface());
+    auto worksets = panzer::buildPartitionedWorksets(*mesh_info_, mesh_, worksetDesc, this->getOrientationsInterface());
 
     // Fill in whatever is in the needs object
     // FIXME: This will just get optimized out... Adding volatile to the calls makes the worksets pretty ugly

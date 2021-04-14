@@ -407,6 +407,7 @@ namespace partitioning_utilities
 
 void
 setupSubLocalMeshInfo(const panzer::LocalMeshInfoBase & parent_info,
+                      const Teuchos::RCP<const panzer_stk::STK_Interface> & mesh,
                       const std::vector<panzer::LocalOrdinal> & owned_parent_cells,
                       panzer::LocalMeshInfoBase & sub_info)
 {
@@ -553,6 +554,13 @@ setupSubLocalMeshInfo(const panzer::LocalMeshInfoBase & parent_info,
     }
   }
 
+  //std::vector<LO> localIds;
+  //for(int cell=0;cell<num_total_cells;++cell) {
+  //  const LO parent_cell = all_parent_cells[cell].first;
+  //  localIds.emplace_back( parent_cell );
+ // }
+  //mesh->getElementVerticesNoResize(localIds,sub_info.cell_vertices);
+
   // Now for the difficult part
 
   // We need to create a new face indexing scheme from the old face indexing scheme
@@ -664,6 +672,7 @@ setupSubLocalMeshInfo(const panzer::LocalMeshInfoBase & parent_info,
 
 void
 splitMeshInfo(const panzer::LocalMeshInfoBase & mesh_info,
+              const Teuchos::RCP<const panzer_stk::STK_Interface> & mesh,
               const int splitting_size,
               std::vector<panzer::LocalMeshPartition> & partitions)
 {
@@ -703,7 +712,7 @@ splitMeshInfo(const panzer::LocalMeshInfoBase & mesh_info,
     partitions.push_back(panzer::LocalMeshPartition());
 
     // Fill the empty partition
-    partitioning_utilities::setupSubLocalMeshInfo(mesh_info,partition_cells,partitions.back());
+    partitioning_utilities::setupSubLocalMeshInfo(mesh_info,mesh,partition_cells,partitions.back());
 
     // Update the cell count
     cell_count += partition_size;
@@ -715,6 +724,7 @@ splitMeshInfo(const panzer::LocalMeshInfoBase & mesh_info,
 
 void
 generateLocalMeshPartitions(const panzer::LocalMeshInfo & mesh_info,
+                            const Teuchos::RCP<const panzer_stk::STK_Interface> & mesh,
                             const panzer::WorksetDescriptor & description,
                             std::vector<panzer::LocalMeshPartition> & partitions)
 {
@@ -744,7 +754,7 @@ generateLocalMeshPartitions(const panzer::LocalMeshInfo & mesh_info,
     const panzer::LocalMeshSidesetInfo & sideset_info = sideset_map.at(sideset_name);
 
     // Partitioning is not important for sidesets
-    panzer::partitioning_utilities::splitMeshInfo(sideset_info, description.getWorksetSize(), partitions);
+    panzer::partitioning_utilities::splitMeshInfo(sideset_info, mesh, description.getWorksetSize(), partitions);
 
     for(auto & partition : partitions){
       partition.sideset_name = sideset_name;
@@ -764,12 +774,12 @@ generateLocalMeshPartitions(const panzer::LocalMeshInfo & mesh_info,
 
     if(description.getWorksetSize() == panzer::WorksetSizeType::ALL_ELEMENTS){
       // We only have one partition describing the entire local mesh
-      panzer::partitioning_utilities::splitMeshInfo(block_info, -1, partitions);
+      panzer::partitioning_utilities::splitMeshInfo(block_info, mesh, -1, partitions);
     } else {
       // We need to partition local mesh
 
       // FIXME: Until the above function is fixed, we will use this hack - this will lead to horrible partitions
-      panzer::partitioning_utilities::splitMeshInfo(block_info, description.getWorksetSize(), partitions);
+      panzer::partitioning_utilities::splitMeshInfo(block_info, mesh, description.getWorksetSize(), partitions);
 
     }
 
