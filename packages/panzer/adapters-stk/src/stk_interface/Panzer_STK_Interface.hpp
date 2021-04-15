@@ -61,6 +61,7 @@
 
 #include <PanzerAdaptersSTK_config.hpp>
 #include <Kokkos_ViewFactory.hpp>
+#include "Phalanx_KokkosDeviceTypes.hpp"
 
 #include <unordered_map>
 
@@ -281,6 +282,8 @@ public:
    /** Get a vector of elements owned by this processor
      */
    void getMyElements(std::vector<stk::mesh::Entity> & elements) const;
+   Kokkos::View<panzer::GlobalOrdinal*> getOwnedGlobalCellIDs() const;
+   Kokkos::View<panzer::GlobalOrdinal*> getGhostGlobalCellIDs() const;
 
    /** Get a vector of elements owned by this processor on a particular block ID
      */

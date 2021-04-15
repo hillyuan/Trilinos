@@ -49,6 +49,7 @@
 #include "Teuchos_RCP.hpp"
 #include "Shards_CellTopology.hpp"
 #include "PanzerDofMgr_config.hpp"
+#include "Phalanx_KokkosDeviceTypes.hpp"
 
 namespace panzer {
 
@@ -135,6 +136,19 @@ class FieldPattern; // from DOFManager
      * input.
      */
     virtual bool hasAssociatedNeighbors() const = 0;
+
+    /// Get the local cell IDs for the workset getLocalCellIDs
+    PHX::View<panzer::GlobalOrdinal*> getGlobalCellIDs() const
+    {return cell_global_ids_;}
+    PHX::View<panzer::GlobalOrdinal*> getOwnedGlobalCellIDs() const
+    {return owned_cell_global_ids_;}
+    PHX::View<panzer::GlobalOrdinal*> getGhostGlobalCellIDs() const
+    {return ghost_cell_global_ids_;}
+
+  protected:
+    PHX::View<panzer::GlobalOrdinal*> cell_global_ids_;
+    PHX::View<panzer::GlobalOrdinal*> owned_cell_global_ids_;
+    PHX::View<panzer::GlobalOrdinal*> ghost_cell_global_ids_;
   };
 
 }

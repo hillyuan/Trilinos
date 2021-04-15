@@ -107,6 +107,7 @@ void STKConnManager::buildLocalElementMapping()
    // defines ordering of blocks
    std::vector<std::string> blockIds;
    stkMeshDB_->getElementBlockNames(blockIds);
+   stk::mesh::BulkData& bulkData = *stkMeshDB_->getBulkData();
 
    std::size_t blockIndex=0;
    for(std::vector<std::string>::const_iterator idItr=blockIds.begin();
@@ -127,6 +128,11 @@ void STKConnManager::buildLocalElementMapping()
    }
 
    ownedElementCount_ = elements_->size();
+   owned_cell_global_ids_ = PHX::View<panzer::GlobalOrdinal*>("owned_global_cells",ownedElementCount_);
+
+   for( std::size_t id=0; id<ownedElementCount_; ++id ) {
+     owned_cell_global_ids_(id) = bulkData.identifier( elements_->at(id) ) -1;
+   }
 
    blockIndex=0;
    for(std::vector<std::string>::const_iterator idItr=blockIds.begin();

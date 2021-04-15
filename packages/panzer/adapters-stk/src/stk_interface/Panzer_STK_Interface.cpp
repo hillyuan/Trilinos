@@ -1141,6 +1141,38 @@ void STK_Interface::getMyElements(std::vector<stk::mesh::Entity> & elements) con
    stk::mesh::get_selected_entities(ownedPart,bulkData_->buckets(elementRank),elements);
 }
 
+Kokkos::View<panzer::GlobalOrdinal*> STK_Interface::getOwnedGlobalCellIDs() const
+{
+   std::vector<stk::mesh::Entity> elements;
+   Kokkos::View<panzer::GlobalOrdinal*> owned_cell_global_ids;
+
+   this->getMyElements( elements );
+   std::size_t ne = elements.size();
+
+   owned_cell_global_ids = PHX::View<panzer::GlobalOrdinal*>("owned_global_cells",ne);
+
+   for( std::size_t id=0; id<ne; ++id ) {
+     owned_cell_global_ids(id) = bulkData_->identifier( elements[id] ) -1;
+   }
+}
+
+Kokkos::View<panzer::GlobalOrdinal*> STK_Interface::getGhostGlobalCellIDs() const
+{
+   std::vector<stk::mesh::Entity> elements;
+   Kokkos::View<panzer::GlobalOrdinal*> ghost_cell_global_ids;
+
+   stk::mesh::Selector ownedPart = metaData_->globally_shared_part();
+   stk::mesh::EntityRank elementRank = getElementRank();
+   stk::mesh::get_selected_entities(ownedPart,bulkData_->buckets(elementRank),elements);
+   std::size_t ne = elements.size();
+
+   ghost_cell_global_ids = PHX::View<panzer::GlobalOrdinal*>("ghost_global_cells",ne);
+
+   for( std::size_t id=0; id<ne; ++id ) {
+     ghost_cell_global_ids(id) = bulkData_->identifier( elements[id] ) -1;
+   }
+}
+
 void STK_Interface::getMyElements(const std::string & blockID,std::vector<stk::mesh::Entity> & elements) const
 {
    stk::mesh::Part * elementBlock = getElementBlockPart(blockID);

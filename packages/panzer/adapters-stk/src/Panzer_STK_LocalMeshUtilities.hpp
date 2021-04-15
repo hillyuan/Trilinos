@@ -66,11 +66,6 @@ namespace panzer_stk
   Teuchos::RCP<panzer::LocalMeshInfo>
   generateLocalMeshInfo(const panzer_stk::STK_Interface & mesh);
 
-  void
-  setupSubLocalMeshInfo( const panzer_stk::STK_Interface & mesh,
-                      const panzer::LocalMeshInfoBase & parent_info,
-                      const std::vector<panzer::LocalOrdinal> & owned_parent_cells,
-                      panzer::LocalMeshBlockInfo & child_info);
 }
 
 #endif
