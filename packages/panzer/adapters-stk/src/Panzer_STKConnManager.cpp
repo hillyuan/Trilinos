@@ -130,6 +130,8 @@ void STKConnManager::buildLocalElementMapping()
    ownedElementCount_ = elements_->size();
    owned_cell_global_ids_ = PHX::View<panzer::GlobalOrdinal*>("owned_global_cells",ownedElementCount_);
 
+   // this expensive operation gurantees ordering of local IDs
+   std::sort(elements_->begin(),elements_->end(),LocalIdCompare(stkMeshDB_));
    for( std::size_t id=0; id<ownedElementCount_; ++id ) {
      owned_cell_global_ids_(id) = bulkData.identifier( elements_->at(id) ) -1;
    }

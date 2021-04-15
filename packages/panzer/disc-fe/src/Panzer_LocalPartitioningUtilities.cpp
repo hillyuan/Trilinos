@@ -795,10 +795,10 @@ fillLocalCellIDs(const Teuchos::RCP<const Teuchos::Comm<int>> & comm,
   // build cell to node map
   PHX::View<panzer::GlobalOrdinal**> owned_cell_to_nodes;
   buildCellToNodes(conn, owned_cell_to_nodes);
-  //owned_cells = conn.getOwnedGlobalCellIDs(); 
+  owned_cells = conn.getOwnedGlobalCellIDs(); 
 
   // Build the local to global cell ID map
-  buildCellGlobalIDs(conn, owned_cells);
+  //buildCellGlobalIDs(conn, owned_cells);
   //for( int i=0; i<owned_cells.extent(0); i++ )
   //  std::cout << i << "," << owned_cells(i) << std::endl;
 
