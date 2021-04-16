@@ -76,7 +76,7 @@ private:
 };
 
 STKConnManager::STKConnManager(const Teuchos::RCP<const STK_Interface> & stkMeshDB)
-   : stkMeshDB_(stkMeshDB), ownedElementCount_(0)
+   : stkMeshDB_(stkMeshDB), ownedElementCount_(0), initialized(false)
 {
   elements_ = Teuchos::rcp(new std::vector<stk::mesh::Entity>);
 }
@@ -167,11 +167,10 @@ void STKConnManager::buildLocalElementMapping()
 
    // allocate space for element LID to Connectivty map
    // connectivity size
-   elmtLidToConn_.clear();
    elmtLidToConn_.resize(elements_->size(),0);
-
-   connSize_.clear();
    connSize_.resize(elements_->size(),0);
+
+   initialized = true;
 }
 
 void
@@ -269,7 +268,7 @@ void STKConnManager::buildConnectivity(const panzer::FieldPattern & fp)
 
    // get element info from STK_Interface
    // object and build a local element mapping.
-   buildLocalElementMapping();
+   if(!initialized) buildLocalElementMapping();
 
    // Build sub cell ID counts and offsets
    //    ID counts = How many IDs belong on each subcell (number of mesh DOF used)
