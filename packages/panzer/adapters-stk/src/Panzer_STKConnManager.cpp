@@ -126,7 +126,6 @@ void STKConnManager::buildLocalElementMapping()
    }
 
    ownedElementCount_ = elements_->size();
-   //owned_cell_global_ids_ = PHX::View<panzer::GlobalOrdinal*>("owned_global_cells",ownedElementCount_);
    Kokkos::resize(owned_cell_global_ids_,ownedElementCount_);
 
    // this expensive operation gurantees ordering of local IDs
@@ -149,8 +148,22 @@ void STKConnManager::buildLocalElementMapping()
          neighborElementBlocks_[blockId]->push_back(stkMeshDB_->elementLocalId(blockElmts[i]));
    }
 
+   std::vector<stk::mesh::Entity> ghost_elements;
+   stkMeshDB_->getNeighborElements(ghost_elements);
+   std::size_t ghostElementCount = ghost_elements.size();
+   Kokkos::resize(ghost_cell_global_ids_ ,ghostElementCount);
+   for( std::size_t id=0; id<ghostElementCount; ++id ) {
+     ghost_cell_global_ids_(id) = bulkData.identifier( ghost_elements[id] ) -1;
+   }
+
    // this expensive operation gurantees ordering of local IDs
    std::sort(elements_->begin(),elements_->end(),LocalIdCompare(stkMeshDB_));
+
+   std::size_t allElementCount = elements_->size();
+   Kokkos::resize( cell_global_ids_ ,allElementCount);
+   for( std::size_t id=0; id<allElementCount; ++id ) {
+     cell_global_ids_(id) = bulkData.identifier( elements_->at(id) ) -1 ;
+   }
 
    // allocate space for element LID to Connectivty map
    // connectivity size
