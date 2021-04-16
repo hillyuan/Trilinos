@@ -60,9 +60,11 @@ class FieldPattern; // from DOFManager
   public:
 
     using GlobalOrdinal = panzer::GlobalOrdinal;
-    using LocalOrdinal = int;
+    using LocalOrdinal = panzer::LocalOrdinal;
 
-    virtual ~ConnManager() {}
+    ConnManager(): cell_global_ids_("global_cells",0), owned_cell_global_ids_("owned_global_cells",0)
+                  , ghost_cell_global_ids_("ghost_global_cells",0)
+    {};
 
     /** Tell the connection manager to build the connectivity assuming
      * a particular field pattern.

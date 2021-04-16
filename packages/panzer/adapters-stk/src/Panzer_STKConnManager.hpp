@@ -206,6 +206,9 @@ public:
       */
     virtual bool hasAssociatedNeighbors() const;
 
+    void setInitialState(bool init)
+    {initialized = init;}
+
 protected:
    /** Apply periodic boundary conditions associated with the mesh object.
      *
@@ -248,6 +251,9 @@ protected:
    std::vector<std::string> sidesetsToAssociate_;
    std::vector<bool> sidesetYieldedAssociations_;
    std::vector<std::vector<LocalOrdinal> > elmtToAssociatedElmts_;
+
+private:
+  bool initialized;
 };
 
 }
