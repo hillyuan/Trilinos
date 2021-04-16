@@ -78,6 +78,7 @@ private:
 STKConnManager::STKConnManager(const Teuchos::RCP<const STK_Interface> & stkMeshDB)
    : stkMeshDB_(stkMeshDB), ownedElementCount_(0)
 {
+  elements_ = Teuchos::rcp(new std::vector<stk::mesh::Entity>);
 }
 
 Teuchos::RCP<panzer::ConnManager>
@@ -88,7 +89,8 @@ STKConnManager::noConnectivityClone() const
 
 void STKConnManager::clearLocalElementMapping()
 {
-   elements_ = Teuchos::null;
+   elements_->clear();
+  // elements_ = Teuchos::null;
 
    elementBlocks_.clear();
    elmtLidToConn_.clear();
@@ -102,18 +104,14 @@ void STKConnManager::buildLocalElementMapping()
 
    // build element block information
    //////////////////////////////////////////////
-   elements_ = Teuchos::rcp(new std::vector<stk::mesh::Entity>);
+  // elements_ = Teuchos::rcp(new std::vector<stk::mesh::Entity>);
 
    // defines ordering of blocks
    std::vector<std::string> blockIds;
    stkMeshDB_->getElementBlockNames(blockIds);
    stk::mesh::BulkData& bulkData = *stkMeshDB_->getBulkData();
 
-   std::size_t blockIndex=0;
-   for(std::vector<std::string>::const_iterator idItr=blockIds.begin();
-       idItr!=blockIds.end();++idItr,++blockIndex) {
-      std::string blockId = *idItr;
-
+   for(std::string blockId : blockIds) {
       // grab elements on this block
       std::vector<stk::mesh::Entity> blockElmts;
       stkMeshDB_->getMyElements(blockId,blockElmts);
@@ -128,7 +126,8 @@ void STKConnManager::buildLocalElementMapping()
    }
 
    ownedElementCount_ = elements_->size();
-   owned_cell_global_ids_ = PHX::View<panzer::GlobalOrdinal*>("owned_global_cells",ownedElementCount_);
+   //owned_cell_global_ids_ = PHX::View<panzer::GlobalOrdinal*>("owned_global_cells",ownedElementCount_);
+   Kokkos::resize(owned_cell_global_ids_,ownedElementCount_);
 
    // this expensive operation gurantees ordering of local IDs
    std::sort(elements_->begin(),elements_->end(),LocalIdCompare(stkMeshDB_));
@@ -136,11 +135,7 @@ void STKConnManager::buildLocalElementMapping()
      owned_cell_global_ids_(id) = bulkData.identifier( elements_->at(id) ) -1;
    }
 
-   blockIndex=0;
-   for(std::vector<std::string>::const_iterator idItr=blockIds.begin();
-       idItr!=blockIds.end();++idItr,++blockIndex) {
-      std::string blockId = *idItr;
-
+   for(std::string blockId : blockIds) {
       // grab elements on this block
       std::vector<stk::mesh::Entity> blockElmts;
       stkMeshDB_->getNeighborElements(blockId,blockElmts);
