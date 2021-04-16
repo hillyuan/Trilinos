@@ -325,6 +325,39 @@ std::string STKConnManager::getBlockId(STKConnManager::LocalOrdinal localElmtId)
 
    return stkMeshDB_->containingBlockId(element);
 }
+	
+/* void STKConnManager::applyPeriodicBCs()
+{
+   std::pair<Teuchos::RCP<std::vector<std::pair<std::size_t,std::size_t> > >, Teuchos::RCP<std::vector<unsigned int> > > matchedValues
+            = stkMeshDB_->getPeriodicNodePairing();
+
+   Teuchos::RCP<std::vector<std::pair<std::size_t,std::size_t> > > matchedNodes
+            = matchedValues.first;
+   Teuchos::RCP<std::vector<unsigned int> > matchTypes
+            = matchedValues.second;
+
+   // no matchedNodes means nothing to do!
+   if(matchedNodes==Teuchos::null) return;
+
+   std::vector<std::size_t> newGhostElements;
+   for(std::size_t m=0;m<matchedNodes->size();m++) {
+      stk::mesh::EntityId oldNodeId = (*matchedNodes)[m].first;
+      std::size_t newNodeId = (*matchedNodes)[m].second;
+	   
+	  if oldNodeId not inside continue;
+	  if newNodeId inside continue;
+	   
+	  stkMeshDB_->getOwnedElementsSharingNode(stk::mesh::EntityId(newNodeId),newGhostElements,localIds,(*matchTypes)[m]);
+	  if( newGhostElements.empty() ) continue;  // hanging node ?
+	  for( auto ele: newGhostElements ) {
+		  if( ele inside ) continue;
+		  newGhostElements.emplace_back(ele);
+	  }
+   }
+	
+	// modify ghost_cell_global_ids_
+}*/
+
 
 void STKConnManager::applyPeriodicBCs(const panzer::FieldPattern & fp, GlobalOrdinal nodeOffset, GlobalOrdinal edgeOffset,
                                       GlobalOrdinal faceOffset, GlobalOrdinal /* cellOffset */)

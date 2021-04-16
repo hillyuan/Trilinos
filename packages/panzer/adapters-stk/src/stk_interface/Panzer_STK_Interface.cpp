@@ -1409,7 +1409,7 @@ void STK_Interface::getAllSides(const std::string & sideName,const std::string &
    stk::mesh::get_selected_entities(sideBlock,bulkData_->buckets(getSideRank()),sides);
 }
 
-void STK_Interface::getMyNodes(const std::string & nodesetName,const std::string & blockName,std::vector<stk::mesh::Entity> & nodes) const
+void STK_Interface::getMyNodeSet(const std::string & nodesetName,const std::string & blockName,std::vector<stk::mesh::Entity> & nodes) const
 {
    stk::mesh::Part * nodePart = getNodeset(nodesetName);
    stk::mesh::Part * elmtPart = getElementBlockPart(blockName);
@@ -1424,6 +1424,63 @@ void STK_Interface::getMyNodes(const std::string & nodesetName,const std::string
 
    // grab elements
    stk::mesh::get_selected_entities(ownedBlock,bulkData_->buckets(getNodeRank()),nodes);
+}
+	
+void STK_Interface::getMyNodeSetId(const std::string & nodesetName,const std::string & blockName,std::vector<stk::mesh::EntityId> & nodeIds) const
+{
+   stk::mesh::Part * nodePart = getNodeset(nodesetName);
+   stk::mesh::Part * elmtPart = getElementBlockPart(blockName);
+   TEUCHOS_TEST_FOR_EXCEPTION(nodePart==0,SidesetException,
+                      "Unknown node set \"" << nodesetName << "\"");
+   TEUCHOS_TEST_FOR_EXCEPTION(elmtPart==0,ElementBlockException,
+                      "Unknown element block \"" << blockName << "\"");
+
+   stk::mesh::Selector nodeset = *nodePart;
+   stk::mesh::Selector block = *elmtPart;
+   stk::mesh::Selector ownedBlock = metaData_->locally_owned_part() & block & nodeset;
+
+   // grab elements
+   std::vector<stk::mesh::Entity> nodes;
+   stk::mesh::get_selected_entities(ownedBlock,bulkData_->buckets(getNodeRank()),nodes);
+	
+   nodeIds.clear();
+   for( const auto n: nodes )
+   {
+	   nodeIds.emplace_back( bulkData_->identifier(n) );
+   }
+}
+	
+void STK_Interface::getOwnedNodeSet(const std::string & nodesetName,std::vector<stk::mesh::Entity> & nodes) const
+{
+   stk::mesh::Part * nodePart = getNodeset(nodesetName);
+   TEUCHOS_TEST_FOR_EXCEPTION(nodePart==0,std::logic_error,
+                      "Unknown side set \"" << nodesetName << "\"");
+
+   stk::mesh::Selector nodeset = *nodePart;
+   stk::mesh::Selector ownedBlock = metaData_->locally_owned_part() & nodeset;
+
+   // grab nodes
+   stk::mesh::get_selected_entities(ownedBlock,bulkData_->buckets(getNodeRank()),nodes);
+}
+
+void STK_Interface::getOwnedNodeSetId(const std::string & nodesetName,std::vector<stk::mesh::EntityId> & nodeIds) const
+{
+   stk::mesh::Part * nodePart = getNodeset(nodesetName);
+   TEUCHOS_TEST_FOR_EXCEPTION(nodePart==0,std::logic_error,
+                      "Unknown side set \"" << nodesetName << "\"");
+
+   stk::mesh::Selector nodeset = *nodePart;
+   stk::mesh::Selector ownedBlock = metaData_->locally_owned_part() & nodeset;
+
+   // grab nodes
+   std::vector<stk::mesh::Entity> nodes;
+   stk::mesh::get_selected_entities(ownedBlock,bulkData_->buckets(getNodeRank()),nodes);
+	
+   nodeIds.clear();
+   for( const auto n: nodes )
+   {
+	   nodeIds.emplace_back( bulkData_->identifier(n) );
+   }
 }
 
 void STK_Interface::getElementBlockNames(std::vector<std::string> & names) const

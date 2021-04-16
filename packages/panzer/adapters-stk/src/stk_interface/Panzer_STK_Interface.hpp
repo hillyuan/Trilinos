@@ -429,7 +429,17 @@ public:
      * \param[in,out] nodes Vector of entities containing the requested nodes.
      */
 
-   void getMyNodes(const std::string & sideName,const std::string & blockName,std::vector<stk::mesh::Entity> & nodes) const;
+   void getMyNodeSet(const std::string & sideName,const std::string & blockName,std::vector<stk::mesh::Entity> & nodes) const;
+   void getMyNodeSetId(const std::string & nodesetName,const std::string & blockName,std::vector<stk::mesh::EntityId> & nodes) const;
+
+   /** Get Entities corresponding to the node set requested. The Entites in the vector should be of dimension
+     * <code>0</code>.
+     *
+     * \param[in] nodesetName Name of node set
+     * \param[in,out] nodes Vector of entities containing the requested nodes.
+     */
+   void getOwnedNodeSet(const std::string & nodesetName, std::vector<stk::mesh::Entity> & nodes) const;
+   void getOwnedNodeSetId(const std::string & nodesetName, std::vector<stk::mesh::EntityId> & nodeIds) const;
 
    /**
     * Searches for connected entity by rank and relation id. Returns
