@@ -108,6 +108,7 @@ void LineMeshFactory::completeMeshConstruction(STK_Interface & mesh,stk::Paralle
    // finish up the edges
    mesh.buildSubcells();
    mesh.buildLocalElementIDs();
+   mesh.buildLocalNodeIDs();
 
    // now that edges are built, sidets can be added
    addSideSets(mesh);

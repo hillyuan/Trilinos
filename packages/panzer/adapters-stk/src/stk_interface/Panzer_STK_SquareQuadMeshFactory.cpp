@@ -160,6 +160,7 @@ void SquareQuadMeshFactory::completeMeshConstruction(STK_Interface & mesh,stk::P
    mesh.buildSubcells();
 #endif
    mesh.buildLocalElementIDs();
+   mesh.buildLocalNodeIDs();
 
    // now that edges are built, sidsets can be added
 #ifndef ENABLE_UNIFORM

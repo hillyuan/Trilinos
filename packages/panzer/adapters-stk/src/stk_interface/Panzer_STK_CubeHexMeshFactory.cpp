@@ -171,6 +171,7 @@ void CubeHexMeshFactory::completeMeshConstruction(STK_Interface & mesh,stk::Para
    }
 
    mesh.buildLocalElementIDs();
+   mesh.buildLocalNodeIDs();
    if(buildSubcells_) {
       mesh.buildLocalEdgeIDs();
       mesh.buildLocalFaceIDs();

@@ -1211,6 +1211,26 @@ void STK_Interface::getNeighborElements(const std::string & blockID,std::vector<
    stk::mesh::EntityRank elementRank = getElementRank();
    stk::mesh::get_selected_entities(neighborBlock,bulkData_->buckets(elementRank),elements);
 }
+	
+void STK_Interface::getMyNodes(std::vector<stk::mesh::Entity> & nodes) const
+{
+   // setup local ownership
+   stk::mesh::Selector ownedPart = metaData_->locally_owned_part();
+
+   // grab elements
+   stk::mesh::EntityRank nodeRank = getNodeRank();
+   stk::mesh::get_selected_entities(ownedPart,bulkData_->buckets(nodeRank),nodes);
+}
+
+void STK_Interface::getAllNodes(std::vector<stk::mesh::Entity> & nodes) const
+{
+   // setup local ownership
+   stk::mesh::Selector ownedPart = (metaData_->locally_owned_part() | metaData_->globally_shared_part());
+
+   // grab elements
+   stk::mesh::EntityRank nodeRank = getNodeRank();
+   stk::mesh::get_selected_entities(ownedPart,bulkData_->buckets(nodeRank),nodes);
+}
 
 void STK_Interface::getMyEdges(std::vector<stk::mesh::Entity> & edges) const
 {
@@ -1554,6 +1574,20 @@ std::size_t STK_Interface::elementLocalId(stk::mesh::EntityId gid) const
    TEUCHOS_ASSERT(itr!=localIDHash_.end());
    return itr->second;
 }
+	
+bool STK_Interface::isNodeLocal(stk::mesh::Entity edge) const
+{
+   return isNodeLocal(bulkData_->identifier(edge));
+}
+
+bool STK_Interface::isNodeLocal(stk::mesh::EntityId gid) const
+{
+   std::unordered_map<stk::mesh::EntityId,std::size_t>::const_iterator itr = localNodeIDHash_.find(gid);
+   if (itr==localNodeIDHash_.end()) {
+     return false;
+   }
+   return true;
+}
 
 bool STK_Interface::isEdgeLocal(stk::mesh::Entity edge) const
 {
@@ -1851,6 +1885,25 @@ void STK_Interface::applyElementLoadBalanceWeights()
       loadBal[0] = blockWeight;
     }
   }
+}
+	
+void STK_Interface::buildLocalNodeIDs()
+{
+   currentLocalId_ = 0;
+
+   orderedNodeVector_ = Teuchos::null; // forces rebuild of ordered lists
+
+   // might be better (faster) to do this by buckets
+   std::vector<stk::mesh::Entity> nodes;
+   getMyNodes(nodes);
+
+   for(stk::mesh::Entity node : nodes) {
+      localNodeIDHash_[bulkData_->identifier(node)] = currentLocalId_;
+      currentLocalId_++;
+   }
+
+   // copy edges into the ordered edge vector
+   orderedNodeVector_ = Teuchos::rcp(new std::vector<stk::mesh::Entity>(nodes));
 }
 
 void STK_Interface::buildLocalEdgeIDs()

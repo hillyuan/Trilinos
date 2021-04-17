@@ -154,6 +154,7 @@ void SquareTriMeshFactory::completeMeshConstruction(STK_Interface & mesh,stk::Pa
    // finish up the edges
    mesh.buildSubcells();
    mesh.buildLocalElementIDs();
+   mesh.buildLocalNodeIDs();
 
    // now that edges are built, sidets can be added
    addSideSets(mesh);

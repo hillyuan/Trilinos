@@ -285,8 +285,7 @@ public:
    Kokkos::View<panzer::GlobalOrdinal*> getOwnedGlobalCellIDs() const;
    Kokkos::View<panzer::GlobalOrdinal*> getGhostGlobalCellIDs() const;
 
-   /** Get a vector of elements owned by this processor on a particular block ID
-     */
+   /** Get a vector of elements owned by this processor on a particular block ID */
    void getMyElements(const std::string & blockID,std::vector<stk::mesh::Entity> & elements) const;
 
    /** Get a vector of elements that share an edge/face with an owned element. Note that these elements
@@ -294,9 +293,14 @@ public:
      */
    void getNeighborElements(std::vector<stk::mesh::Entity> & elements) const;
 
-   /** Get a vector of elements not owned by this processor but in a particular block
-     */
+   /** Get a vector of elements not owned by this processor but in a particular block */
    void getNeighborElements(const std::string & blockID,std::vector<stk::mesh::Entity> & elements) const;
+	
+   /** Get a vector of nodes owned by this processor */
+   void getMyNodes(std::vector<stk::mesh::Entity> & nodes) const;
+	
+   /** Get a vector of nodes in this processor */
+   void getAllNodes(std::vector<stk::mesh::Entity> & nodes) const;
 
    /** Get a vector of edges owned by this processor
      */
@@ -772,6 +776,12 @@ public:
      */
    inline stk::mesh::EntityId elementGlobalId(stk::mesh::Entity elmt) const
    { return bulkData_->identifier(elmt); }
+	
+   /** Is an edge local to this processor? */
+   bool isNodeLocal(stk::mesh::Entity node) const;
+
+   /** Is an edge local to this processor? */
+   bool isNodeLocal(stk::mesh::EntityId gid) const;
 
    /** Is an edge local to this processor?
      */
@@ -1081,6 +1091,9 @@ public:
    /** Build fields and parts from the meta data
      */
    void initializeFromMetaData();
+	
+   /** Setup local element IDs */
+   void buildLocalNodeIDs();
 
    /** Setup local element IDs
      */
@@ -1390,18 +1403,16 @@ protected:
 #endif
 
    // uses lazy evaluation
+   mutable Teuchos::RCP<std::vector<stk::mesh::Entity> > orderedNodeVector_;
    mutable Teuchos::RCP<std::vector<stk::mesh::Entity> > orderedElementVector_;
-
-   // uses lazy evaluation
    mutable Teuchos::RCP<std::vector<stk::mesh::Entity> > orderedEdgeVector_;
-
-   // uses lazy evaluation
    mutable Teuchos::RCP<std::vector<stk::mesh::Entity> > orderedFaceVector_;
 
    // for element block weights
    std::map<std::string,double> blockWeights_;
 
    std::unordered_map<stk::mesh::EntityId,std::size_t> localIDHash_;
+   std::unordered_map<stk::mesh::EntityId,std::size_t> localNodeIDHash_;
    std::unordered_map<stk::mesh::EntityId,std::size_t> localEdgeIDHash_;
    std::unordered_map<stk::mesh::EntityId,std::size_t> localFaceIDHash_;
 

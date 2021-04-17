@@ -241,6 +241,7 @@ void STK_ExodusReaderFactory::completeMeshConstruction(STK_Interface & mesh,stk:
 
    mesh.buildSubcells();
    mesh.buildLocalElementIDs();
+   mesh.buildLocalNodeIDs();
    if (createEdgeBlocks_) {
       mesh.buildLocalEdgeIDs();
    }
