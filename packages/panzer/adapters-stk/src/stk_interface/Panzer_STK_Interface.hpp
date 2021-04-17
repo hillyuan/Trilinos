@@ -282,6 +282,7 @@ public:
    /** Get a vector of elements owned by this processor
      */
    void getMyElements(std::vector<stk::mesh::Entity> & elements) const;
+   void getAllElementGIDs(std::vector<panzer::GlobalOrdinal> & elements) const;
    Kokkos::View<panzer::GlobalOrdinal*> getOwnedGlobalCellIDs() const;
    Kokkos::View<panzer::GlobalOrdinal*> getGhostGlobalCellIDs() const;
 
@@ -506,8 +507,7 @@ public:
    *                      results.
    */
   void
-  writeToExodus(
-    double timestep);
+  writeToExodus(double timestep);
 
   /**
    *  \brief Add an `int` global variable to the information to be written to
@@ -529,9 +529,7 @@ public:
    *  \param[in] value The value of the global variable you'll be adding.
    */
   void
-  addGlobalToExodus(
-    const std::string& key,
-    const int&         value);
+  addGlobalToExodus(const std::string& key, const int& value);
 
   /**
    *  \brief Add a `double` global variable to the information to be written to
@@ -553,9 +551,7 @@ public:
    *  \param[in] value The value of the global variable you'll be adding.
    */
   void
-  addGlobalToExodus(
-    const std::string& key,
-    const double&      value);
+  addGlobalToExodus( const std::string& key, const double& value);
 
   /**
    *  \brief Add a `std::vector<int>` global variable to the information to be
@@ -577,9 +573,7 @@ public:
    *  \param[in] value The value of the global variable you'll be adding.
    */
   void
-  addGlobalToExodus(
-    const std::string&      key,
-    const std::vector<int>& value);
+  addGlobalToExodus( const std::string& key, const std::vector<int>& value);
 
   /**
    *  \brief Add a `std::vector<double>` global variable to the information to
@@ -601,9 +595,7 @@ public:
    *  \param[in] value The value of the global variable you'll be adding.
    */
   void
-  addGlobalToExodus(
-    const std::string&         key,
-    const std::vector<double>& value);
+  addGlobalToExodus( const std::string& key, const std::vector<double>& value);
 
    // Accessor functions
    //////////////////////////////////////////

@@ -218,6 +218,7 @@ protected:
    void applyPeriodicBCs( const panzer::FieldPattern & fp, GlobalOrdinal nodeOffset, GlobalOrdinal edgeOffset,
                                                            GlobalOrdinal faceOffset, GlobalOrdinal cellOffset);
    void applyInterfaceConditions();
+   void considerPeriodicBCs();
 
    void buildLocalElementMapping();
    void clearLocalElementMapping();

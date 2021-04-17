@@ -326,7 +326,7 @@ std::string STKConnManager::getBlockId(STKConnManager::LocalOrdinal localElmtId)
    return stkMeshDB_->containingBlockId(element);
 }
 	
-/* void STKConnManager::applyPeriodicBCs()
+void STKConnManager::considerPeriodicBCs()
 {
    std::pair<Teuchos::RCP<std::vector<std::pair<std::size_t,std::size_t> > >, Teuchos::RCP<std::vector<unsigned int> > > matchedValues
             = stkMeshDB_->getPeriodicNodePairing();
@@ -338,25 +338,42 @@ std::string STKConnManager::getBlockId(STKConnManager::LocalOrdinal localElmtId)
 
    // no matchedNodes means nothing to do!
    if(matchedNodes==Teuchos::null) return;
+	
+   std::vector<panzer::GlobalOrdinal> eleGIDs;
+   stkMeshDB_->getAllElementGIDs(eleGIDs);
 
-   std::vector<std::size_t> newGhostElements;
+   std::vector<stk::mesh::Entity> newGhostElements;
    for(std::size_t m=0;m<matchedNodes->size();m++) {
       stk::mesh::EntityId oldNodeId = (*matchedNodes)[m].first;
-      std::size_t newNodeId = (*matchedNodes)[m].second;
+      stk::mesh::EntityId newNodeId = (*matchedNodes)[m].second;
 	   
-	  if oldNodeId not inside continue;
-	  if newNodeId inside continue;
+	  if(matchTypes->at(m) == 0)
+     	if ( !stkMeshDB_->isNodeLocal(oldNodeId) ) continue;
+	  	if ( stkMeshDB_->isNodeLocal(newNodeId) )  continue;
+      else if(matchTypes->at(m) == 1)
+     	if ( !stkMeshDB_->isEdgeLocal(oldNodeId) ) continue;
+	  	if ( stkMeshDB_->isEdgeLocal(newNodeId) )  continue;
+      else if(matchTypes->at(m) == 2)
+     	if ( !stkMeshDB_->isFaceLocal(oldNodeId) ) continue;
+	  	if ( stkMeshDB_->isFaceLocal(newNodeId) )  continue;
+	  else
+		 TEUCHOS_ASSERT(false);
 	   
-	  stkMeshDB_->getOwnedElementsSharingNode(stk::mesh::EntityId(newNodeId),newGhostElements,localIds,(*matchTypes)[m]);
+	  std::vector<int> localIds;
+	  stkMeshDB_->getOwnedElementsSharingNode(newNodeId,newGhostElements,localIds,(*matchTypes)[m]);
 	  if( newGhostElements.empty() ) continue;  // hanging node ?
 	  for( auto ele: newGhostElements ) {
-		  if( ele inside ) continue;
-		  newGhostElements.emplace_back(ele);
+		stk::mesh::EntityId gid = stkMeshDB_->elementGlobalId(ele);
+		auto result = std::find(eleGIDs.begin(), eleGIDs.end(), gid);
+		if (result == eleGIDs.end()) {
+        	newGhostElements.emplace_back( gid );
+			eleGIDs.emplace_back(gid);
+		}
 	  }
    }
 	
 	// modify ghost_cell_global_ids_
-}*/
+}
 
 
 void STKConnManager::applyPeriodicBCs(const panzer::FieldPattern & fp, GlobalOrdinal nodeOffset, GlobalOrdinal edgeOffset,
