@@ -373,7 +373,7 @@ void STKConnManager::considerPeriodicBCs()
 		 TEUCHOS_ASSERT(false);
 
 	  std::vector<int> localIds;
-	  stkMeshDB_->getOwnedElementsSharingNode(newNodeId-offset0,newGhostElements,localIds,(*matchTypes)[m]);
+	  stkMeshDB_->getOwnedElementsSharingNode(oldNodeId-offset0,newGhostElements,localIds,(*matchTypes)[m]);
 	  if( newGhostElements.empty() ) continue;  // hanging node ?
 	  for( auto ele: newGhostElements ) {
 		stk::mesh::EntityId gid = stkMeshDB_->elementGlobalId(ele);
@@ -387,7 +387,14 @@ void STKConnManager::considerPeriodicBCs()
 	
     //  std::cout << stkMeshDB_->getComm()->getRank() << " end:" << matchedNodes->size() << std::endl;
 	
-	// modify ghost_cell_global_ids_
+	if( !newGhostElements.empty() ) {
+	   std::size_t oldsize = ghost_cell_global_ids_.extent(0);
+	   std::size_t newsize = oldsize + newGhostElements.size();
+	   Kokkos::resize(ghost_cell_global_ids_, newsize);
+	   for( std::size_t i=0; i<newGhostElements.size(); i++ ) {
+		   ghost_cell_global_ids_( oldsize+i ) = stkMeshDB_->elementGlobalId( newGhostElements[i] )-1;
+	   }
+   }
 }
 
 
