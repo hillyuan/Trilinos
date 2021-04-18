@@ -1599,10 +1599,11 @@ bool STK_Interface::isNodeLocal(stk::mesh::Entity edge) const
 bool STK_Interface::isNodeLocal(stk::mesh::EntityId gid) const
 {
    std::unordered_map<stk::mesh::EntityId,std::size_t>::const_iterator itr = localNodeIDHash_.find(gid);
-   if (itr==localNodeIDHash_.end()) {
-     return false;
-   }
-   return true;
+	//std::cout <<  getComm()->getRank() << "  finde: " << gid << "," << (itr==localNodeIDHash_.end()) << std::endl;
+   if (itr==localNodeIDHash_.end())
+	   return false;
+   else
+	   return true;
 }
 
 bool STK_Interface::isEdgeLocal(stk::mesh::Entity edge) const

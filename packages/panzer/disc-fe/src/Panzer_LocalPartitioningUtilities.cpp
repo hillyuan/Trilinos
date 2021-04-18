@@ -745,11 +745,11 @@ fillLocalCellIDs(const Teuchos::RCP<const Teuchos::Comm<int>> & comm,
 
   // Build the local to global cell ID map
   owned_cells = conn.getOwnedGlobalCellIDs(); 
-  //for( int i=0; i<owned_cells.extent(0); i++ )
-  //  std::cout << i << "," << owned_cells(i) << std::endl;
 
   // Get ghost cells
   ghost_cells = buildGhostedCellOneRing(comm,owned_cells,owned_cell_to_nodes);
+  //for( int i=0; i<owned_cells.extent(0); i++ )
+  //  std::cout << comm->getRank() << ","  << i << "," << owned_cells(i) << std::endl;
 
   // Build virtual cells
   // Note: virtual cells are currently defined by faces (only really used for FV/DG type discretizations)

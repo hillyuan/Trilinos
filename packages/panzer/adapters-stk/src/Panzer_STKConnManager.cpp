@@ -164,6 +164,8 @@ void STKConnManager::buildLocalElementMapping()
    for( std::size_t id=0; id<allElementCount; ++id ) {
      cell_global_ids_(id) = bulkData.identifier( elements_->at(id) ) -1 ;
    }
+	
+   considerPeriodicBCs();
 
    // allocate space for element LID to Connectivty map
    // connectivity size
@@ -341,26 +343,37 @@ void STKConnManager::considerPeriodicBCs()
 	
    std::vector<panzer::GlobalOrdinal> eleGIDs;
    stkMeshDB_->getAllElementGIDs(eleGIDs);
+	//for( int i=0; i<eleGIDs.size(); i++ )
+    //  std::cout << stkMeshDB_->getComm()->getRank() << " b,"  << i << "," << eleGIDs[i] << std::endl;
 
    std::vector<stk::mesh::Entity> newGhostElements;
    for(std::size_t m=0;m<matchedNodes->size();m++) {
+	//   std::cout << stkMeshDB_->getComm()->getRank() << "," << m <<"," << matchTypes->at(m) << std::endl;
       stk::mesh::EntityId oldNodeId = (*matchedNodes)[m].first;
       stk::mesh::EntityId newNodeId = (*matchedNodes)[m].second;
+	//std::cout << stkMeshDB_->getComm()->getRank() << ":" <<  oldNodeId << ", " << newNodeId << std::endl;
+	//   std::cout << stkMeshDB_->isNodeLocal(newNodeId)  << std::endl;
 	   
-	  if(matchTypes->at(m) == 0)
+      GlobalOrdinal offset0 = 0; // to make numbering consistent with that in PeriodicBC_Matcher
+	  if(matchTypes->at(m) == 0) {
      	if ( !stkMeshDB_->isNodeLocal(oldNodeId) ) continue;
 	  	if ( stkMeshDB_->isNodeLocal(newNodeId) )  continue;
-      else if(matchTypes->at(m) == 1)
+	  }
+      else if(matchTypes->at(m) == 1) {
      	if ( !stkMeshDB_->isEdgeLocal(oldNodeId) ) continue;
 	  	if ( stkMeshDB_->isEdgeLocal(newNodeId) )  continue;
-      else if(matchTypes->at(m) == 2)
+        offset0 = stkMeshDB_->getMaxEntityId(stkMeshDB_->getNodeRank());
+	  }
+      else if(matchTypes->at(m) == 2) {
      	if ( !stkMeshDB_->isFaceLocal(oldNodeId) ) continue;
 	  	if ( stkMeshDB_->isFaceLocal(newNodeId) )  continue;
+        offset0 = stkMeshDB_->getMaxEntityId(stkMeshDB_->getNodeRank())+stkMeshDB_->getMaxEntityId(stkMeshDB_->getEdgeRank());
+	  }
 	  else
 		 TEUCHOS_ASSERT(false);
-	   
+
 	  std::vector<int> localIds;
-	  stkMeshDB_->getOwnedElementsSharingNode(newNodeId,newGhostElements,localIds,(*matchTypes)[m]);
+	  stkMeshDB_->getOwnedElementsSharingNode(newNodeId-offset0,newGhostElements,localIds,(*matchTypes)[m]);
 	  if( newGhostElements.empty() ) continue;  // hanging node ?
 	  for( auto ele: newGhostElements ) {
 		stk::mesh::EntityId gid = stkMeshDB_->elementGlobalId(ele);
@@ -371,6 +384,8 @@ void STKConnManager::considerPeriodicBCs()
 		}
 	  }
    }
+	
+    //  std::cout << stkMeshDB_->getComm()->getRank() << " end:" << matchedNodes->size() << std::endl;
 	
 	// modify ghost_cell_global_ids_
 }
