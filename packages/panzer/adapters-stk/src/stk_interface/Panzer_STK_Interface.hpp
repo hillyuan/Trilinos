@@ -282,7 +282,8 @@ public:
    /** Get a vector of elements owned by this processor
      */
    void getMyElements(std::vector<stk::mesh::Entity> & elements) const;
-   void getAllElementGIDs(std::vector<panzer::GlobalOrdinal> & elements) const;
+   void getMyElementGIDs(std::vector<panzer::GlobalOrdinal> & elements) const;
+   void getMyElementGIDs(std::set<panzer::GlobalOrdinal> & elements) const;
    Kokkos::View<panzer::GlobalOrdinal*> getOwnedGlobalCellIDs() const;
    Kokkos::View<panzer::GlobalOrdinal*> getGhostGlobalCellIDs() const;
 

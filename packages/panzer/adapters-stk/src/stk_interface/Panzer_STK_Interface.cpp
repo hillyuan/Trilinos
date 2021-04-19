@@ -1173,7 +1173,7 @@ Kokkos::View<panzer::GlobalOrdinal*> STK_Interface::getGhostGlobalCellIDs() cons
    }
 }
 	
-void STK_Interface::getAllElementGIDs(std::vector<panzer::GlobalOrdinal> & elementGIDs) const
+void STK_Interface::getMyElementGIDs(std::vector<panzer::GlobalOrdinal> & elementGIDs) const
 {
    // setup local ownership
    stk::mesh::Selector ownedPart = (metaData_->locally_owned_part() | metaData_->globally_shared_part());
@@ -1186,6 +1186,22 @@ void STK_Interface::getAllElementGIDs(std::vector<panzer::GlobalOrdinal> & eleme
    elementGIDs.clear();
    for( auto element: elements ) {
 	   elementGIDs.emplace_back( bulkData_->identifier( element ) );
+   }
+}
+
+void STK_Interface::getMyElementGIDs(std::set<panzer::GlobalOrdinal> & elementGIDs) const
+{
+   // setup local ownership
+   stk::mesh::Selector ownedPart = (metaData_->locally_owned_part() | metaData_->globally_shared_part());
+
+   // grab elements
+   std::vector<stk::mesh::Entity> elements;
+   stk::mesh::EntityRank elementRank = getElementRank();
+   stk::mesh::get_selected_entities(ownedPart,bulkData_->buckets(elementRank),elements);
+	
+   elementGIDs.clear();
+   for( auto element: elements ) {
+	   elementGIDs.insert( bulkData_->identifier( element ) );
    }
 }
 
