@@ -1131,6 +1131,12 @@ public:
    std::pair<Teuchos::RCP<std::vector<std::pair<std::size_t,std::size_t> > >, Teuchos::RCP<std::vector<unsigned int> > >
    getPeriodicNodePairing() const;
 
+   /** Apply a periodic boundary condition.
+     *
+     * \note This function add constraint into mesh structure.
+     */
+   void applyPeriodicCondition();
+
    /** check for a valid block id
      */
    bool validBlockId(const std::string & blockId) const;

@@ -165,7 +165,7 @@ void STKConnManager::buildLocalElementMapping()
      cell_global_ids_(id) = bulkData.identifier( elements_->at(id) ) -1 ;
    }
 	
-   considerPeriodicBCs();
+  // considerPeriodicBCs();
 
    // allocate space for element LID to Connectivty map
    // connectivity size

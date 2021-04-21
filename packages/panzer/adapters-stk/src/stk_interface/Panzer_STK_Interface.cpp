@@ -2026,6 +2026,40 @@ STK_Interface::getPeriodicNodePairing() const
    return std::make_pair(vec,type_vec);
 }
 
+void
+STK_Interface::applyPeriodicCondition()
+{
+   //std::vector<stk::mesh::SideSet *> sidesets = bulkData_->get_sidesets();
+   //this->print(std::cout);
+   //std::cout << mpiComm_->getRank() << "," << sidesets.size() << std::endl;
+
+   const std::vector<Teuchos::RCP<const PeriodicBC_MatcherBase> > & bcVector = getPeriodicBCVector();
+   for(std::size_t i=0;i<bcVector.size();i++) {
+      std::string left = bcVector[i]->getLeftSidesetName();
+      std::string right = bcVector[i]->getRightSidesetName();
+      std::string type = bcVector[i]->getType();
+      std::cout << "      " << type << "\n";
+      stk::mesh::EntityRank rank;
+      stk::mesh::Part* leftPart;
+      stk::mesh::Part* rightPart;
+      if(type == "coord"){
+         rank = getNodeRank();
+         leftPart = getNodeset(left);
+         rightPart = getNodeset(right);
+      } else if(type == "edge"){
+         rank = getEdgeRank();
+         leftPart = getSideset(left);
+         rightPart = getSideset(right);
+      } else if(type == "face"){
+         rank = getFaceRank();
+      } else {
+         std::stringstream ss;
+         ss << "Can't do BCs of type " << type  << std::endl;
+         TEUCHOS_TEST_FOR_EXCEPTION(true,std::runtime_error, ss.str())
+      }
+   }
+}
+
 bool STK_Interface::validBlockId(const std::string & blockId) const
 {
    std::map<std::string, stk::mesh::Part*>::const_iterator blkItr = elementBlocks_.find(blockId);
