@@ -2032,20 +2032,29 @@ STK_Interface::applyPeriodicCondition()
    //std::vector<stk::mesh::SideSet *> sidesets = bulkData_->get_sidesets();
    //this->print(std::cout);
    //std::cout << mpiComm_->getRank() << "," << sidesets.size() << std::endl;
-
+   bulkData_->modification_begin();
+   
    const std::vector<Teuchos::RCP<const PeriodicBC_MatcherBase> > & bcVector = getPeriodicBCVector();
    for(std::size_t i=0;i<bcVector.size();i++) {
       std::string left = bcVector[i]->getLeftSidesetName();
       std::string right = bcVector[i]->getRightSidesetName();
       std::string type = bcVector[i]->getType();
-      std::cout << "      " << type << "\n";
       stk::mesh::EntityRank rank;
       stk::mesh::Part* leftPart;
       stk::mesh::Part* rightPart;
+      std::vector<stk::mesh::Entity> leftEntities;
+      std::vector<stk::mesh::Entity> rightEntities;
       if(type == "coord"){
-         rank = getNodeRank();
-         leftPart = getNodeset(left);
-         rightPart = getNodeset(right);
+         //rank = getNodeRank();
+         rank = getSideRank();
+         leftPart = getSideset(left);
+         rightPart = getSideset(right);
+         //getAllSides(left,leftEntities);
+         //getAllSides(right,rightEntities);
+         TEUCHOS_TEST_FOR_EXCEPTION(leftPart==0,std::logic_error,
+                      "Unknown side set \"" << left << "\"");
+         TEUCHOS_TEST_FOR_EXCEPTION(rightPart==0,std::logic_error,
+                      "Unknown side set \"" << right << "\"");
       } else if(type == "edge"){
          rank = getEdgeRank();
          leftPart = getSideset(left);
@@ -2057,7 +2066,27 @@ STK_Interface::applyPeriodicCondition()
          ss << "Can't do BCs of type " << type  << std::endl;
          TEUCHOS_TEST_FOR_EXCEPTION(true,std::runtime_error, ss.str())
       }
+
+      stk::mesh::get_entities(*bulkData_, rank, *leftPart, leftEntities);
+      stk::mesh::get_entities(*bulkData_, rank, *rightPart, rightEntities);
+      //TEUCHOS_TEST_FOR_EXCEPTION(leftEntities.size()==rightEntities.size(),std::logic_error,
+      //                "Unknown side set \"" << left << "\"");
+      //std::cout << mpiComm_->getRank() << ", bb "  << leftEntities.size() << "," << rightEntities.size() << std::endl;
+      for(unsigned j=0; j<leftEntities.size(); ++j) {
+         std::cout << mpiComm_->getRank() << ", left "  << bulkData_->identifier(leftEntities[j]) << std::endl;
+      }
+      for(unsigned j=0; j<rightEntities.size(); ++j) {
+         std::cout << mpiComm_->getRank() << ", right "  << bulkData_->identifier(rightEntities[j]) << std::endl;
+      }
+      stk::mesh::EntityId constraintId = i+1;
+      stk::mesh::Entity constraintEntity = bulkData_->declare_constraint(constraintId);
+   //   for(unsigned j=0; j<leftEntities.size(); ++j) {
+   //      bulkData_->declare_relation(constraintEntity, leftEntities[j], 0);
+   //      bulkData_->declare_relation(constraintEntity, rightEntities[j], 1);
+   //   }
    }
+
+   bulkData_->modification_end();
 }
 
 bool STK_Interface::validBlockId(const std::string & blockId) const
