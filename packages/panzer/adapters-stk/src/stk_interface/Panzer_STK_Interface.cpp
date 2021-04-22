@@ -61,6 +61,7 @@
 
 #include <stk_util/parallel/ParallelReduce.hpp>
 #include <stk_util/parallel/CommSparse.hpp>
+#include </home/yuan/programs/Trilinos/packages/stk/stk_search_util/stk_search_util/PeriodicBoundarySearch.hpp>
 
 #ifdef PANZER_HAVE_IOSS
 #include <Ionit_Initializer.h>
@@ -2029,10 +2030,12 @@ STK_Interface::getPeriodicNodePairing() const
 void
 STK_Interface::applyPeriodicCondition()
 {
-   //std::vector<stk::mesh::SideSet *> sidesets = bulkData_->get_sidesets();
+   typedef stk::mesh::GetCoordinates<VectorFieldType> CoordinateFunctor;
+   typedef stk::mesh::PeriodicBoundarySearch<CoordinateFunctor> PeriodicSearch;
+
+   PeriodicSearch pbc_search(*bulkData_, CoordinateFunctor(*bulkData_, *coordinatesField_));
    //this->print(std::cout);
    //std::cout << mpiComm_->getRank() << "," << sidesets.size() << std::endl;
-   bulkData_->modification_begin();
    
    const std::vector<Teuchos::RCP<const PeriodicBC_MatcherBase> > & bcVector = getPeriodicBCVector();
    for(std::size_t i=0;i<bcVector.size();i++) {
@@ -2067,7 +2070,24 @@ STK_Interface::applyPeriodicCondition()
          TEUCHOS_TEST_FOR_EXCEPTION(true,std::runtime_error, ss.str())
       }
 
-      stk::mesh::get_entities(*bulkData_, rank, *leftPart, leftEntities);
+      const stk::mesh::Selector side_left = *leftPart;
+      const stk::mesh::Selector side_right = *rightPart;
+
+      pbc_search.add_linear_periodic_pair(side_left, side_right);
+      pbc_search.find_periodic_nodes(bulkData_->parallel());
+
+      auto search_results = pbc_search.get_pairs();
+
+      for (size_t i=0, size=search_results.size(); i<size; ++i) {
+         stk::mesh::EntityId domain_node = search_results[i].first.id().id();
+         stk::mesh::EntityId range_node = search_results[i].second.id().id();
+
+         std::cout << mpiComm_->getRank() << ", bb " << domain_node << "/" << range_node  << std::endl;
+      }
+
+      
+
+      /*stk::mesh::get_entities(*bulkData_, rank, *leftPart, leftEntities);
       stk::mesh::get_entities(*bulkData_, rank, *rightPart, rightEntities);
       //TEUCHOS_TEST_FOR_EXCEPTION(leftEntities.size()==rightEntities.size(),std::logic_error,
       //                "Unknown side set \"" << left << "\"");
@@ -2083,9 +2103,11 @@ STK_Interface::applyPeriodicCondition()
    //   for(unsigned j=0; j<leftEntities.size(); ++j) {
    //      bulkData_->declare_relation(constraintEntity, leftEntities[j], 0);
    //      bulkData_->declare_relation(constraintEntity, rightEntities[j], 1);
-   //   }
+   //   }*/
    }
 
+   bulkData_->modification_begin();
+   pbc_search.create_ghosting("periodic_ghosts");
    bulkData_->modification_end();
 }
 
