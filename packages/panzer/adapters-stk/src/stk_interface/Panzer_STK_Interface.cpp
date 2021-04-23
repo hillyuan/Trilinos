@@ -2102,11 +2102,8 @@ STK_Interface::applyPeriodicCondition()
       for(unsigned j=0; j<rightEntities.size(); ++j) {
          std::cout << mpiComm_->getRank() << ", right "  << bulkData_->identifier(rightEntities[j]) << std::endl;
       }*/
-      for( unsigned j=0; j<pbc_search.size(); ++j) {
+     /* for( unsigned j=0; j<pbc_search.size(); ++j) {
          auto entity_pair = pbc_search.get_node_pair(j);
-         //TEUCHOS_TEST_FOR_EXCEPTION( bulkData_->is_valid(search_results.first),std::logic_error,
-         //             "Unknown side set \"" << left << "\"");
-         //ThrowRequire(bulk_data.is_valid(search_results.second));
          if( ( bulkData_->is_valid(entity_pair.first) && bulkData_->bucket(entity_pair.first).owned() )
             || ( bulkData_->is_valid(entity_pair.second) && bulkData_->bucket(entity_pair.second).owned() ) ) {
             stk::mesh::EntityId constraintId = j+1;
@@ -2121,18 +2118,17 @@ STK_Interface::applyPeriodicCondition()
                std::cout << mpiComm_->getRank() << ", right "  << bulkData_->identifier(entity_pair.second) << std::endl;
             }
          }
-      }
+      }*/
    }
-
-   //pbc_search.create_ghosting("periodic_ghosts");
+const std::vector<stk::mesh::Ghosting*> ghost = bulkData_->ghostings();
+   pbc_search.create_ghosting("periodic_ghosts");
+   //stk::mesh::fixup_ghosted_to_shared_nodes(bulkData_);
    bulkData_->modification_end();
 
- //  stk::mesh::EntityVector ghosted_nodes_that_need_to_be_shared;
- //  stk::mesh::find_ghosted_nodes_that_need_to_be_shared(*bulkData_, ghosted_nodes_that_need_to_be_shared);
- //  std::cout << "SIZE: " << ghosted_nodes_that_need_to_be_shared.size() << std::endl;
- //   for (std::size_t i=0, size=ghosted_nodes_that_need_to_be_shared.size(); i<size; ++i) {
- //        std::cout << mpiComm_->getRank() << ", aa " << ghosted_nodes_that_need_to_be_shared[i]  << std::endl;
- //     }
+   auto node1 = bulkData_->get_entity(stk::topology::NODE_RANK, 1);
+   auto node7 = bulkData_->get_entity(stk::topology::NODE_RANK, 7);
+   std::cout << mpiComm_->getRank() << " cc1," << bulkData_->bucket(node1).shared()<< " ," << bulkData_->bucket(node1).owned() << std::endl;
+   std::cout << mpiComm_->getRank() << " cc7," << bulkData_->bucket(node7).shared()<< " ," << bulkData_->bucket(node7).owned() << std::endl;
 }
 
 bool STK_Interface::validBlockId(const std::string & blockId) const
