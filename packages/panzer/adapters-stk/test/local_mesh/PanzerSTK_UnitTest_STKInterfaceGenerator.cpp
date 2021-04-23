@@ -77,8 +77,6 @@ generateMesh(const Teuchos::ParameterList & parameter_list_in)
     TEUCHOS_TEST_FOR_EXCEPT_MSG(true, "generate_mesh : Mesh Type '"<<mesh_type<<"' not found. Options: Line, Tri, Quad, Tet, and Hex.");
   }
 
-  mesh->applyPeriodicCondition();
-
   return mesh;
 
 }

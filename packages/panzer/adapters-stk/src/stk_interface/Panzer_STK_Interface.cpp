@@ -125,6 +125,7 @@ STK_Interface::STK_Interface(unsigned dim)
    metaData_ = rcp(new stk::mesh::MetaData(dimension_,entity_rank_names));
 
    initializeFromMetaData();
+   //applyPeriodicCondition();
 }
 
 void STK_Interface::addSideset(const std::string & name,const CellTopologyData * ctData)
@@ -2036,20 +2037,20 @@ STK_Interface::applyPeriodicCondition()
    PeriodicSearch pbc_search(*bulkData_, CoordinateFunctor(*bulkData_, *coordinatesField_));
    //this->print(std::cout);
    //std::cout << mpiComm_->getRank() << "," << sidesets.size() << std::endl;
-   
+   bulkData_->modification_begin();
    const std::vector<Teuchos::RCP<const PeriodicBC_MatcherBase> > & bcVector = getPeriodicBCVector();
    for(std::size_t i=0;i<bcVector.size();i++) {
       std::string left = bcVector[i]->getLeftSidesetName();
       std::string right = bcVector[i]->getRightSidesetName();
       std::string type = bcVector[i]->getType();
-      stk::mesh::EntityRank rank;
+      //stk::mesh::EntityRank rank;
       stk::mesh::Part* leftPart;
       stk::mesh::Part* rightPart;
       std::vector<stk::mesh::Entity> leftEntities;
       std::vector<stk::mesh::Entity> rightEntities;
       if(type == "coord"){
          //rank = getNodeRank();
-         rank = getSideRank();
+         //rank = getSideRank();
          leftPart = getSideset(left);
          rightPart = getSideset(right);
          //getAllSides(left,leftEntities);
@@ -2059,11 +2060,11 @@ STK_Interface::applyPeriodicCondition()
          TEUCHOS_TEST_FOR_EXCEPTION(rightPart==0,std::logic_error,
                       "Unknown side set \"" << right << "\"");
       } else if(type == "edge"){
-         rank = getEdgeRank();
+         //rank = getEdgeRank();
          leftPart = getSideset(left);
          rightPart = getSideset(right);
       } else if(type == "face"){
-         rank = getFaceRank();
+         //rank = getFaceRank();
       } else {
          std::stringstream ss;
          ss << "Can't do BCs of type " << type  << std::endl;
@@ -2076,16 +2077,19 @@ STK_Interface::applyPeriodicCondition()
       pbc_search.add_linear_periodic_pair(side_left, side_right);
       pbc_search.find_periodic_nodes(bulkData_->parallel());
 
-      auto search_results = pbc_search.get_pairs();
+      /*auto search_results = pbc_search.get_pairs();
 
-      for (size_t i=0, size=search_results.size(); i<size; ++i) {
+      for (std::size_t i=0, size=search_results.size(); i<size; ++i) {
          stk::mesh::EntityId domain_node = search_results[i].first.id().id();
          stk::mesh::EntityId range_node = search_results[i].second.id().id();
 
          std::cout << mpiComm_->getRank() << ", bb " << domain_node << "/" << range_node  << std::endl;
-      }
 
-      
+         auto myleft = bulkData_->get_entity(search_results[i].first.id());
+         std::cout << mpiComm_->getRank() << ", left "  << bulkData_->is_valid(myleft) << std::endl;
+         auto myright = bulkData_->get_entity(search_results[i].second.id());
+         std::cout << mpiComm_->getRank() << ", right "  << bulkData_->is_valid(myright) << std::endl;
+      }*/      
 
       /*stk::mesh::get_entities(*bulkData_, rank, *leftPart, leftEntities);
       stk::mesh::get_entities(*bulkData_, rank, *rightPart, rightEntities);
@@ -2097,18 +2101,38 @@ STK_Interface::applyPeriodicCondition()
       }
       for(unsigned j=0; j<rightEntities.size(); ++j) {
          std::cout << mpiComm_->getRank() << ", right "  << bulkData_->identifier(rightEntities[j]) << std::endl;
+      }*/
+      for( unsigned j=0; j<pbc_search.size(); ++j) {
+         auto entity_pair = pbc_search.get_node_pair(j);
+         //TEUCHOS_TEST_FOR_EXCEPTION( bulkData_->is_valid(search_results.first),std::logic_error,
+         //             "Unknown side set \"" << left << "\"");
+         //ThrowRequire(bulk_data.is_valid(search_results.second));
+         if( ( bulkData_->is_valid(entity_pair.first) && bulkData_->bucket(entity_pair.first).owned() )
+            || ( bulkData_->is_valid(entity_pair.second) && bulkData_->bucket(entity_pair.second).owned() ) ) {
+            stk::mesh::EntityId constraintId = j+1;
+            stk::mesh::Entity constraintEntity = bulkData_->declare_constraint(constraintId);
+
+            if( bulkData_->is_valid(entity_pair.first) && bulkData_->bucket(entity_pair.first).owned() ) {
+               bulkData_->declare_relation(constraintEntity, entity_pair.first, 0);
+               std::cout << mpiComm_->getRank() << ", left "  << bulkData_->identifier(entity_pair.first) << std::endl;
+            }
+            if( bulkData_->is_valid(entity_pair.second) && bulkData_->bucket(entity_pair.second).owned() ) {
+               bulkData_->declare_relation(constraintEntity, entity_pair.second, 1);
+               std::cout << mpiComm_->getRank() << ", right "  << bulkData_->identifier(entity_pair.second) << std::endl;
+            }
+         }
       }
-      stk::mesh::EntityId constraintId = i+1;
-      stk::mesh::Entity constraintEntity = bulkData_->declare_constraint(constraintId);
-   //   for(unsigned j=0; j<leftEntities.size(); ++j) {
-   //      bulkData_->declare_relation(constraintEntity, leftEntities[j], 0);
-   //      bulkData_->declare_relation(constraintEntity, rightEntities[j], 1);
-   //   }*/
    }
 
-   bulkData_->modification_begin();
-   pbc_search.create_ghosting("periodic_ghosts");
+   //pbc_search.create_ghosting("periodic_ghosts");
    bulkData_->modification_end();
+
+ //  stk::mesh::EntityVector ghosted_nodes_that_need_to_be_shared;
+ //  stk::mesh::find_ghosted_nodes_that_need_to_be_shared(*bulkData_, ghosted_nodes_that_need_to_be_shared);
+ //  std::cout << "SIZE: " << ghosted_nodes_that_need_to_be_shared.size() << std::endl;
+ //   for (std::size_t i=0, size=ghosted_nodes_that_need_to_be_shared.size(); i<size; ++i) {
+ //        std::cout << mpiComm_->getRank() << ", aa " << ghosted_nodes_that_need_to_be_shared[i]  << std::endl;
+ //     }
 }
 
 bool STK_Interface::validBlockId(const std::string & blockId) const
