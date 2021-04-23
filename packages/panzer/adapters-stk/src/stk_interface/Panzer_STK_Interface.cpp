@@ -2120,15 +2120,20 @@ STK_Interface::applyPeriodicCondition()
          }
       }*/
    }
-const std::vector<stk::mesh::Ghosting*> ghost = bulkData_->ghostings();
+   this->beginModification();
    pbc_search.create_ghosting("periodic_ghosts");
    //stk::mesh::fixup_ghosted_to_shared_nodes(bulkData_);
-   bulkData_->modification_end();
+  // bulkData_->modification_end();
+   this->endModification();
 
-   auto node1 = bulkData_->get_entity(stk::topology::NODE_RANK, 1);
-   auto node7 = bulkData_->get_entity(stk::topology::NODE_RANK, 7);
-   std::cout << mpiComm_->getRank() << " cc1," << bulkData_->bucket(node1).shared()<< " ," << bulkData_->bucket(node1).owned() << std::endl;
-   std::cout << mpiComm_->getRank() << " cc7," << bulkData_->bucket(node7).shared()<< " ," << bulkData_->bucket(node7).owned() << std::endl;
+   //   const std::vector<stk::mesh::Ghosting*> ghost = bulkData_->ghostings();
+  //for( auto a: ghost ) 
+   // std::cout << *a << std::endl;
+
+  // auto node1 = bulkData_->get_entity(stk::topology::NODE_RANK, 1);
+  // auto node7 = bulkData_->get_entity(stk::topology::NODE_RANK, 7);
+  // std::cout << mpiComm_->getRank() << " cc1," << bulkData_->bucket(node1).shared()<< " ," << bulkData_->bucket(node1).owned() << std::endl;
+  // std::cout << mpiComm_->getRank() << " cc7," << bulkData_->bucket(node7).shared()<< " ," << bulkData_->bucket(node7).owned() << std::endl;
 }
 
 bool STK_Interface::validBlockId(const std::string & blockId) const
