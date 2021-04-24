@@ -2081,7 +2081,7 @@ STK_Interface::applyPeriodicCondition()
 
       auto search_results = pbc_search.get_pairs();    
 
-      /*for( unsigned j=0; j<search_results.size(); ++j) {
+      for( unsigned j=0; j<search_results.size(); ++j) {
          stk::mesh::Entity domain_node = bulkData_->get_entity( search_results[j].first.id() );
          stk::mesh::Entity range_node = bulkData_->get_entity( search_results[j].second.id() );
 		  
@@ -2128,7 +2128,7 @@ STK_Interface::applyPeriodicCondition()
                  }
             }
 		 }
-	   }*/
+	   }
 
         /* if( ( bulkData_->is_valid(entity_pair.first) && bulkData_->bucket(entity_pair.first).owned() )
             || ( bulkData_->is_valid(entity_pair.second) && bulkData_->bucket(entity_pair.second).owned() ) ) {
@@ -2148,9 +2148,9 @@ STK_Interface::applyPeriodicCondition()
    }
    //this->beginModification();
    bulkData_->modification_begin();
-   //stk::mesh::Ghosting &periodic_ghosts = bulkData_->create_ghosting("periodic_ghosts");
-   //bulkData_->change_ghosting(periodic_ghosts, send_nodes);
-   pbc_search.create_ghosting("periodic_ghosts");
+   stk::mesh::Ghosting &periodic_ghosts = bulkData_->create_ghosting("periodic_ghosts");
+   bulkData_->change_ghosting(periodic_ghosts, send_nodes);
+   //pbc_search.create_ghosting("periodic_ghosts");
    //stk::mesh::fixup_ghosted_to_shared_nodes(bulkData_);
    bulkData_->modification_end();
    //this->endModification();

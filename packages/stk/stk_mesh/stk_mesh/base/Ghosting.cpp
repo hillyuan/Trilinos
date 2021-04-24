@@ -93,7 +93,7 @@ std::ostream& Ghosting::operator<<(std::ostream& out) const
       for ( PairIterEntityComm ec = m_mesh.internal_entity_comm_map(commListInfo.key) ; ! ec.empty() ; ++ec ) {
         if ( ec->ghost_id == m_ordinal ) {
           out << "    ";
-          out << commListInfo.key.id();
+          out << commListInfo.key.id() << "(" << commListInfo.key.rank() << ")";
           out << ", sending ghost to " << ec->proc << ", status is: "
               << m_mesh.state(commListInfo.entity) << "\n";
         }
@@ -107,7 +107,7 @@ std::ostream& Ghosting::operator<<(std::ostream& out) const
       for ( PairIterEntityComm ec = m_mesh.internal_entity_comm_map(commListInfo.key); !ec.empty(); ++ec ) {
         if ( ec->ghost_id == m_ordinal ) {
           out << "    ";
-          out << commListInfo.key.id();
+          out << commListInfo.key.id()<< "(" << commListInfo.key.rank() << ")";
           out << ", owner of ghost is " << m_mesh.parallel_owner_rank(commListInfo.entity)
               << ", status is: " << m_mesh.state(commListInfo.entity) << "\n";
         }
