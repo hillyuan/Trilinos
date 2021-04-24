@@ -61,7 +61,7 @@
 
 #include <stk_util/parallel/ParallelReduce.hpp>
 #include <stk_util/parallel/CommSparse.hpp>
-#include </home/yuan/programs/Trilinos/packages/stk/stk_search_util/stk_search_util/PeriodicBoundarySearch.hpp>
+#include </home/yuan/programs/solver/Trilinos/install/include/stk_search_util/PeriodicBoundarySearch.hpp>
 
 #ifdef PANZER_HAVE_IOSS
 #include <Ionit_Initializer.h>
@@ -2037,7 +2037,9 @@ STK_Interface::applyPeriodicCondition()
    PeriodicSearch pbc_search(*bulkData_, CoordinateFunctor(*bulkData_, *coordinatesField_));
    //this->print(std::cout);
    //std::cout << mpiComm_->getRank() << "," << sidesets.size() << std::endl;
-   bulkData_->modification_begin();
+   
+   const int parallel_rank = bulkData_->parallel_rank();
+   std::vector<stk::mesh::EntityProc> send_nodes;
    const std::vector<Teuchos::RCP<const PeriodicBC_MatcherBase> > & bcVector = getPeriodicBCVector();
    for(std::size_t i=0;i<bcVector.size();i++) {
       std::string left = bcVector[i]->getLeftSidesetName();
@@ -2077,34 +2079,58 @@ STK_Interface::applyPeriodicCondition()
       pbc_search.add_linear_periodic_pair(side_left, side_right);
       pbc_search.find_periodic_nodes(bulkData_->parallel());
 
-      /*auto search_results = pbc_search.get_pairs();
+      auto search_results = pbc_search.get_pairs();    
 
-      for (std::size_t i=0, size=search_results.size(); i<size; ++i) {
-         stk::mesh::EntityId domain_node = search_results[i].first.id().id();
-         stk::mesh::EntityId range_node = search_results[i].second.id().id();
+      /*for( unsigned j=0; j<search_results.size(); ++j) {
+         stk::mesh::Entity domain_node = bulkData_->get_entity( search_results[j].first.id() );
+         stk::mesh::Entity range_node = bulkData_->get_entity( search_results[j].second.id() );
+		  
+		 bool isOwnedDomain = bulkData_->is_valid(domain_node) ? bulkData_->bucket(domain_node).owned() : false;
+         bool isOwnedRange = bulkData_->is_valid(range_node) ? bulkData_->bucket(range_node).owned() : false;
+         int domain_proc = search_results[j].first.proc();
+         int range_proc = search_results[j].second.proc();
+		  
+		 if (range_proc == domain_proc) continue;
+		  
+		 if (isOwnedDomain && domain_proc == parallel_rank) {  // if in owned domain
+			 if (range_proc == parallel_rank) continue;        // if range in the same proc, do nothing
+			 
+			 //stk::ThrowRequire(bulkData_->parallel_owner_rank(domain_node) == domain_proc);
+			 
+			 unsigned numElems = bulkData_->num_elements(domain_node);
+             if(numElems > 0)
+             {
+                 const stk::mesh::Entity* elems = bulkData_->begin_elements(domain_node);
+                 for(unsigned k = 0; k < numElems; k++)
+                 {
+					 if( !(bulkData_->bucket(elems[k]).owned()) ) continue;
+					 send_nodes.emplace_back(elems[k], range_proc);
+					 
+					 std::cout << "On proc " << parallel_rank << " we are sending domain element "
+                        << bulkData_->identifier(elems[k]) << " to proc " << range_proc << std::endl;
+                 }
+            }
+		 }
+		 else if (isOwnedRange && range_proc == parallel_rank)
+         {
+          	 if (domain_proc == parallel_rank) continue;
+			 
+			 unsigned numElems = bulkData_->num_elements(range_node);
+             if(numElems > 0)
+             {
+                 const stk::mesh::Entity* elems = bulkData_->begin_elements(range_node);
+                 for(unsigned k = 0; k < numElems; k++)
+                 {
+					 if( !(bulkData_->bucket(elems[k]).owned()) ) continue;
+                     send_nodes.emplace_back(elems[k], domain_proc); 
+					 std::cout << "On proc " << parallel_rank << " we are sending range element "
+                        << bulkData_->identifier(elems[k]) << " to proc " << domain_proc << std::endl;
+                 }
+            }
+		 }
+	   }*/
 
-         std::cout << mpiComm_->getRank() << ", bb " << domain_node << "/" << range_node  << std::endl;
-
-         auto myleft = bulkData_->get_entity(search_results[i].first.id());
-         std::cout << mpiComm_->getRank() << ", left "  << bulkData_->is_valid(myleft) << std::endl;
-         auto myright = bulkData_->get_entity(search_results[i].second.id());
-         std::cout << mpiComm_->getRank() << ", right "  << bulkData_->is_valid(myright) << std::endl;
-      }*/      
-
-      /*stk::mesh::get_entities(*bulkData_, rank, *leftPart, leftEntities);
-      stk::mesh::get_entities(*bulkData_, rank, *rightPart, rightEntities);
-      //TEUCHOS_TEST_FOR_EXCEPTION(leftEntities.size()==rightEntities.size(),std::logic_error,
-      //                "Unknown side set \"" << left << "\"");
-      //std::cout << mpiComm_->getRank() << ", bb "  << leftEntities.size() << "," << rightEntities.size() << std::endl;
-      for(unsigned j=0; j<leftEntities.size(); ++j) {
-         std::cout << mpiComm_->getRank() << ", left "  << bulkData_->identifier(leftEntities[j]) << std::endl;
-      }
-      for(unsigned j=0; j<rightEntities.size(); ++j) {
-         std::cout << mpiComm_->getRank() << ", right "  << bulkData_->identifier(rightEntities[j]) << std::endl;
-      }*/
-     /* for( unsigned j=0; j<pbc_search.size(); ++j) {
-         auto entity_pair = pbc_search.get_node_pair(j);
-         if( ( bulkData_->is_valid(entity_pair.first) && bulkData_->bucket(entity_pair.first).owned() )
+        /* if( ( bulkData_->is_valid(entity_pair.first) && bulkData_->bucket(entity_pair.first).owned() )
             || ( bulkData_->is_valid(entity_pair.second) && bulkData_->bucket(entity_pair.second).owned() ) ) {
             stk::mesh::EntityId constraintId = j+1;
             stk::mesh::Entity constraintEntity = bulkData_->declare_constraint(constraintId);
@@ -2117,18 +2143,23 @@ STK_Interface::applyPeriodicCondition()
                bulkData_->declare_relation(constraintEntity, entity_pair.second, 1);
                std::cout << mpiComm_->getRank() << ", right "  << bulkData_->identifier(entity_pair.second) << std::endl;
             }
-         }
-      }*/
+         }*/
+      
    }
-   this->beginModification();
+   //this->beginModification();
+   bulkData_->modification_begin();
+   //stk::mesh::Ghosting &periodic_ghosts = bulkData_->create_ghosting("periodic_ghosts");
+   //bulkData_->change_ghosting(periodic_ghosts, send_nodes);
    pbc_search.create_ghosting("periodic_ghosts");
    //stk::mesh::fixup_ghosted_to_shared_nodes(bulkData_);
-  // bulkData_->modification_end();
-   this->endModification();
+   bulkData_->modification_end();
+   //this->endModification();
 
-   //   const std::vector<stk::mesh::Ghosting*> ghost = bulkData_->ghostings();
-  //for( auto a: ghost ) 
-   // std::cout << *a << std::endl;
+   const std::vector<stk::mesh::Ghosting*> ghost = bulkData_->ghostings();
+  // for( auto a: ghost ) 
+  //  std::cout << *a << std::endl;
+	
+	std::cout << *ghost[2] << std::endl;
 
   // auto node1 = bulkData_->get_entity(stk::topology::NODE_RANK, 1);
   // auto node7 = bulkData_->get_entity(stk::topology::NODE_RANK, 7);
