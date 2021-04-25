@@ -208,6 +208,16 @@ public:
 
     void setInitialState(bool init)
     {initialized = init;}
+	
+	virtual PHX::View<panzer::GlobalOrdinal*> getOwnedGlobalCellID() const final
+    {
+		return stkMeshDB_->getOwnedGlobalCellIDs();
+	}
+    virtual PHX::View<panzer::GlobalOrdinal*> getGhostGlobalCellID() const final
+	{
+		return stkMeshDB_->getGhostGlobalCellIDs();
+	}
+
 
 protected:
    /** Apply periodic boundary conditions associated with the mesh object.

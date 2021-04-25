@@ -2172,11 +2172,9 @@ STK_Interface::applyPeriodicCondition()
 //	std::cout << *ghost[1] << std::endl;
 //	std::cout << periodic_ghosts << std::endl;
 
- //  auto node1 = bulkData_->get_entity(stk::topology::ELEMENT_RANK, 1);
- //  std::cout << mpiComm_->getRank() << " cc1," << bulkData_->in_send_ghost(node1) << std::endl;
-	auto ghost_cells = getGhostGlobalCellIDs();
-	for( int i=0; i<ghost_cells.extent(0); i++ )
-      std::cout << parallel_rank << ","  << i << "," << ghost_cells(i) << std::endl;
+//	auto ghost_cells = getGhostGlobalCellIDs();
+//	for( int i=0; i<ghost_cells.extent(0); i++ )
+//      std::cout << parallel_rank << ","  << i << "," << ghost_cells(i) << std::endl;
 }
 
 bool STK_Interface::validBlockId(const std::string & blockId) const

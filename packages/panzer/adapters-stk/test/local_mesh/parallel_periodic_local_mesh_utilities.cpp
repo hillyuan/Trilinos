@@ -75,10 +75,7 @@ buildParallelLocalMeshInfo(const std::vector<int> & N,   // Cells per dimension
                            const std::vector<int> periodic_dims) // Periodic dimensions
 {
   Teuchos::RCP<panzer_stk::STK_Interface> mesh = buildParallelMesh(N,B,P,L,periodic_dims);
-//  const std::vector<stk::mesh::Ghosting*> ghost = mesh->getBulkData()->ghostings();
-//  for( auto a: ghost ) 
-//    std::cout << *a << std::endl;
-  mesh->applyPeriodicCondition();
+  //mesh->applyPeriodicCondition();
   return generateLocalMeshInfo(*mesh);
 }
 

@@ -62,8 +62,7 @@ class FieldPattern; // from DOFManager
     using GlobalOrdinal = panzer::GlobalOrdinal;
     using LocalOrdinal = panzer::LocalOrdinal;
 
-    ConnManager(): cell_global_ids_("global_cells",0), owned_cell_global_ids_("owned_global_cells",0)
-                  , ghost_cell_global_ids_("ghost_global_cells",0)
+    ConnManager()
     {};
 
     /** Tell the connection manager to build the connectivity assuming
@@ -140,17 +139,16 @@ class FieldPattern; // from DOFManager
     virtual bool hasAssociatedNeighbors() const = 0;
 
     /// Get the local cell IDs for the workset getLocalCellIDs
-    PHX::View<panzer::GlobalOrdinal*> getGlobalCellIDs() const
-    {return cell_global_ids_;}
-    PHX::View<panzer::GlobalOrdinal*> getOwnedGlobalCellIDs() const
-    {return owned_cell_global_ids_;}
-    PHX::View<panzer::GlobalOrdinal*> getGhostGlobalCellIDs() const
-    {return ghost_cell_global_ids_;}
-
-  protected:
-    PHX::View<panzer::GlobalOrdinal*> cell_global_ids_;
-    PHX::View<panzer::GlobalOrdinal*> owned_cell_global_ids_;
-    PHX::View<panzer::GlobalOrdinal*> ghost_cell_global_ids_;
+	virtual PHX::View<panzer::GlobalOrdinal*> getOwnedGlobalCellID() const
+    {
+		PHX::View<panzer::GlobalOrdinal*> global_ids_;
+		return global_ids_;
+	}
+    virtual PHX::View<panzer::GlobalOrdinal*> getGhostGlobalCellID() const
+	{
+		PHX::View<panzer::GlobalOrdinal*> global_ids_;
+		return global_ids_;
+	}
   };
 
 }

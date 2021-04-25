@@ -104,14 +104,16 @@ void STKConnManager::buildLocalElementMapping()
 
    // build element block information
    //////////////////////////////////////////////
-  // elements_ = Teuchos::rcp(new std::vector<stk::mesh::Entity>);
+   elements_ = Teuchos::rcp(new std::vector<stk::mesh::Entity>);
 
    // defines ordering of blocks
    std::vector<std::string> blockIds;
    stkMeshDB_->getElementBlockNames(blockIds);
-   stk::mesh::BulkData& bulkData = *stkMeshDB_->getBulkData();
 
-   for(std::string blockId : blockIds) {
+   for(std::vector<std::string>::const_iterator idItr=blockIds.begin();
+       idItr!=blockIds.end();++idItr) {
+      std::string blockId = *idItr;
+
       // grab elements on this block
       std::vector<stk::mesh::Entity> blockElmts;
       stkMeshDB_->getMyElements(blockId,blockElmts);
@@ -126,15 +128,11 @@ void STKConnManager::buildLocalElementMapping()
    }
 
    ownedElementCount_ = elements_->size();
-   Kokkos::resize(owned_cell_global_ids_,ownedElementCount_);
 
-   // this expensive operation gurantees ordering of local IDs
-   std::sort(elements_->begin(),elements_->end(),LocalIdCompare(stkMeshDB_));
-   for( std::size_t id=0; id<ownedElementCount_; ++id ) {
-     owned_cell_global_ids_(id) = bulkData.identifier( elements_->at(id) ) -1;
-   }
+   for(std::vector<std::string>::const_iterator idItr=blockIds.begin();
+       idItr!=blockIds.end();++idItr) {
+      std::string blockId = *idItr;
 
-   for(std::string blockId : blockIds) {
       // grab elements on this block
       std::vector<stk::mesh::Entity> blockElmts;
       stkMeshDB_->getNeighborElements(blockId,blockElmts);
@@ -148,29 +146,13 @@ void STKConnManager::buildLocalElementMapping()
          neighborElementBlocks_[blockId]->push_back(stkMeshDB_->elementLocalId(blockElmts[i]));
    }
 
-   std::vector<stk::mesh::Entity> ghost_elements;
-   stkMeshDB_->getNeighborElements(ghost_elements);
-   std::size_t ghostElementCount = ghost_elements.size();
-   Kokkos::resize(ghost_cell_global_ids_ ,ghostElementCount);
-   for( std::size_t id=0; id<ghostElementCount; ++id ) {
-     ghost_cell_global_ids_(id) = bulkData.identifier( ghost_elements[id] ) -1;
-   }
-
    // this expensive operation gurantees ordering of local IDs
    std::sort(elements_->begin(),elements_->end(),LocalIdCompare(stkMeshDB_));
 
-   std::size_t allElementCount = elements_->size();
-   Kokkos::resize( cell_global_ids_ ,allElementCount);
-   for( std::size_t id=0; id<allElementCount; ++id ) {
-     cell_global_ids_(id) = bulkData.identifier( elements_->at(id) ) -1 ;
-   }
-	
    // allocate space for element LID to Connectivty map
    // connectivity size
    elmtLidToConn_.resize(elements_->size(),0);
    connSize_.resize(elements_->size(),0);
-
-   initialized = true;
 }
 
 void
