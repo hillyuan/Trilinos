@@ -84,7 +84,8 @@ void Ghosting::receive_list( std::vector<Entity> & entities ) const
 std::ostream& Ghosting::operator<<(std::ostream& out) const
 {
   out << "Ghosting object: name: " << name()
-      << ", ordinal: " << ordinal() << "\n";
+      << ", ordinal: " << ordinal()
+	  << ", proc: " << m_mesh.parallel_rank() << "\n";
 
   out << "  Locally owned entities ghosted on other processors (send list):\n";
 
