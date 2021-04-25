@@ -1164,8 +1164,8 @@ Kokkos::View<panzer::GlobalOrdinal*> STK_Interface::getGhostGlobalCellIDs() cons
 {
    std::vector<stk::mesh::Entity> elements;
    Kokkos::View<panzer::GlobalOrdinal*> ghost_cell_global_ids;
-
-   stk::mesh::Selector ownedPart = metaData_->globally_shared_part();
+//bulkData_->dump_all_mesh_info(std::cout);
+   stk::mesh::Selector ownedPart = !metaData_->locally_owned_part();
    stk::mesh::EntityRank elementRank = getElementRank();
    stk::mesh::get_selected_entities(ownedPart,bulkData_->buckets(elementRank),elements);
    std::size_t ne = elements.size();
@@ -1176,7 +1176,7 @@ Kokkos::View<panzer::GlobalOrdinal*> STK_Interface::getGhostGlobalCellIDs() cons
      ghost_cell_global_ids(id) = bulkData_->identifier( elements[id] ) -1;
    }
 	
-	return ghost_cell_global_ids;
+   return ghost_cell_global_ids;
 }
 	
 void STK_Interface::getMyElementGIDs(std::vector<panzer::GlobalOrdinal> & elementGIDs) const
@@ -2174,6 +2174,9 @@ STK_Interface::applyPeriodicCondition()
 
  //  auto node1 = bulkData_->get_entity(stk::topology::ELEMENT_RANK, 1);
  //  std::cout << mpiComm_->getRank() << " cc1," << bulkData_->in_send_ghost(node1) << std::endl;
+	auto ghost_cells = getGhostGlobalCellIDs();
+	for( int i=0; i<ghost_cells.extent(0); i++ )
+      std::cout << parallel_rank << ","  << i << "," << ghost_cells(i) << std::endl;
 }
 
 bool STK_Interface::validBlockId(const std::string & blockId) const
