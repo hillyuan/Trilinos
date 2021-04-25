@@ -99,6 +99,7 @@ initialize(panzer::ConnManager & conn)
 #endif
 
   std::vector<GlobalOrdinal> element_GIDS;
+	//conn.getMyElementGIDs(element_GIDS);
   for (size_t iblk = 0 ; iblk < block_ids.size(); ++iblk) {
     // The connectivity takes in a shards class, therefore, it has to be build block by block?
     // This seems odd, but o.k, moving forward.

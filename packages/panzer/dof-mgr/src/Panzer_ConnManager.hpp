@@ -106,6 +106,7 @@ class FieldPattern; // from DOFManager
 
     /** What are the blockIds included in this connection manager */
     virtual void getElementBlockIds(std::vector<std::string> & elementBlockIds) const = 0;
+	virtual void getMyElementGIDs(std::vector<panzer::GlobalOrdinal> & elements) const {};
 
     /** Returns the cellTopologies linked to element blocks in this connection manager */
     virtual void getElementBlockTopologies(std::vector<shards::CellTopology> & elementBlockTopologies) const = 0;

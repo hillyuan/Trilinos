@@ -125,6 +125,9 @@ public:
      */
    virtual void getElementBlockIds(std::vector<std::string> & elementBlockIds) const
    { return stkMeshDB_->getElementBlockNames(elementBlockIds); }
+	
+   virtual void getMyElementGIDs(std::vector<panzer::GlobalOrdinal> & elements) const final
+   { return stkMeshDB_->getMyElementGIDs(elements); }
    /** What are the cellTopologies linked to element blocks in this connection manager?
     */
    virtual void getElementBlockTopologies(std::vector<shards::CellTopology> & elementBlockTopologies) const{
