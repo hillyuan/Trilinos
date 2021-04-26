@@ -1399,6 +1399,23 @@ void STK_Interface::getMyFaces(const std::string & faceBlockName,const std::stri
    // grab elements
    stk::mesh::get_selected_entities(owned_block,bulkData_->buckets(getFaceRank()),faces);
 }
+	
+void STK_Interface::getFaceGIDs(const std::string & blockName,std::vector<panzer::GlobalOrdinal> & faceIDs)  const
+{
+   stk::mesh::Part * elmtPart = getElementBlockPart(blockName);
+   TEUCHOS_TEST_FOR_EXCEPTION(elmtPart==0,ElementBlockException,
+                      "Unknown element block \"" << blockName << "\"");
+
+   stk::mesh::Selector element_block = *elmtPart;
+   stk::mesh::Selector owned_block = metaData_->locally_owned_part() & element_block;
+
+   std::vector<stk::mesh::Entity> faces;
+   stk::mesh::get_selected_entities(owned_block,bulkData_->buckets(getFaceRank()),faces);
+
+   faceIDs.clear();
+   for( auto face: faces )
+	   faceIDs.emplace_back( bulkData_->identifier( face )-1 );
+}
 
 void STK_Interface::getAllFaces(const std::string & faceBlockName,std::vector<stk::mesh::Entity> & faces) const
 {

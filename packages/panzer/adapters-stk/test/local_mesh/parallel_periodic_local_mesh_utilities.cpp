@@ -334,7 +334,7 @@ TEUCHOS_UNIT_TEST(parallelPeriodicLocalMeshUtilities, 1D_mesh)
 }
 
 // 1D
-/*
+
 TEUCHOS_UNIT_TEST(parallelPeriodicLocalMeshUtilities, 1D_connectivity_bc)
 {
   runConnectivityTest({3},{2},{2},{1.},{},out,success);
@@ -389,5 +389,5 @@ TEUCHOS_UNIT_TEST(parallelPeriodicLocalMeshUtilities, 3D_connectivity_bc012)
 {
   runConnectivityTest({3,3,2},{2,1,1},{2,1,1},{1.,1.,1.},{0,1,2},out,success);
 }
-*/
+
 }

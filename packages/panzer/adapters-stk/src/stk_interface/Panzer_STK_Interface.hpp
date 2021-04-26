@@ -369,6 +369,7 @@ public:
      * \param[in,out] faces Vector of entities containing the requested faces.
      */
    void getMyFaces(const std::string & faceBlockName,const std::string & blockName,std::vector<stk::mesh::Entity> & faces) const;
+   void getFaceGIDs(const std::string & blockName,std::vector<panzer::GlobalOrdinal> & faces) const;
 
    /** Get Entities corresponding to the locally owned part of the face block requested.
      * The Entites in the vector should be a dimension
