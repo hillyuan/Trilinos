@@ -1191,7 +1191,7 @@ void STK_Interface::getMyElementGIDs(std::vector<panzer::GlobalOrdinal> & elemen
 	
    elementGIDs.clear();
    for( auto element: elements ) {
-	   elementGIDs.emplace_back( bulkData_->identifier( element ) );
+	   elementGIDs.emplace_back( bulkData_->identifier( element )-1 );
    }
 }
 
@@ -1207,7 +1207,7 @@ void STK_Interface::getMyElementGIDs(std::set<panzer::GlobalOrdinal> & elementGI
 	
    elementGIDs.clear();
    for( auto element: elements ) {
-	   elementGIDs.insert( bulkData_->identifier( element ) );
+	   elementGIDs.insert( bulkData_->identifier( element )-1 );
    }
 }
 
@@ -1224,6 +1224,27 @@ void STK_Interface::getMyElements(const std::string & blockID,std::vector<stk::m
    // grab elements
    stk::mesh::EntityRank elementRank = getElementRank();
    stk::mesh::get_selected_entities(ownedBlock,bulkData_->buckets(elementRank),elements);
+}
+	
+void STK_Interface::getMyElementGIDs(const std::string & blockID,std::vector<panzer::GlobalOrdinal> & elementGIDs) const
+{
+   stk::mesh::Part * elementBlock = getElementBlockPart(blockID);
+
+   TEUCHOS_TEST_FOR_EXCEPTION(elementBlock==0,std::logic_error,"Could not find element block \"" << blockID << "\"");
+
+   // setup local ownership
+   // stk::mesh::Selector block = *elementBlock;
+   stk::mesh::Selector ownedBlock = metaData_->locally_owned_part() & (*elementBlock);
+
+   // grab elements
+   stk::mesh::EntityRank elementRank = getElementRank();
+   std::vector<stk::mesh::Entity> elements;
+   stk::mesh::get_selected_entities(ownedBlock,bulkData_->buckets(elementRank),elements);
+	
+   elementGIDs.clear();
+   for( auto element: elements ) {
+	   elementGIDs.emplace_back( bulkData_->identifier( element )-1 );
+   }
 }
 
 void STK_Interface::getNeighborElements(std::vector<stk::mesh::Entity> & elements) const

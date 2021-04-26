@@ -473,7 +473,6 @@ setupSubLocalMeshInfo(const panzer::LocalMeshInfoBase & parent_info,
   sub_info.num_owned_cells = owned_parent_cells.size();
   sub_info.num_ghstd_cells = ghstd_parent_cells.size();
   sub_info.num_virtual_cells = virtual_parent_cells.size();
-
   // We now have the indexing order for our sub_info
 
   // Just as a precaution, make sure the parent_info is setup properly
@@ -744,7 +743,7 @@ fillLocalCellIDs(const Teuchos::RCP<const Teuchos::Comm<int>> & comm,
   owned_cells = conn.getOwnedGlobalCellID(); 
 
   // Get ghost cells
-  ghost_cells = buildGhostedCellOneRing(comm,owned_cells,owned_cell_to_nodes);std::cout << "5\n";
+  ghost_cells = buildGhostedCellOneRing(comm,owned_cells,owned_cell_to_nodes);
   //ghost_cells = conn.getGhostGlobalCellID();
   //for( int i=0; i<ghost_cells.extent(0); i++ )
   //  std::cout << comm->getRank() << ","  << i << "," << ghost_cells(i) << std::endl;
@@ -772,7 +771,7 @@ fillLocalCellIDs(const Teuchos::RCP<const Teuchos::Comm<int>> & comm,
   std::vector<int> all_boundary_faces;
   const int num_faces = elems_by_face.extent(0);
   for(int face=0;face<num_faces;++face)
-    if(elems_by_face(face,0) < 0 or elems_by_face(face,1) < 0)
+    if(elems_by_face(face,0) < 0 or elems_by_face(face,1) < 0) 
       all_boundary_faces.push_back(face);
   const panzer::LocalOrdinal num_virtual_cells = all_boundary_faces.size();
 
