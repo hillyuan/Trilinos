@@ -125,7 +125,6 @@ STK_Interface::STK_Interface(unsigned dim)
    metaData_ = rcp(new stk::mesh::MetaData(dimension_,entity_rank_names));
 
    initializeFromMetaData();
-   //applyPeriodicCondition();
 }
 
 void STK_Interface::addSideset(const std::string & name,const CellTopologyData * ctData)
@@ -2194,15 +2193,15 @@ STK_Interface::applyPeriodicCondition()
          }*/
       
    }
-   //this->beginModification();
-   bulkData_->modification_begin();
+   this->beginModification();
+   //bulkData_->modification_begin();
    stk::mesh::Ghosting &periodic_ghosts = bulkData_->create_ghosting("periodic_ghosts");
    //auto & auro = bulkData_->shared_ghosting();
    bulkData_->change_ghosting(periodic_ghosts, send_nodes);
    //pbc_search.create_ghosting("periodic_ghosts");
    //stk::mesh::fixup_ghosted_to_shared_nodes(bulkData_);
-   bulkData_->modification_end();
-   //this->endModification();
+   //bulkData_->modification_end();
+   this->endModification();
 
 //   const std::vector<stk::mesh::Ghosting*> ghost = bulkData_->ghostings();
 //   for( auto a: ghost ) 

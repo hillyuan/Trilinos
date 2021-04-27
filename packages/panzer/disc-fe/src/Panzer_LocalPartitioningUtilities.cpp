@@ -736,15 +736,15 @@ fillLocalCellIDs(const Teuchos::RCP<const Teuchos::Comm<int>> & comm,
                  PHX::View<panzer::GlobalOrdinal*> & virtual_cells)
 {
   // build cell to node map
-  PHX::View<panzer::GlobalOrdinal**> owned_cell_to_nodes;
-  buildCellToNodes(conn, owned_cell_to_nodes);
+  //PHX::View<panzer::GlobalOrdinal**> owned_cell_to_nodes;
+  //buildCellToNodes(conn, owned_cell_to_nodes);
 
   // Build the local to global cell ID map
   owned_cells = conn.getOwnedGlobalCellID(); 
 
   // Get ghost cells
-  ghost_cells = buildGhostedCellOneRing(comm,owned_cells,owned_cell_to_nodes);
-  //ghost_cells = conn.getGhostGlobalCellID();
+  //ghost_cells = buildGhostedCellOneRing(comm,owned_cells,owned_cell_to_nodes);
+  ghost_cells = conn.getGhostGlobalCellID();
   //for( int i=0; i<ghost_cells.extent(0); i++ )
   //  std::cout << comm->getRank() << ","  << i << "," << ghost_cells(i) << std::endl;
 
