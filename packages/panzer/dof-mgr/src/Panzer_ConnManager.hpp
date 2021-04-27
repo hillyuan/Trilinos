@@ -110,6 +110,8 @@ class FieldPattern; // from DOFManager
 	virtual void getMyElementGIDs(std::vector<panzer::GlobalOrdinal> & elements) const {};
 	virtual void getElementGIDs(const std::string & blockID,std::vector<panzer::GlobalOrdinal> & elements) const {};
 	virtual void getFaceGIDs(const std::string & blockName,std::vector<panzer::GlobalOrdinal> & faces) const {};
+	  
+    virtual void getSkinMesh(std::vector<panzer::GlobalOrdinal> & elements, int& sideRank) const {};
 
     /** Returns the cellTopologies linked to element blocks in this connection manager */
     virtual void getElementBlockTopologies(std::vector<shards::CellTopology> & elementBlockTopologies) const = 0;

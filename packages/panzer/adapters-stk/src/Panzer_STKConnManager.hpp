@@ -134,6 +134,12 @@ public:
 	
    virtual void getFaceGIDs(const std::string & blockName,std::vector<panzer::GlobalOrdinal> & faces) const final
    { return stkMeshDB_->getFaceGIDs(blockName, faces); }
+	
+   virtual void getSkinMesh(std::vector<panzer::GlobalOrdinal> & elements, int& sideRank) const final
+   {   stk::mesh::EntityRank rank;
+	   stkMeshDB_->getSkinMesh(elements, rank); 
+	   sideRank = rank;
+   }
    /** What are the cellTopologies linked to element blocks in this connection manager?
     */
    virtual void getElementBlockTopologies(std::vector<shards::CellTopology> & elementBlockTopologies) const{

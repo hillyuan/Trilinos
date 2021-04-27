@@ -290,6 +290,9 @@ public:
    /** Get a vector of elements owned by this processor on a particular block ID */
    void getMyElements(const std::string & blockID,std::vector<stk::mesh::Entity> & elements) const;
    void getMyElementGIDs(const std::string & blockID,std::vector<panzer::GlobalOrdinal> & elements) const;
+	
+   /** Get skin boundary sides */
+   void getSkinMesh(std::vector<panzer::GlobalOrdinal> & elements, stk::mesh::EntityRank& sideRank) const;
 
    /** Get a vector of elements that share an edge/face with an owned element. Note that these elements
      * are not owned.

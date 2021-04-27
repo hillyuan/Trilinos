@@ -53,6 +53,7 @@
 #include <stk_mesh/base/GetEntities.hpp>
 #include <stk_mesh/base/GetBuckets.hpp>
 #include <stk_mesh/base/CreateAdjacentEntities.hpp>
+#include <stk_mesh/base/SkinBoundary.hpp> 
 
 // #include <stk_rebalance/Rebalance.hpp>
 // #include <stk_rebalance/Partition.hpp>
@@ -1243,6 +1244,24 @@ void STK_Interface::getMyElementGIDs(const std::string & blockID,std::vector<pan
    elementGIDs.clear();
    for( auto element: elements ) {
 	   elementGIDs.emplace_back( bulkData_->identifier( element )-1 );
+   }
+}
+	
+void STK_Interface::getSkinMesh(std::vector<panzer::GlobalOrdinal> & sideIDs, stk::mesh::EntityRank& sideRank) const
+{
+   stk::mesh::Selector ownedPart = metaData_->locally_owned_part();
+   sideRank = metaData_->side_rank();
+   stk::mesh::Part &skinPart = metaData_->declare_part("skin", sideRank);
+	
+   stk::mesh::create_exposed_block_boundary_sides(*bulkData_, ownedPart, {&skinPart});
+   stk::mesh::Selector selector(skinPart);
+   stk::mesh::EntityVector boundarySides;
+   stk::mesh::get_selected_entities(selector,bulkData_->buckets(sideRank),boundarySides);
+
+   // grab elements
+   sideIDs.clear();
+   for( auto element: boundarySides ) {
+	   sideIDs.emplace_back( bulkData_->identifier( element )-1 );
    }
 }
 

@@ -474,6 +474,11 @@ fillLocalCellIDs(const Teuchos::RCP<const Teuchos::Comm<int>> & comm,
   faceToElement->initialize(conn);
   auto elems_by_face = faceToElement->getFaceToElementsMap();
 
+  //int sideRank;
+  //std::vector<panzer::GlobalOrdinal>  sides;
+  //conn.getSkinMesh(sides, sideRank);
+//	std::cout << elems_by_face.extent(0) << ", " << sides.size() << std::endl;
+
   const panzer::LocalOrdinal num_owned_cells = owned_cells.extent(0);
 
   // We also need to consider faces that connect to cells that do not exist, but are needed for boundary conditions
