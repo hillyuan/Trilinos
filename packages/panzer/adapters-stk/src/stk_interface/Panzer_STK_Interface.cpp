@@ -2150,8 +2150,8 @@ STK_Interface::applyPeriodicCondition()
 					 if( bulkData_->is_communicated_with_proc(elems[k], range_proc) ) continue;
 					 send_nodes.emplace_back(elems[k], range_proc);
 					 
-					 std::cout << "On proc " << parallel_rank << " we are sending domain element "
-                        << bulkData_->identifier(elems[k]) << " to proc " << range_proc << std::endl;
+				//	 std::cout << "On proc " << parallel_rank << " we are sending domain element "
+                //        << bulkData_->identifier(elems[k]) << " to proc " << range_proc << std::endl;
                  }
             }
 		 }
@@ -2170,8 +2170,8 @@ STK_Interface::applyPeriodicCondition()
 				//	 if( bulkData_->in_shared(elems[k], domain_proc) ) continue;
 					 if( bulkData_->is_communicated_with_proc(elems[k], domain_proc) ) continue;
                      send_nodes.emplace_back(elems[k], domain_proc); 
-					 std::cout << "On proc " << parallel_rank << " we are sending range element "
-                        << bulkData_->identifier(elems[k]) << " to proc " << domain_proc << std::endl;
+				//	 std::cout << "On proc " << parallel_rank << " we are sending range element "
+                //        << bulkData_->identifier(elems[k]) << " to proc " << domain_proc << std::endl;
                  }
             }
 		 }
