@@ -1016,6 +1016,30 @@ generateLocalMeshInfo_new(const panzer_stk::STK_Interface & mesh)
   PHX::View<panzer::GlobalOrdinal*> owned_cells, ghost_cells;
   owned_cells = conn.getOwnedGlobalCellID(); 
   ghost_cells = conn.getGhostGlobalCellID();
+	
+  // ====== master mesh info ========
+  mesh_info.num_owned_cells = owned_cells.extent(0);
+  mesh_info.num_ghstd_cells = ghost_cells.extent(0);
+  std::size_t num_total_cells = mesh_info.num_owned_cells + mesh_info.num_ghstd_cells;
+  /*mesh_info.global_cells = PHX::View<panzer::GlobalOrdinal*>("global_cell_indices",num_total_cells);
+  mesh_info.local_cells = PHX::View<panzer::LocalOrdinal*>("local_cell_indices",num_total_cells);
+  for(int i=0;i<mesh_info.num_owned_cells;++i){
+      mesh_info.global_cells(i) = owned_cells(i);
+      mesh_info.local_cells(i) = i;
+  }
+  for(int i=0;i<mesh_info.num_ghstd_cells;++i){
+      mesh_info.global_cells(i+mesh_info.num_owned_cells) = ghost_cells(i);
+      mesh_info.local_cells(i+mesh_info.num_owned_cells) = i+mesh_info.num_owned_cells;
+  }*/
+  // ==================================
+
+  // glocal element id -> local element id
+  std::unordered_map<panzer::GlobalOrdinal,panzer::LocalOrdinal> global_to_local;
+  global_to_local[-1] = -1; // this is the "no neighbor" flag
+  for(size_t i=0;i<owned_cells.extent(0);i++)
+    global_to_local[owned_cells(i)] = i;
+  for(size_t i=0;i<ghost_cells.extent(0);i++)
+    global_to_local[ghost_cells(i)] = i+Teuchos::as<int>(owned_cells.extent(0));
 
   // build cell maps
   /////////////////////////////////////////////////////////////////////
@@ -1062,7 +1086,8 @@ generateLocalMeshInfo_new(const panzer_stk::STK_Interface & mesh)
     mesh.getNeighborElements( element_block_name, ghost_elements );
     block_info.num_owned_cells = my_elements.size();
     block_info.num_ghstd_cells = ghost_elements.size();
-    std::size_t num_total_cells = block_info.num_owned_cells + block_info.num_ghstd_cells;
+	block_info.num_virtual_cells = 0;   // for consitence with old design
+    num_total_cells = block_info.num_owned_cells + block_info.num_ghstd_cells;
 	  
 	block_info.global_cells = PHX::View<panzer::GlobalOrdinal*>("global_cells", num_total_cells);
     block_info.local_cells = PHX::View<panzer::LocalOrdinal*>("local_cells", num_total_cells);
@@ -1094,16 +1119,17 @@ generateLocalMeshInfo_new(const panzer_stk::STK_Interface & mesh)
 	  
 	// Faces
 	//if( mesh.getBulkData()->has_face_adjacent_element_graph() ) {
-	//}
+
+	// cell_to_faces : ELement LID -> faces GIDs
 	block_info.cell_to_faces = PHX::View<panzer::LocalOrdinal**>("cell_to_face",num_total_cells,faces_per_cell);
-	std::set<stk::mesh::EntityId> faceGIds;
+	std::set<stk::mesh::Entity> faces;
 	for( int i=0;i<block_info.num_owned_cells;++i ) {
 		const stk::mesh::Entity* faceElement = mesh.getBulkData()->begin(my_elements[i], sideRank);
-		unsigned numSides = mesh.getBulkData()->num_sides(*faceElement);
+		unsigned numSides = mesh.getBulkData()->num_connectivity( my_elements[i], sideRank);
 		for (unsigned j = 0; j < numSides; ++j)
         {
-            block_info.cell_to_faces(i,j) = mesh.getBulkData()->identifier( faceElement[j] ) -1;
-			faceGIds.insert( mesh.getBulkData()->identifier( faceElement[j] ));
+            block_info.cell_to_faces(i,j) = mesh.getBulkData()->identifier( faceElement[j] );
+			faces.insert( faceElement[j] );
         }
 	}
 	for( int i=0;i<block_info.num_ghstd_cells;++i ) {
@@ -1111,16 +1137,59 @@ generateLocalMeshInfo_new(const panzer_stk::STK_Interface & mesh)
 		unsigned numSides = mesh.getBulkData()->num_sides(*faceElement);
 		for (unsigned j = 0; j < numSides; ++j)
         {
-            block_info.cell_to_faces(i+block_info.num_owned_cells,j) = mesh.getBulkData()->identifier( faceElement[j] ) -1;
-			faceGIds.insert( mesh.getBulkData()->identifier( faceElement[j] ));
+            block_info.cell_to_faces(i+block_info.num_owned_cells,j) = mesh.getBulkData()->identifier( faceElement[j] );
+			faces.insert( faceElement[j] );
         }
 	}
-	block_info.face_to_cells = PHX::View<panzer::LocalOrdinal*[2]>("face_to_localidx",faceGIds.size());
-	block_info.face_to_lidx = PHX::View<panzer::LocalOrdinal*[2]>("face_to_localidx",faceGIds.size());
-  
+	std::cout << "Number of owned and ghost element=" << block_info.num_owned_cells  << "," << block_info.num_ghstd_cells
+		<< " with number of faces= " << faces.size() << std::endl;
+
+	// face_to_cells : Face GIDs => Element[0] LID + Element[1] LID
+	block_info.face_to_cells = PHX::View<panzer::LocalOrdinal*[2]>("face_to_cells",faces.size());
+	block_info.face_to_lidx = PHX::View<panzer::LocalOrdinal*[2]>("face_to_localidx",faces.size());
+    std::unordered_map<panzer::GlobalOrdinal,panzer::LocalOrdinal> face_g2l;
+	//stk::mesh::EntityRank eleRank = sideRank+1:
+	std::size_t numFace = 0;
+    for( const auto face: faces ) {
+		const stk::mesh::Entity* elements = mesh.getBulkData()->begin_elements(face);
+		unsigned numEles = mesh.getBulkData()->num_elements( face );
+ 	//	std::cout << mesh.getBulkData()->identifier(face) << ",a  " << numEles << std::endl;
+		panzer::GlobalOrdinal global_c0 = mesh.getBulkData()->identifier( elements[0] ) -1;
+		TEUCHOS_ASSERT(global_to_local.find(global_c0)!=global_to_local.end());
+		panzer::LocalOrdinal c0 = global_to_local[global_c0];
+		block_info.face_to_cells( numFace, 0 ) = c0;
+	//	std::cout <<    "  :,a  " << numFace << "," << c0 << std::endl;
+		panzer::GlobalOrdinal global_c1 = -1;
+		panzer::LocalOrdinal c1 = -1;
+		if( numEles>=2 ) {
+        	global_c1 = mesh.getBulkData()->identifier( elements[1] ) -1;
+      		TEUCHOS_ASSERT(global_to_local.find(global_c1)!=global_to_local.end());
+			c1 = global_to_local[global_c1];
+		}
+		block_info.face_to_cells( numFace, 1 ) = c1;
+	//	std::cout <<    "  :,a  " << global_c1 << "," << c1 << std::endl;
+     // auto lidx0 = face_to_lidx(f,0);
+      
+     // auto lidx1 = face_to_lidx(f,1);
+		face_g2l[ mesh.getBulkData()->identifier(face)] =numFace;
+		++numFace;		
+	}
+	  
+	// cell_to_faces : ELement LID -> faces LIDs
+	for( int i=0;i<block_info.num_owned_cells+block_info.num_ghstd_cells;++i ) {
+		const stk::mesh::Entity* faceElement = mesh.getBulkData()->begin(my_elements[i], sideRank);
+		unsigned numSides = mesh.getBulkData()->num_connectivity( my_elements[i], sideRank);
+		for (unsigned j = 0; j < numSides; ++j)
+        {
+            panzer::GlobalOrdinal global_c = block_info.cell_to_faces(i,j);
+			TEUCHOS_ASSERT(face_g2l.find(global_c)!=face_g2l.end());
+			block_info.cell_to_faces(i,j) = face_g2l[global_c];
+        }
+	}
+
     block_info.subcell_index = -1;
     block_info.has_connectivity = true;
-	  
+
 	std::vector<stk::mesh::Entity> side_entities;
 	for(const std::string & sideset_name : sideset_names){
       panzer::LocalMeshSidesetInfo & sideset_info = mesh_info.sidesets[element_block_name][sideset_name];

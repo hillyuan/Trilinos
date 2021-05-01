@@ -329,6 +329,7 @@ setupSubLocalMeshInfo(const panzer::LocalMeshInfoBase & parent_info,
   // Complete.
 
 }
+	
 
 void
 splitMeshInfo(const panzer::LocalMeshInfoBase & mesh_info,
@@ -431,7 +432,7 @@ generateLocalMeshPartitions(const panzer::LocalMeshInfo & mesh_info,
     const panzer::LocalMeshBlockInfo & block_info = mesh_info.element_blocks.at(element_block_name);
 
     if(description.getWorksetSize() == panzer::WorksetSizeType::ALL_ELEMENTS){
-      // We only have one partition describing the entire local mesh
+      // We only have one partition describing the entire local mesh		d::cout ｓ
       panzer::partitioning_utilities::splitMeshInfo(block_info, -1, partitions);
     } else {
       // We need to partition local mesh
