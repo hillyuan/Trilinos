@@ -160,8 +160,9 @@ namespace panzer {
     const int num_faces_per_cell = face_connectivity.numSubcellsOnCell(0);
     const int num_points_per_face = num_points / num_faces_per_cell;
 
-    TEST_EQUALITY(num_faces,8); // 3*2-2 vertical edges (2 removed by periodicity)
-                                // 3*2-2 horizontal edges (2 removed by periodicty)
+	TEST_EQUALITY(num_faces,12); // we donot consider 4 faces removed by periodicity
+   // TEST_EQUALITY(num_faces,8); // 3*2-2 vertical edges (2 removed by periodicity)
+   //                             // 3*2-2 horizontal edges (2 removed by periodicty)
     TEST_EQUALITY(num_faces_per_cell,4);
     TEST_EQUALITY(num_points,2*4);
 
