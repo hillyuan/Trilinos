@@ -1146,7 +1146,6 @@ generateLocalMeshInfo_new(const panzer_stk::STK_Interface & mesh)
 
 	// face_to_cells : Face GIDs => Element[0] LID + Element[1] LID
 	block_info.face_to_cells = PHX::View<panzer::LocalOrdinal*[2]>("face_to_cells",faces.size());
-	block_info.face_to_lidx = PHX::View<panzer::LocalOrdinal*[2]>("face_to_localidx",faces.size());
     std::unordered_map<panzer::GlobalOrdinal,panzer::LocalOrdinal> face_g2l;
 	//stk::mesh::EntityRank eleRank = sideRank+1:
 	std::size_t numFace = 0;
@@ -1168,14 +1167,15 @@ generateLocalMeshInfo_new(const panzer_stk::STK_Interface & mesh)
 		}
 		block_info.face_to_cells( numFace, 1 ) = c1;
 	//	std::cout <<    "  :,a  " << global_c1 << "," << c1 << std::endl;
-     // auto lidx0 = face_to_lidx(f,0);
-      
-     // auto lidx1 = face_to_lidx(f,1);
 		face_g2l[ mesh.getBulkData()->identifier(face)] =numFace;
 		++numFace;		
 	}
 	  
 	// cell_to_faces : ELement LID -> faces LIDs
+	// face_to_lidx: FaceLIDs (FaceGIDs) -> side index of parent cell
+	std::vector<panzer::LocalOrdinal> counter(faces.size(),0);
+	block_info.face_to_lidx = PHX::View<panzer::LocalOrdinal*[2]>("face_to_localidx",faces.size());
+	Kokkos::deep_copy(block_info.face_to_lidx,-1);
 	for( int i=0;i<block_info.num_owned_cells+block_info.num_ghstd_cells;++i ) {
 		const stk::mesh::Entity* faceElement = mesh.getBulkData()->begin(my_elements[i], sideRank);
 		unsigned numSides = mesh.getBulkData()->num_connectivity( my_elements[i], sideRank);
@@ -1183,7 +1183,11 @@ generateLocalMeshInfo_new(const panzer_stk::STK_Interface & mesh)
         {
             panzer::GlobalOrdinal global_c = block_info.cell_to_faces(i,j);
 			TEUCHOS_ASSERT(face_g2l.find(global_c)!=face_g2l.end());
-			block_info.cell_to_faces(i,j) = face_g2l[global_c];
+			auto lid = face_g2l[global_c];
+			block_info.face_to_lidx( lid, counter[lid] ) = j;
+			//std::cout << global_c << ", " << lid << ", aa:" << counter[lid] << ", " << block_info.face_to_lidx( lid, counter[lid] ) << std::endl;
+			++(counter[lid]);
+			block_info.cell_to_faces(i,j) = lid;
         }
 	}
 

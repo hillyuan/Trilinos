@@ -132,6 +132,9 @@ setupSubLocalMeshInfo(const panzer::LocalMeshBlockInfo & parent_info,           
   for( const LO face_LID : faceLIDs) {
 	sub_info.face_to_cells(nf,0) = parent_info.face_to_cells(face_LID,0);
 	sub_info.face_to_cells(nf,1) = parent_info.face_to_cells(face_LID,1);
+	sub_info.face_to_lidx(nf,0) = parent_info.face_to_lidx(face_LID,0);
+	sub_info.face_to_lidx(nf,1) = parent_info.face_to_lidx(face_LID,1);
+//	std::cout << "face:" << face_LID << "," << sub_info.face_to_lidx(nf,0) << "," << sub_info.face_to_lidx(nf,1) <<std::endl;
 	nf++;
   }
 
