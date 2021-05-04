@@ -153,7 +153,8 @@ splitMeshInfo(const panzer::LocalMeshBlockInfo & block_info,
   TEUCHOS_ASSERT((splitting_size > 0) or (splitting_size == WorksetSizeType::ALL_ELEMENTS));
 
   // Default partition size
-  const LO base_partition_size = std::min(block_info.num_owned_cells, (splitting_size > 0) ? splitting_size : block_info.num_owned_cells);
+  const LO numCells = block_info.num_owned_cells + block_info.num_ghstd_cells;
+  const LO base_partition_size = std::min(numCells, (splitting_size > 0) ? splitting_size : numCells);
 
   // Cells to partition
   std::vector<LO> partition_cells;
@@ -161,11 +162,11 @@ splitMeshInfo(const panzer::LocalMeshBlockInfo & block_info,
 
   // Create the partitions
   LO cell_count = 0;
-  while(cell_count < block_info.num_owned_cells){
+  while(cell_count < numCells){
 
     LO partition_size = base_partition_size;
-    if(cell_count + partition_size > block_info.num_owned_cells)
-      partition_size = block_info.num_owned_cells - cell_count;
+    if(cell_count + partition_size > numCells)
+      partition_size = numCells - cell_count;
 
     // Error check for a null partition - this should never happen by design
     TEUCHOS_ASSERT(partition_size != 0);

@@ -1176,7 +1176,7 @@ generateLocalMeshInfo_new(const panzer_stk::STK_Interface & mesh)
 	std::vector<panzer::LocalOrdinal> counter(faces.size(),0);
 	block_info.face_to_lidx = PHX::View<panzer::LocalOrdinal*[2]>("face_to_localidx",faces.size());
 	Kokkos::deep_copy(block_info.face_to_lidx,-1);
-	for( int i=0;i<block_info.num_owned_cells+block_info.num_ghstd_cells;++i ) {
+	for( int i=0;i<block_info.num_owned_cells;++i ) {
 		const stk::mesh::Entity* faceElement = mesh.getBulkData()->begin(my_elements[i], sideRank);
 		unsigned numSides = mesh.getBulkData()->num_connectivity( my_elements[i], sideRank);
 		for (unsigned j = 0; j < numSides; ++j)
