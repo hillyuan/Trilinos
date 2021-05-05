@@ -78,14 +78,14 @@ namespace panzer {
     RCP<Teuchos::ParameterList> pl = rcp(new Teuchos::ParameterList);
     pl->set("X Blocks",2);
     pl->set("Y Blocks",1);
-    pl->set("X Elements",4);  // in each block
+    pl->set("X Elements",2);  // in each block
     pl->set("Y Elements",1);  // in each block
 
     panzer_stk::QuadTriMeshFactory factory;
     factory.setParameterList(pl);
     RCP<panzer_stk::STK_Interface> mesh = factory.buildMesh(MPI_COMM_WORLD);
     if(mesh->isWritable())
-      mesh->writeToExodus("blocked_mesh.exo");
+      mesh->writeToExodus("mixed_mesh.exo");
 
     std::vector<std::string> element_blocks;
     mesh->getElementBlockNames(element_blocks);

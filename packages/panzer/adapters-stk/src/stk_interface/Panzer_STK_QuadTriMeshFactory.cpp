@@ -246,8 +246,11 @@ void QuadTriMeshFactory::initializeWithDefaults()
 void QuadTriMeshFactory::buildMetaData(stk::ParallelMachine /* parallelMach */, STK_Interface & mesh) const
 {
    typedef shards::Triangle<> TriTopo;
-   const CellTopologyData * ctd = shards::getCellTopologyData<TriTopo>();
-   const CellTopologyData * side_ctd = shards::CellTopology(ctd).getBaseCellTopologyData(1,0);
+   const CellTopologyData * ctd_tri = shards::getCellTopologyData<TriTopo>();
+   const CellTopologyData * side_ctd = shards::CellTopology(ctd_tri).getBaseCellTopologyData(1,0);
+   typedef shards::Quadrilateral<4> QuadTopo;
+   const CellTopologyData * ctd_quad = shards::getCellTopologyData<QuadTopo>();
+ //  const CellTopologyData * side_ctd = shards::CellTopology(ctd).getBaseCellTopologyData(1,0);
 
    // build meta data
    //mesh.setDimension(2);
@@ -260,7 +263,10 @@ void QuadTriMeshFactory::buildMetaData(stk::ParallelMachine /* parallelMach */, 
             ebPostfix << "-" << bx << "_" << by;
 
             // add element blocks
-            mesh.addElementBlock("eblock"+ebPostfix.str(),ctd);
+			if( bx==0 ) 
+            	mesh.addElementBlock("eblock"+ebPostfix.str(),ctd_quad);
+			else
+				mesh.addElementBlock("eblock"+ebPostfix.str(),ctd_tri);
          }
 
       }
@@ -303,26 +309,36 @@ void QuadTriMeshFactory::buildBlock(stk::ParallelMachine /* parallelMach */, int
 
    double deltaX = (xf_-x0_)/double(totalXElems);
    double deltaY = (yf_-y0_)/double(totalYElems);
- 
+
    std::vector<double> coord(2,0.0);
 
    // build the nodes, 1-based
-   for(int nx=0;nx<5;++nx) {
-      coord[0] = this->getMeshCoord(nx, deltaX, x0_);
-      for(int ny=0;ny<2;++ny) {
+   if( xBlock==0 ) {
+     for(int nx=0;nx<3;++nx) {
+       coord[0] = this->getMeshCoord(nx, deltaX, x0_);
+       for(int ny=0;ny<2;++ny) {
          coord[1] = this->getMeshCoord(ny, deltaY, y0_);
-
          mesh.addNode(ny*(totalXElems+1)+nx+1,coord);
-      }
+       }
+     }
+   } else {
+	 for(int nx=3;nx<5;++nx) {
+       coord[0] = this->getMeshCoord(nx, deltaX, x0_);
+       for(int ny=0;ny<2;++ny) {
+         coord[1] = this->getMeshCoord(ny, deltaY, y0_);
+         mesh.addNode(ny*(totalXElems+1)+nx+1,coord);
+       }
+	 }
    }
 
    std::stringstream blockName;
    blockName << "eblock-" << xBlock << "_" << yBlock;
    stk::mesh::Part * block = mesh.getElementBlockPart(blockName.str());
 
-   stk::mesh::EntityId gid = 0 ;
+   
    // build the elements
-   if( xBlock==1 ) {  //quad 
+   if( xBlock==0 ) {  //quad 
+	 stk::mesh::EntityId gid = 0 ;
      for(int nx=0;nx<2;++nx) {
        for(int ny=0;ny<1;++ny) {
          ++gid;
@@ -333,10 +349,12 @@ void QuadTriMeshFactory::buildBlock(stk::ParallelMachine /* parallelMach */, int
          nodes[3] = nodes[2]-1;
 
          RCP<ElementDescriptor> ed = rcp(new ElementDescriptor(gid,nodes));
+		   
          mesh.addElement(ed,block);
        }
      }
    } else { //tri
+	 stk::mesh::EntityId gid = 2 ;
      for(int nx=2;nx<4;++nx) {
        for(int ny=0;ny<1;++ny) {
          std::vector<stk::mesh::EntityId> nodes(3);
