@@ -81,7 +81,7 @@ setupSubLocalMeshInfo(const panzer::LocalMeshBlockInfo & parent_info,           
 
   std::size_t n_ghost =0;
   for( auto e: owned_parent_cells )
-  	if( e > parent_info.num_owned_cells ) ++n_ghost;
+  	if( e >= parent_info.num_owned_cells ) ++n_ghost;
 
   std::size_t num_total_cells = owned_parent_cells.size();
   sub_info.num_owned_cells = num_total_cells - n_ghost;

@@ -1142,7 +1142,7 @@ generateLocalMeshInfo_new(const panzer_stk::STK_Interface & mesh)
         }
 	}
 	std::cout << "Number of owned and ghost element=" << block_info.num_owned_cells  << "," << block_info.num_ghstd_cells
-		<< " with number of faces= " << faces.size() << std::endl;
+		<< " with number of faces= " << faces.size() << " in rank" << comm->getRank() << std::endl;
 
 	// face_to_cells : Face GIDs => Element[0] LID + Element[1] LID
 	block_info.face_to_cells = PHX::View<panzer::LocalOrdinal*[2]>("face_to_cells",faces.size());
