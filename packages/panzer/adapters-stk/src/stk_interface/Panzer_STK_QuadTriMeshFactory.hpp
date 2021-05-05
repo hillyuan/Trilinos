@@ -91,9 +91,6 @@ protected:
    void buildElements(stk::ParallelMachine parallelMach,STK_Interface & mesh) const;
    void buildBlock(stk::ParallelMachine machRank,int xBlock,int yBlock,STK_Interface & mesh) const;
 
-   std::pair<int,int> determineXElemSizeAndStart(int xBlock,unsigned int size,unsigned int rank) const;
-   std::pair<int,int> determineYElemSizeAndStart(int yBlock,unsigned int size,unsigned int rank) const;
-
    void addSideSets(STK_Interface & mesh) const;
    void addNodeSets(STK_Interface & mesh) const;
 

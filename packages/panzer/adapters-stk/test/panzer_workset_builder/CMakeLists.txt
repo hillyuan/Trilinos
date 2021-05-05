@@ -12,6 +12,13 @@ TRIBITS_ADD_EXECUTABLE_AND_TEST(
   COMM serial mpi
   NUM_MPI_PROCS 1
   )
+  
+TRIBITS_ADD_EXECUTABLE_AND_TEST(
+  mixelement_builder
+  SOURCES mixelement_builder.cpp ${UNIT_TEST_DRIVER}
+  COMM serial mpi
+  NUM_MPI_PROCS 1
+  )
 
 TRIBITS_ADD_EXECUTABLE_AND_TEST(
   d_workset_builder

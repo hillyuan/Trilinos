@@ -199,24 +199,33 @@ Teuchos::RCP<const Teuchos::ParameterList> QuadTriMeshFactory::getValidParameter
 {
    static RCP<Teuchos::ParameterList> defaultParams;
 
-   // fill with default values
+   /* fill with default values
+   
+      5----6----7--8--9
+	  |    |    | /| /|
+	  |    |    |/ |/ |
+      0----1----2--3--4
+	  
+	  element block 0: Quad 0,1
+	  element block 1: Tri  2,3,4,5
+   */
    if(defaultParams == Teuchos::null) {
       defaultParams = rcp(new Teuchos::ParameterList);
 
       defaultParams->set<double>("X0",0.0);
       defaultParams->set<double>("Y0",0.0);
 
-      defaultParams->set<double>("Xf",1.0);
+      defaultParams->set<double>("Xf",4.0);
       defaultParams->set<double>("Yf",1.0);
 
-      defaultParams->set<int>("X Blocks",1);
+      defaultParams->set<int>("X Blocks",2);
       defaultParams->set<int>("Y Blocks",1);
 
       defaultParams->set<int>("X Procs",-1);
       defaultParams->set<int>("Y Procs",1);
 
-      defaultParams->set<int>("X Elements",5);
-      defaultParams->set<int>("Y Elements",5);
+      defaultParams->set<int>("X Elements",4);
+      defaultParams->set<int>("Y Elements",1);
 
       Teuchos::ParameterList & bcs = defaultParams->sublist("Periodic BCs");
       bcs.set<int>("Count",0); // no default periodic boundary conditions
@@ -282,13 +291,13 @@ void QuadTriMeshFactory::buildElements(stk::ParallelMachine parallelMach,STK_Int
 void QuadTriMeshFactory::buildBlock(stk::ParallelMachine /* parallelMach */, int xBlock, int yBlock, STK_Interface& mesh) const
 {
    // grab this processors rank and machine size
-   std::pair<int,int> sizeAndStartX = determineXElemSizeAndStart(xBlock,xProcs_,machRank_);
-   std::pair<int,int> sizeAndStartY = determineYElemSizeAndStart(yBlock,yProcs_,machRank_);
+  // std::pair<int,int> sizeAndStartX = determineXElemSizeAndStart(xBlock,xProcs_,machRank_);
+  // std::pair<int,int> sizeAndStartY = determineYElemSizeAndStart(yBlock,yProcs_,machRank_);
 
-   int myXElems_start = sizeAndStartX.first;
-   int myXElems_end  = myXElems_start+sizeAndStartX.second;
-   int myYElems_start = sizeAndStartY.first;
-   int myYElems_end  = myYElems_start+sizeAndStartY.second;
+  // int myXElems_start = sizeAndStartX.first;
+  // int myXElems_end  = myXElems_start+sizeAndStartX.second;
+  // int myYElems_start = sizeAndStartY.first;
+  // int myYElems_end  = myYElems_start+sizeAndStartY.second;
    int totalXElems = nXElems_*xBlocks_;
    int totalYElems = nYElems_*yBlocks_;
 
@@ -297,10 +306,10 @@ void QuadTriMeshFactory::buildBlock(stk::ParallelMachine /* parallelMach */, int
  
    std::vector<double> coord(2,0.0);
 
-   // build the nodes
-   for(int nx=myXElems_start;nx<myXElems_end+1;++nx) {
+   // build the nodes, 1-based
+   for(int nx=0;nx<5;++nx) {
       coord[0] = this->getMeshCoord(nx, deltaX, x0_);
-      for(int ny=myYElems_start;ny<myYElems_end+1;++ny) {
+      for(int ny=0;ny<2;++ny) {
          coord[1] = this->getMeshCoord(ny, deltaY, y0_);
 
          mesh.addNode(ny*(totalXElems+1)+nx+1,coord);
@@ -311,11 +320,25 @@ void QuadTriMeshFactory::buildBlock(stk::ParallelMachine /* parallelMach */, int
    blockName << "eblock-" << xBlock << "_" << yBlock;
    stk::mesh::Part * block = mesh.getElementBlockPart(blockName.str());
 
+   stk::mesh::EntityId gid = 0 ;
    // build the elements
-   for(int nx=myXElems_start;nx<myXElems_end;++nx) {
-      for(int ny=myYElems_start;ny<myYElems_end;++ny) {
-         stk::mesh::EntityId gid_a = 2*(totalXElems*ny+nx+1)-1;
-         stk::mesh::EntityId gid_b = gid_a+1;
+   if( xBlock==1 ) {  //quad 
+     for(int nx=0;nx<2;++nx) {
+       for(int ny=0;ny<1;++ny) {
+         ++gid;
+         std::vector<stk::mesh::EntityId> nodes(4);
+         nodes[0] = nx+1+ny*(totalXElems+1);
+         nodes[1] = nodes[0]+1;
+         nodes[2] = nodes[1]+(totalXElems+1);
+         nodes[3] = nodes[2]-1;
+
+         RCP<ElementDescriptor> ed = rcp(new ElementDescriptor(gid,nodes));
+         mesh.addElement(ed,block);
+       }
+     }
+   } else { //tri
+     for(int nx=2;nx<4;++nx) {
+       for(int ny=0;ny<1;++ny) {
          std::vector<stk::mesh::EntityId> nodes(3);
          stk::mesh::EntityId sw,se,ne,nw;
          sw = nx+1+ny*(totalXElems+1);
@@ -326,60 +349,17 @@ void QuadTriMeshFactory::buildBlock(stk::ParallelMachine /* parallelMach */, int
          nodes[0] = sw;
          nodes[1] = se;
          nodes[2] = ne;
-         mesh.addElement(rcp(new ElementDescriptor(gid_a,nodes)),block);
+		 ++gid;
+         mesh.addElement(rcp(new ElementDescriptor(gid,nodes)),block);
 
          nodes[0] = sw;
          nodes[1] = ne;
          nodes[2] = nw;
-         mesh.addElement(rcp(new ElementDescriptor(gid_b,nodes)),block);
-      }
+		 ++gid;
+         mesh.addElement(rcp(new ElementDescriptor(gid,nodes)),block);
+       }
+     }
    }
-}
-
-std::pair<int,int> QuadTriMeshFactory::determineXElemSizeAndStart(int xBlock,unsigned int size,unsigned int /* rank */) const
-{
-   std::size_t xProcLoc = procTuple_[0];
-   unsigned int minElements = nXElems_/size;
-   unsigned int extra = nXElems_ - minElements*size;
-
-   TEUCHOS_ASSERT(minElements>0);
-
-   // first "extra" elements get an extra column of elements
-   // this determines the starting X index and number of elements
-   int nume=0, start=0;
-   if(xProcLoc<extra) {
-      nume  = minElements+1;
-      start = xProcLoc*(minElements+1);
-   }
-   else {
-      nume  = minElements;
-      start = extra*(minElements+1)+(xProcLoc-extra)*minElements;
-   }
-
-   return std::make_pair(start+nXElems_*xBlock,nume);
-}
-
-std::pair<int,int> QuadTriMeshFactory::determineYElemSizeAndStart(int yBlock,unsigned int size,unsigned int /* rank */) const
-{
-   std::size_t yProcLoc = procTuple_[1];
-   unsigned int minElements = nYElems_/size;
-   unsigned int extra = nYElems_ - minElements*size;
-
-   TEUCHOS_ASSERT(minElements>0);
-
-   // first "extra" elements get an extra column of elements
-   // this determines the starting X index and number of elements
-   int nume=0, start=0;
-   if(yProcLoc<extra) {
-      nume  = minElements+1;
-      start = yProcLoc*(minElements+1);
-   }
-   else {
-      nume  = minElements;
-      start = extra*(minElements+1)+(yProcLoc-extra)*minElements;
-   }
-
-   return std::make_pair(start+nYElems_*yBlock,nume);
 }
 
 void QuadTriMeshFactory::addSideSets(STK_Interface & mesh) const
