@@ -143,20 +143,23 @@ namespace panzer {
 					       cell_vertex_coordinates));
     
       TEST_EQUALITY((*worksets[i])[0].cell_vertex_coordinates(0,0,0), cell_vertex_coordinates(0,0,0));
-      TEST_EQUALITY((*worksets[i])[0].cell_vertex_coordinates(2,3,1), cell_vertex_coordinates(2,3,1));
+      TEST_EQUALITY((*worksets[i])[0].cell_vertex_coordinates(1,2,1), cell_vertex_coordinates(1,2,1));
 
       TEST_ASSERT((*worksets[i])[0].cell_local_ids==local_cell_ids);
 
       TEST_EQUALITY((*worksets[i])[0](0).cell_vertex_coordinates(0,0,0), cell_vertex_coordinates(0,0,0));
-      TEST_EQUALITY((*worksets[i])[0](0).cell_vertex_coordinates(2,3,1), cell_vertex_coordinates(2,3,1));
+      TEST_EQUALITY((*worksets[i])[0](0).cell_vertex_coordinates(1,2,1), cell_vertex_coordinates(1,2,1));
     }
     
 
     TEST_EQUALITY(worksets.size(), 2);
     TEST_EQUALITY(worksets[0]->size(), 1);
     TEST_EQUALITY(worksets[1]->size(), 1);
+	  
+	TEST_EQUALITY((*worksets[0])[0](0).cell_vertex_coordinates.extent(1), 4);
+	TEST_EQUALITY((*worksets[1])[0](0).cell_vertex_coordinates.extent(1), 3);
 
-    TEST_EQUALITY((*worksets[0])[0].num_cells, 4);
+    TEST_EQUALITY((*worksets[0])[0].num_cells, 2);
     TEST_EQUALITY((*worksets[1])[0].num_cells, 4);
     
     TEST_EQUALITY((*worksets[0])[0].block_id, element_blocks[0]);
