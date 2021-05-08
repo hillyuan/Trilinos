@@ -166,6 +166,120 @@ namespace panzer {
     TEST_EQUALITY((*worksets[1])[0].block_id, element_blocks[1]);
     
   }
+	
+  TEUCHOS_UNIT_TEST(workset_builder, edge)
+  {
+
+    RCP<Teuchos::ParameterList> pl = rcp(new Teuchos::ParameterList);
+    pl->set("X Blocks",2);
+    pl->set("Y Blocks",1);
+    pl->set("X Elements",2);  // in each block
+    pl->set("Y Elements",1);  // in each block
+
+    panzer_stk::QuadTriMeshFactory factory;
+    factory.setParameterList(pl);
+    RCP<panzer_stk::STK_Interface> mesh = factory.buildMesh(MPI_COMM_WORLD);
+
+    std::vector<std::string> element_blocks;
+    mesh->getElementBlockNames(element_blocks);
+    const std::size_t workset_size = 20;
+
+    Teuchos::RCP<Teuchos::ParameterList> ipb = Teuchos::parameterList("Physics Blocks");
+    std::vector<panzer::BC> bcs;
+    testInitialzation(ipb, bcs);
+
+    // build physics blocks
+    //////////////////////////////////////////////////////////////
+    std::vector<Teuchos::RCP<panzer::PhysicsBlock> > physicsBlocks;
+    {
+      const int default_integration_order = 1;
+
+      Teuchos::RCP<user_app::MyFactory> eqset_factory = Teuchos::rcp(new user_app::MyFactory);
+    
+      std::map<std::string,std::string> block_ids_to_physics_ids;
+      block_ids_to_physics_ids["eblock-0_0"] = "test physics";
+      block_ids_to_physics_ids["eblock-1_0"] = "test physics";
+
+      std::map<std::string,Teuchos::RCP<const shards::CellTopology> > block_ids_to_cell_topo;
+      block_ids_to_cell_topo["eblock-0_0"] = mesh->getCellTopology("eblock-0_0");
+      block_ids_to_cell_topo["eblock-1_0"] = mesh->getCellTopology("eblock-1_0");
+      
+      Teuchos::RCP<panzer::GlobalData> gd = panzer::createGlobalData();
+
+      panzer::buildPhysicsBlocks(block_ids_to_physics_ids,
+				 block_ids_to_cell_topo,
+				 ipb,
+				 default_integration_order,
+				 workset_size,
+				 eqset_factory,
+				 gd,
+				 false,
+				 physicsBlocks);
+    }
+
+    Teuchos::RCP<std::vector<panzer::Workset> > worksets;
+
+    {
+      std::vector<std::size_t> local_cell_ids_a, local_cell_ids_b;
+      std::vector<std::size_t> local_side_ids_a, local_side_ids_b;
+
+      local_cell_ids_a.push_back(0);
+      local_cell_ids_b.push_back(4);
+
+      local_side_ids_a.push_back(3);
+      local_side_ids_b.push_back(1);
+
+      Kokkos::DynRankView<double,PHX::Device> cell_vertex_coordinates_a, cell_vertex_coordinates_b;
+      mesh->getElementVertices(local_cell_ids_a,cell_vertex_coordinates_a);
+      mesh->getElementVertices(local_cell_ids_b,cell_vertex_coordinates_b);
+
+      Teuchos::RCP<const panzer::PhysicsBlock> pb_a = panzer::findPhysicsBlock(element_blocks[0],physicsBlocks);
+      Teuchos::RCP<const panzer::PhysicsBlock> pb_b = panzer::findPhysicsBlock(element_blocks[1],physicsBlocks);
+      worksets = panzer::buildEdgeWorksets( pb_a->getWorksetNeeds(),pb_a->elementBlockID(),
+ 	                         local_cell_ids_a, local_side_ids_a, cell_vertex_coordinates_a,
+                                 pb_b->getWorksetNeeds(),pb_b->elementBlockID(),
+			                 local_cell_ids_b, local_side_ids_b, cell_vertex_coordinates_b);
+
+     
+      TEST_EQUALITY((*worksets).size(),1);
+      TEST_EQUALITY((*worksets)[0].num_cells,1);
+      TEST_EQUALITY((*worksets)[0].subcell_dim,1);
+
+      // this is identical to (*worksets)[0](0)
+      TEST_EQUALITY((*worksets)[0].cell_vertex_coordinates(0,0,0), cell_vertex_coordinates_a(0,0,0));
+      TEST_EQUALITY((*worksets)[0].cell_vertex_coordinates(0,3,1), cell_vertex_coordinates_a(0,3,1));
+      TEST_EQUALITY((*worksets)[0].subcell_index, 3);
+      TEST_EQUALITY((*worksets)[0].block_id, "eblock-0_0");
+      TEST_EQUALITY((*worksets)[0].cell_local_ids.size(),1);
+      TEST_EQUALITY((*worksets)[0].cell_local_ids[0],0);
+      TEST_EQUALITY((*worksets)[0].ir_degrees->size(),1);
+      TEST_EQUALITY((*worksets)[0].int_rules.size(),1);
+      TEST_EQUALITY((*worksets)[0].basis_names->size(),2);
+      TEST_EQUALITY((*worksets)[0].bases.size(),2);
+      
+      TEST_EQUALITY((*worksets)[0](0).cell_vertex_coordinates(0,0,0), cell_vertex_coordinates_a(0,0,0));
+      TEST_EQUALITY((*worksets)[0](0).cell_vertex_coordinates(0,3,1), cell_vertex_coordinates_a(0,3,1));
+      TEST_EQUALITY((*worksets)[0](0).subcell_index, 3);
+      TEST_EQUALITY((*worksets)[0](0).block_id, "eblock-0_0");
+      TEST_EQUALITY((*worksets)[0](0).cell_local_ids.size(),1);
+      TEST_EQUALITY((*worksets)[0](0).cell_local_ids[0],0);
+      TEST_EQUALITY((*worksets)[0](0).ir_degrees->size(),1);
+      TEST_EQUALITY((*worksets)[0](0).int_rules.size(),1);
+      TEST_EQUALITY((*worksets)[0](0).basis_names->size(),2);
+      TEST_EQUALITY((*worksets)[0](0).bases.size(),2);
+
+      TEST_EQUALITY((*worksets)[0](1).cell_vertex_coordinates(0,0,0), cell_vertex_coordinates_b(0,0,0));
+      TEST_EQUALITY((*worksets)[0](1).cell_vertex_coordinates(0,2,1), cell_vertex_coordinates_b(0,2,1));
+      TEST_EQUALITY((*worksets)[0](1).subcell_index, 1);
+      TEST_EQUALITY((*worksets)[0](1).block_id, "eblock-1_0");
+      TEST_EQUALITY((*worksets)[0](1).cell_local_ids[0],4);
+      TEST_EQUALITY((*worksets)[0](1).ir_degrees->size(),1);
+      TEST_EQUALITY((*worksets)[0](1).int_rules.size(),1);
+      TEST_EQUALITY((*worksets)[0](1).basis_names->size(),2);
+      TEST_EQUALITY((*worksets)[0](1).bases.size(),2);
+    }
+    
+  }
 
   void testInitialzation(const Teuchos::RCP<Teuchos::ParameterList>& ipb,
 			 std::vector<panzer::BC>& bcs)
