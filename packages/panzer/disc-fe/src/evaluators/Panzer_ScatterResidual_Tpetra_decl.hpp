@@ -94,7 +94,7 @@ class ScatterResidual_Tpetra<panzer::Traits::Residual,TRAITS,LO,GO,NodeT>
   
 public:
   ScatterResidual_Tpetra(const Teuchos::RCP<const panzer::GlobalIndexer> & indexer) 
-     : globalIndexer_(indexer) {}
+     : globalIndexer_(indexer), tensorRank(0) {}
   
   ScatterResidual_Tpetra(const Teuchos::RCP<const panzer::GlobalIndexer> & indexer,
                          const Teuchos::ParameterList& p);
@@ -117,6 +117,8 @@ private:
 
   // fields that need to be scattered will be put in this vector
   std::vector< PHX::MDField<const ScalarT,Cell,NODE> > scatterFields_;
+  PHX::MDField<ScalarT const,Cell,Node,Dim>  scatterVector_;
+  PHX::MDField<ScalarT const,Cell,Node,Dim,Dim> scatterTensor_;
 
   // maps the local (field,element,basis) triplet to a global ID
   // for scattering
@@ -134,6 +136,8 @@ private:
 
   PHX::View<int**> scratch_lids_;
   std::vector<PHX::View<int*> > scratch_offsets_;
+  
+  unsigned short int tensorRank;
 
   ScatterResidual_Tpetra();
 };
@@ -149,7 +153,7 @@ class ScatterResidual_Tpetra<panzer::Traits::Tangent,TRAITS,LO,GO,NodeT>
   
 public:
   ScatterResidual_Tpetra(const Teuchos::RCP<const panzer::GlobalIndexer> & indexer) 
-     : globalIndexer_(indexer) {}
+     : globalIndexer_(indexer), tensorRank(0) {}
   
   ScatterResidual_Tpetra(const Teuchos::RCP<const panzer::GlobalIndexer> & indexer,
                          const Teuchos::ParameterList& p);
@@ -187,6 +191,7 @@ private:
   std::string globalDataKey_; // what global data does this fill?
 
   std::vector< Teuchos::ArrayRCP<double> > dfdp_vectors_;
+  unsigned short int tensorRank;
 
   ScatterResidual_Tpetra();
 };
@@ -203,7 +208,7 @@ class ScatterResidual_Tpetra<panzer::Traits::Jacobian,TRAITS,LO,GO,NodeT>
 public:
   
   ScatterResidual_Tpetra(const Teuchos::RCP<const panzer::GlobalIndexer> & indexer) 
-     : globalIndexer_(indexer) {}
+     : globalIndexer_(indexer), tensorRank(0) {}
 
   ScatterResidual_Tpetra(const Teuchos::RCP<const panzer::GlobalIndexer> & indexer,
                          const Teuchos::ParameterList& pl);
@@ -249,6 +254,7 @@ private:
 
   int my_derivative_size_;
   int other_derivative_size_;
+  unsigned short int tensorRank;
 };
 
 }
