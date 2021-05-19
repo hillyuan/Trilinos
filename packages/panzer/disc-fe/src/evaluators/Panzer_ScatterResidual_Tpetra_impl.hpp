@@ -88,23 +88,14 @@ ScatterResidual_Tpetra(const Teuchos::RCP<const panzer::GlobalIndexer> & indexer
   Teuchos::RCP<PHX::DataLayout> dl =
     p.get< Teuchos::RCP<const panzer::PureBasis> >("Basis")->functional;
 
-  tensorRank = p.get<int>("Tensor Rank");
-
   // build the vector of fields that this is dependent on
   scatterFields_.resize(names.size());
   scratch_offsets_.resize(names.size());
-  if (tensorRank == 0 ) {
-    for (std::size_t eq = 0; eq < names.size(); ++eq) {
-      scatterFields_[eq] = PHX::MDField<const ScalarT,Cell,NODE>(names[eq],dl);
+  for (std::size_t eq = 0; eq < names.size(); ++eq) {
+    scatterFields_[eq] = PHX::MDField<const ScalarT,Cell,NODE>(names[eq],dl);
 
     // tell the field manager that we depend on this field
-      this->addDependentField(scatterFields_[eq]);
-    }
-  } else if (tensorRank == 1 ) {
-    // vector
-    scatterVector_ = PHX::MDField<ScalarT const,Cell,Node,Dim>(names[0],dl->node_vector);
-    this->addDependentField(scatterVector_);
- //   numFieldsBase = dl->node_vector->extent(2);
+    this->addDependentField(scatterFields_[eq]);
   }
 
   // this is what this evaluator provides
