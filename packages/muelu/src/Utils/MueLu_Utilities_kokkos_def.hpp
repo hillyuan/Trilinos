@@ -219,16 +219,13 @@ namespace MueLu {
     RCP<const Map> rowMap = A.getRowMap(), colMap = A.getColMap();
     RCP<Vector>    localDiag     = VectorFactory::Build(rowMap);
 
-    try {
-       const CrsMatrixWrap* crsOp = dynamic_cast<const CrsMatrixWrap*>(&A);
-       if (crsOp == NULL) {
-         throw Exceptions::RuntimeError("cast to CrsMatrixWrap failed");
-       }
+    const CrsMatrixWrap* crsOp = dynamic_cast<const CrsMatrixWrap*>(&A);
+    if (crsOp != NULL) {
        Teuchos::ArrayRCP<size_t> offsets;
        crsOp->getLocalDiagOffsets(offsets);
        crsOp->getLocalDiagCopy(*localDiag,offsets());
     }
-    catch (...) {
+    else {
       ArrayRCP<SC>   localDiagVals = localDiag->getDataNonConst(0);
       Teuchos::ArrayRCP<SC> diagVals = GetMatrixDiagonal(A);
       for (LO i = 0; i < localDiagVals.size(); i++)
@@ -375,7 +372,8 @@ namespace MueLu {
   DetectDirichletRows(const Xpetra::Matrix<SC,LO,GO,NO>& A,
                       const typename Teuchos::ScalarTraits<SC>::magnitudeType& tol,
                       const bool count_twos_as_dirichlet) {
-    using ATS        = Kokkos::ArithTraits<SC>;
+    using impl_scalar_type = typename Kokkos::ArithTraits<SC>::val_type;
+    using ATS        = Kokkos::ArithTraits<impl_scalar_type>;
     using range_type = Kokkos::RangePolicy<LO, typename NO::execution_space>;
 
     auto localMatrix = A.getLocalMatrix();

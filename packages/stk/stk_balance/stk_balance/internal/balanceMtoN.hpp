@@ -39,20 +39,16 @@
 
 namespace stk { namespace mesh { class BulkData; } }
 namespace stk { namespace io { class StkMeshIoBroker; } }
+namespace stk { namespace balance { class BalanceSettings; } }
 namespace stk { namespace balance { struct M2NParsedOptions; } }
 
 namespace stk {
 namespace balance {
 namespace internal {
 
-bool rebalanceMtoN(stk::mesh::BulkData& bulkData,
-                   stk::mesh::Field<double> &targetDecompField,
-                   const stk::balance::M2NParsedOptions & parsedOptions,
-                   int numSteps = -1,
-                   double timeStep = 0.0);
-
 bool rebalanceMtoN(stk::io::StkMeshIoBroker& ioBroker,
-                   stk::mesh::Field<double> &targetDecompField,
+                   stk::mesh::Field<unsigned> &targetDecompField,
+                   const stk::balance::BalanceSettings & balanceSettings,
                    const stk::balance::M2NParsedOptions & parsedOptions,
                    int numSteps = -1,
                    double timeStep = 0.0);

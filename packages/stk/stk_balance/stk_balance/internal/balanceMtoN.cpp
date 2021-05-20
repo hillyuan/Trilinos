@@ -51,28 +51,6 @@ namespace stk {
 namespace balance {
 namespace internal {
 
-void execute_rebalanceMtoN(MtoNRebalancer& m2nRebalancer, const std::string& outputFilename, int numSteps, double timeStep)
-{
-  m2nRebalancer.decompose_mesh();
-
-  const std::vector<unsigned> targetSubdomainsToProc = m2nRebalancer.map_new_subdomains_to_original_processors();
-
-  std::vector<size_t> counts;
-  stk::mesh::comm_mesh_counts(m2nRebalancer.get_bulk(), counts);
-  int global_num_nodes = counts[stk::topology::NODE_RANK];
-  int global_num_elems = counts[stk::topology::ELEM_RANK];
-
-  m2nRebalancer.move_subdomains_such_that_entire_subdomain_doesnt_span_proc_boundaries(targetSubdomainsToProc);
-
-  for (unsigned subdomain = 0; subdomain < targetSubdomainsToProc.size(); ++subdomain) {
-    if (m2nRebalancer.does_this_proc_own_subdomain(targetSubdomainsToProc[subdomain])) {
-      stk::io::EntitySharingInfo nodeSharingInfo = m2nRebalancer.get_node_sharing_info(subdomain);
-      m2nRebalancer.create_subdomain_and_write(outputFilename, subdomain, global_num_nodes, global_num_elems,
-                                               nodeSharingInfo, numSteps, timeStep);
-    }
-  }
-}
-
 using DecomposerPtr = std::shared_ptr<stk::balance::internal::M2NDecomposer>;
 
 DecomposerPtr make_decomposer(stk::mesh::BulkData& bulkData,
@@ -89,30 +67,16 @@ DecomposerPtr make_decomposer(stk::mesh::BulkData& bulkData,
   return decomposer;
 }
 
-bool rebalanceMtoN(stk::mesh::BulkData& bulkData,
-                   stk::mesh::Field<double> &targetDecompField,
-                   const stk::balance::M2NParsedOptions & parsedOptions,
-                   int numSteps,
-                   double timeStep)
-{
-    GraphCreationSettings balanceSettings;
-    DecomposerPtr decomposer = make_decomposer(bulkData, balanceSettings, parsedOptions);
-    MtoNRebalancer m2nRebalancer(bulkData, targetDecompField, *decomposer, parsedOptions);
-    execute_rebalanceMtoN(m2nRebalancer, parsedOptions.inFile, numSteps, timeStep);
-
-    return true;
-}
-
 bool rebalanceMtoN(stk::io::StkMeshIoBroker& ioBroker,
-                   stk::mesh::Field<double> &targetDecompField,
+                   stk::mesh::Field<unsigned> &targetDecompField,
+                   const stk::balance::BalanceSettings & balanceSettings,
                    const stk::balance::M2NParsedOptions & parsedOptions,
                    int numSteps,
                    double timeStep)
 {
-    GraphCreationSettings balanceSettings;
     DecomposerPtr decomposer = make_decomposer(ioBroker.bulk_data(), balanceSettings, parsedOptions);
     MtoNRebalancer m2nRebalancer(ioBroker, targetDecompField, *decomposer, parsedOptions);
-    execute_rebalanceMtoN(m2nRebalancer, parsedOptions.inFile, numSteps, timeStep);
+    m2nRebalancer.rebalance(numSteps, timeStep);
 
     return true;
 }
