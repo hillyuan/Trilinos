@@ -622,7 +622,7 @@ initAllValues (const row_matrix_type& A)
   }
 
   D_->putScalar (STS::zero ()); // Set diagonal values to zero
-  ArrayRCP<scalar_type> DV = D_->get1dViewNonConst (); // Get view of diagonal
+  auto DV = Kokkos::subview(D_->getLocalViewHost(Tpetra::Access::ReadWrite), Kokkos::ALL(), 0);
 
   RCP<const map_type> rowMap = L_->getRowMap ();
 
@@ -654,7 +654,7 @@ initAllValues (const row_matrix_type& A)
       if (k == local_row) {
         DiagFound = true;
         // Store perturbed diagonal in Tpetra::Vector D_
-        DV[local_row] += Rthresh_ * InV[j] + IFPACK2_SGN(InV[j]) * Athresh_;
+        DV(local_row) += Rthresh_ * InV[j] + IFPACK2_SGN(InV[j]) * Athresh_;
       }
       else if (k < 0) { // Out of range
         TEUCHOS_TEST_FOR_EXCEPTION(
@@ -682,7 +682,7 @@ initAllValues (const row_matrix_type& A)
     if (DiagFound) {
       ++NumNonzeroDiags;
     } else {
-      DV[local_row] = Athresh_;
+      DV(local_row) = Athresh_;
     }
 
     if (NumL) {
@@ -771,8 +771,8 @@ void RILUK<MatrixType>::compute ()
     size_t num_cols = U_->getColMap()->getNodeNumElements();
     Teuchos::Array<int> colflag(num_cols);
 
-    Teuchos::ArrayRCP<scalar_type> DV = D_->get1dViewNonConst(); // Get view of diagonal
-																				 
+    auto DV = Kokkos::subview(D_->getLocalViewHost(Tpetra::Access::ReadWrite), Kokkos::ALL(), 0);
+
     // Now start the factorization.
 
     // Need some integer workspace and pointers
@@ -791,7 +791,7 @@ void RILUK<MatrixType>::compute ()
       NumIn = MaxNumEntries;
       L_->getLocalRowCopy (local_row, InI (), InV (), NumL);
 
-      InV[NumL] = DV[i]; // Put in diagonal
+      InV[NumL] = DV(i); // Put in diagonal
       InI[NumL] = local_row;
 
       U_->getLocalRowCopy (local_row, InI (NumL+1, MaxNumEntries-NumL-1),
@@ -809,7 +809,7 @@ void RILUK<MatrixType>::compute ()
         local_ordinal_type j = InI[jj];
         scalar_type multiplier = InV[jj]; // current_mults++;
         
-        InV[jj] *= DV[j];
+        InV[jj] *= static_cast<scalar_type>(DV(j));
         
         U_->getLocalRowView(j, UUI, UUV); // View of row above
         NumUU = UUI.size();
@@ -845,26 +845,26 @@ void RILUK<MatrixType>::compute ()
         L_->replaceLocalValues (local_row, InI (0, NumL), InV (0, NumL));
       }
 
-      DV[i] = InV[NumL]; // Extract Diagonal value
+      DV(i) = InV[NumL]; // Extract Diagonal value
 
       if (RelaxValue_ != STM::zero ()) {
-        DV[i] += RelaxValue_*diagmod; // Add off diagonal modifications
+        DV(i) += RelaxValue_*diagmod; // Add off diagonal modifications
       }
 
-      if (STS::magnitude (DV[i]) > STS::magnitude (MaxDiagonalValue)) {
-        if (STS::real (DV[i]) < STM::zero ()) {
-          DV[i] = -MinDiagonalValue;
+      if (STS::magnitude (DV(i)) > STS::magnitude (MaxDiagonalValue)) {
+        if (STS::real (DV(i)) < STM::zero ()) {
+          DV(i) = -MinDiagonalValue;
         }
         else {
-          DV[i] = MinDiagonalValue;
+          DV(i) = MinDiagonalValue;
         }
       }
       else {
-        DV[i] = STS::one () / DV[i]; // Invert diagonal value
+        DV(i) = static_cast<impl_scalar_type>(STS::one ()) / DV(i); // Invert diagonal value
       }
 
       for (size_t j = 0; j < NumU; ++j) {
-        InV[NumL+1+j] *= DV[i]; // Scale U by inverse of diagonal
+        InV[NumL+1+j] *= static_cast<scalar_type>(DV(i)); // Scale U by inverse of diagonal
       }
 
       if (NumU) {
@@ -940,17 +940,6 @@ void RILUK<MatrixType>::compute ()
     auto U_rowmap  = U_->getLocalMatrix().graph.row_map;
     auto U_entries = U_->getLocalMatrix().graph.entries;
     auto U_values  = U_->getLocalValuesView();
-    
-    for (unsigned int row_id = 0; row_id < L_rowmap.extent(0)-1; row_id++) {
-      int row_start = L_rowmap(row_id);
-      int row_end   = L_rowmap(row_id + 1);
-      Kokkos::sort(subview(L_entries, Kokkos::make_pair(row_start, row_end)));
-    }
-    for (unsigned int row_id = 0; row_id < U_rowmap.extent(0)-1; row_id++) {
-      int row_start = U_rowmap(row_id);
-      int row_end   = U_rowmap(row_id + 1);
-      Kokkos::sort(subview(U_entries, Kokkos::make_pair(row_start, row_end)));
-    }
     
     KokkosSparse::Experimental::spiluk_numeric( KernelHandle_.getRawPtr(), LevelOfFill_, 
                                                 A_local_rowmap_, A_local_entries_, A_local_values_, 
