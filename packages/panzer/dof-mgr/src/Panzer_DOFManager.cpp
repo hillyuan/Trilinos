@@ -1408,7 +1408,7 @@ void DOFManager::buildDofsInfo()
   faceGIDMap_.clear();
   std::size_t dimension = ga_fp_->getDimension();
   std::vector<panzer::GlobalOrdinal> edgeGIDs;
-  std::vector<panzer::GlobalOrdinal> subcellGIDs;
+  std::vector<panzer::GlobalOrdinal> elementalNodes;
   std::vector<panzer::GlobalOrdinal> faceGIDs;
   auto nrank = connMngr_->getNodeRank();
   auto erank = connMngr_->getEdgeRank();
@@ -1427,6 +1427,11 @@ void DOFManager::buildDofsInfo()
   for( auto blockId : elementBlockIds )
   {
 	  const std::vector<int>& fields = this->getBlockFieldNumbers(blockId);
+	  fieldids.clear();
+	  for(std::size_t f=0;f<fields.size();f++) {
+            int fieldNum = fields[f];
+            fieldids.emplace(fieldNum); 
+      }
 	  const std::vector<panzer::LocalOrdinal>& elements = connMngr_->getElementBlock(blockId);
 	  
 	  std::map<std::string,int>::const_iterator bitr = blockNameToID_.find(blockId);
@@ -1441,61 +1446,62 @@ void DOFManager::buildDofsInfo()
 	  	getElementGIDs( ele, GIDs );
 		auto LIDs = getElementLIDs( ele );
 		
-		int fd, dofcount = 0;
-		connMngr_->getElementalNodeConnectivity(ele, subcellGIDs);
-		for( std::size_t i =0; i<subcellGIDs.size(); i++ )
+		int dofcount = 0;
+		connMngr_->getElementalNodeConnectivity(ele, elementalNodes);
+		for( std::size_t i =0; i<elementalNodes.size(); i++ )
 		{
-			fd = fields[dofcount];
-			fieldids.insert(fd);
-			const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd, nrank, i);
-			const auto& offsets =  offsetPair.first;
-			if( offsets.empty() ) break;
-			dofcount++;
+			for( auto fd1 : fieldids ) {
+				const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd1, nrank, i);
+				const auto& offsets =  offsetPair.first;
+				if( offsets.empty() ) break;
+				++dofcount;
 			
-			auto gid = GIDs[offsets[0]];
-			auto lid = LIDs[offsets[0]];
-			auto& ndgid = subcellGIDs[i];
-			LidTuple_nd.emplace_back( std::make_tuple(fd, ndgid, lid) );
-			GidTuple_nd.emplace_back( std::make_tuple(fd, ndgid, gid) );
+				auto gid = GIDs[offsets[0]];
+				auto lid = LIDs[offsets[0]];
+				auto& ndgid = elementalNodes[i];
+			//	std::cout << "ele:" << ele << "," << fd1 << ", " << i << ", " << ndgid << ", " << gid << ", " << lid << std::endl;
+				LidTuple_nd.emplace_back( std::make_tuple(fd1, ndgid, lid) );
+				GidTuple_nd.emplace_back( std::make_tuple(fd1, ndgid, gid) );
+			}
 		}
 		if( dofcount>=fields.size() ) continue;  // no edge/face dofs
 			
 		connMngr_->getElementalEdges(ele, edgeGIDs);
-  	    for( std::size_t i =0; i<edgeGIDs.size(); i++ )
+		for( std::size_t i =0; i<edgeGIDs.size(); i++ )
 		{
-			fd = fields[dofcount];
-			fieldids.insert(fd);
-			const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd, erank, i);
-			const auto& offsets =  offsetPair.first;
-			if( offsets.empty() ) break;    // no edge dof of current field
-			dofcount++;
-
-			auto gid = GIDs[offsets[0]];
-			auto lid = LIDs[offsets[0]];
-			auto& ndgid = edgeGIDs[i];
-			LidTuple.emplace_back( std::make_tuple(fd, ndgid, lid) );
-			GidTuple.emplace_back( std::make_tuple(fd, ndgid, gid) );
-	   }
-       if( dofcount>=fields.size() ) continue;  // no face dofs
+			for( auto fd1 : fieldids ) {
+				const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd1, erank, i);
+				const auto& offsets =  offsetPair.first;
+				if( offsets.empty() ) break;
+				++dofcount;
+			
+				auto gid = GIDs[offsets[0]];
+				auto lid = LIDs[offsets[0]];
+				auto& ndgid = edgeGIDs[i];
+				LidTuple_nd.emplace_back( std::make_tuple(fd1, ndgid, lid) );
+				GidTuple_nd.emplace_back( std::make_tuple(fd1, ndgid, gid) );
+			}
+		}
+        if( dofcount>=fields.size() ) continue;  // no face dofs
 		  
-       if( dimension>1 ) {
+        if( dimension>1 ) {
 		   connMngr_->getElementalFaces(ele, faceGIDs);
 		   for( std::size_t i =0; i<faceGIDs.size(); i++ )
 		   {
-			 fd = fields[dofcount];
-			 fieldids.insert(fd);
-			 const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd, frank, i);
-			 const auto& offsets =  offsetPair.first;
-			 if( offsets.empty() ) break;    // no face dof of current field
-			 dofcount++;
-
-			 auto gid = GIDs[offsets[0]];
-			 auto lid = LIDs[offsets[0]];
-			 auto& ndgid = faceGIDs[i];
-			 LidTuple_fc.emplace_back( std::make_tuple(fd, ndgid, lid) );
-			 GidTuple_fc.emplace_back( std::make_tuple(fd, ndgid, gid) );
-	      }
-	   }
+			 for( auto fd1 : fieldids ) {
+				const auto& offsetPair = getGIDFieldOffsets_closure(blockId, fd1, frank, i);
+				const auto& offsets =  offsetPair.first;
+				if( offsets.empty() ) break;
+				++dofcount;
+			
+				auto gid = GIDs[offsets[0]];
+				auto lid = LIDs[offsets[0]];
+				auto& ndgid = faceGIDs[i];
+				LidTuple_nd.emplace_back( std::make_tuple(fd1, ndgid, lid) );
+				GidTuple_nd.emplace_back( std::make_tuple(fd1, ndgid, gid) );
+			}
+		  }
+	    }
 	}
   }
 	
