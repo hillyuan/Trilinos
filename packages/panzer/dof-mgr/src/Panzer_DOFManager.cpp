@@ -1416,8 +1416,8 @@ void DOFManager::buildDofsInfo()
 
 //	std::vector< std::map< panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidMaps;
 //  std::vector< std::map< panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidMaps;
-  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidTuple;   // field id, edge id, dof offset
-  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidTuple;  // field id, edge id, dof offset
+  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidTuple_ed;   // field id, edge id, dof offset
+  std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidTuple_ed;  // field id, edge id, dof offset
   std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidTuple_nd;   // field id, node id, dof offset
   std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidTuple_nd;  // field id, node id, dof offset
   std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidTuple_fc;   // field id, face id, dof offset
@@ -1478,8 +1478,8 @@ void DOFManager::buildDofsInfo()
 				auto gid = GIDs[offsets[0]];
 				auto lid = LIDs[offsets[0]];
 				auto& ndgid = edgeGIDs[i];
-				LidTuple_nd.emplace_back( std::make_tuple(fd1, ndgid, lid) );
-				GidTuple_nd.emplace_back( std::make_tuple(fd1, ndgid, gid) );
+				LidTuple_ed.emplace_back( std::make_tuple(fd1, ndgid, lid) );
+				GidTuple_ed.emplace_back( std::make_tuple(fd1, ndgid, gid) );
 			}
 		}
         if( dofcount>=fields.size() ) continue;  // no face dofs
@@ -1497,8 +1497,8 @@ void DOFManager::buildDofsInfo()
 				auto gid = GIDs[offsets[0]];
 				auto lid = LIDs[offsets[0]];
 				auto& ndgid = faceGIDs[i];
-				LidTuple_nd.emplace_back( std::make_tuple(fd1, ndgid, lid) );
-				GidTuple_nd.emplace_back( std::make_tuple(fd1, ndgid, gid) );
+				LidTuple_fc.emplace_back( std::make_tuple(fd1, ndgid, lid) );
+				GidTuple_fc.emplace_back( std::make_tuple(fd1, ndgid, gid) );
 			}
 		  }
 	    }
@@ -1522,15 +1522,15 @@ void DOFManager::buildDofsInfo()
 	}
   }
 
-  if( !LidTuple.empty() ) {
+  if( !LidTuple_ed.empty() ) {
   	for(auto fd : fieldids) {
 	  std::map< panzer::GlobalOrdinal, panzer::LocalOrdinal > LidMap;
-	  for( auto lids: LidTuple ) {
+	  for( auto lids: LidTuple_ed ) {
 		  if( std::get<0>(lids) != fd ) continue;
 		  LidMap.insert( std::make_pair(std::get<1>(lids), std::get<2>(lids)) );
 	  }
 	  std::map< panzer::GlobalOrdinal, panzer::GlobalOrdinal > GidMap;
-	  for( auto gids: GidTuple ) {
+	  for( auto gids: GidTuple_ed ) {
 		  if( std::get<0>(gids) != fd ) continue;
 		  GidMap.insert( std::make_pair(std::get<1>(gids), std::get<2>(gids)) );
 	  }

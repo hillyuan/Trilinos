@@ -367,7 +367,11 @@ public:
    }
 	
    panzer::LocalOrdinal getEdgeLDofOfField(int f, panzer::GlobalOrdinal nd) const
-   { return edgeLIDMap_.at(f).at(nd); }
+   {
+	   if( edgeLIDMap_.empty() ) return -1;
+	   auto localmap = edgeLIDMap_.at( f );
+	   return localmap.at(nd); 
+   }
 	
    panzer::GlobalOrdinal getEdgeGDofOfField(int f, panzer::GlobalOrdinal nd) const
    { return edgeLIDMap_.at(f).at(nd); }
