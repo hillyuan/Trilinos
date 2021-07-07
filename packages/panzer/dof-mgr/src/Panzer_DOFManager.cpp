@@ -1423,14 +1423,17 @@ void DOFManager::buildDofsInfo()
   std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::LocalOrdinal > > LidTuple_fc;   // field id, face id, dof offset
   std::vector< std::tuple<int, panzer::GlobalOrdinal, panzer::GlobalOrdinal > > GidTuple_fc;  // field id, face id, dof offset
 
-  std::set<int> fieldids;
+  std::set<int> fieldids, total_fieldids;
+  std::set<int> lid_defined;
   for( auto blockId : elementBlockIds )
   {
 	  const std::vector<int>& fields = this->getBlockFieldNumbers(blockId);
 	  fieldids.clear();
+	  lid_defined.clear();
 	  for(std::size_t f=0;f<fields.size();f++) {
             int fieldNum = fields[f];
             fieldids.emplace(fieldNum); 
+		  total_fieldids.emplace(fieldNum); 
       }
 	  const std::vector<panzer::LocalOrdinal>& elements = connMngr_->getElementBlock(blockId);
 	  
@@ -1458,8 +1461,11 @@ void DOFManager::buildDofsInfo()
 			
 				auto gid = GIDs[offsets[0]];
 				auto lid = LIDs[offsets[0]];
+				auto itr_find = lid_defined.find(lid);
+				if( itr_find != lid_defined.end() ) continue;  // emblaced already!
+				lid_defined.emplace(lid);
 				auto& ndgid = elementalNodes[i];
-			//	std::cout << "ele:" << ele << "," << fd1 << ", " << i << ", " << ndgid << ", " << gid << ", " << lid << std::endl;
+				std::cout << "ele:" << ele << "," << fd1 << ", " << i << ", " << ndgid << ", " << gid << ", " << lid << std::endl;
 				LidTuple_nd.emplace_back( std::make_tuple(fd1, ndgid, lid) );
 				GidTuple_nd.emplace_back( std::make_tuple(fd1, ndgid, gid) );
 			}
@@ -1506,7 +1512,7 @@ void DOFManager::buildDofsInfo()
   }
 	
   if( !LidTuple_nd.empty() ) {
-  	for(auto fd : fieldids) {
+  	for(auto fd : total_fieldids) {
 	  std::map< panzer::GlobalOrdinal, panzer::LocalOrdinal > LidMap;
 	  for( auto lids: LidTuple_nd ) {
 		  if( std::get<0>(lids) != fd ) continue;
@@ -1523,7 +1529,7 @@ void DOFManager::buildDofsInfo()
   }
 
   if( !LidTuple_ed.empty() ) {
-  	for(auto fd : fieldids) {
+  	for(auto fd : total_fieldids) {
 	  std::map< panzer::GlobalOrdinal, panzer::LocalOrdinal > LidMap;
 	  for( auto lids: LidTuple_ed ) {
 		  if( std::get<0>(lids) != fd ) continue;
@@ -1596,7 +1602,7 @@ void DOFManager::print_faceInfo(std::ostream &os) const
 	}
 }
 	
-void DOFManager::getFieldIndex(const std::string& fd, std::vector<panzer::LocalOrdinal>& ldofs) const
+void DOFManager::getFieldIndex(const std::string& fd, std::set<panzer::LocalOrdinal>& ldofs) const
 {
 	// All element ids in current cpu
 	const auto elementLIDs = this->getLIDs();
@@ -1618,13 +1624,13 @@ void DOFManager::getFieldIndex(const std::string& fd, std::vector<panzer::LocalO
 			for(std::size_t basis=0;basis<offsets.size();basis++) {
           		int offset = offsets[basis];
           		auto lid   = elementLIDs(ele,offset);
-          		ldofs.emplace_back( lid );
+          		ldofs.emplace( lid );
         	}
 		}
 	}
 }
 	
-void DOFManager::getFieldIndex_ElementBlock(const std::string& fd, const std::string& eb, std::vector<panzer::LocalOrdinal>& ldofs) const
+void DOFManager::getFieldIndex_ElementBlock(const std::string& fd, const std::string& eb, std::set<panzer::LocalOrdinal>& ldofs) const
 {
 	// All element ids in current element block
 	const auto elementLIDs = this->getElementBlock(eb);
@@ -1638,7 +1644,7 @@ void DOFManager::getFieldIndex_ElementBlock(const std::string& fd, const std::st
 		for(std::size_t basis=0;basis<offsets.size();basis++) {
           int offset = offsets[basis];
           auto lid   = LIDs(offset);
-          ldofs.emplace_back(lid);
+          ldofs.emplace(lid);
         }
 	}
 }

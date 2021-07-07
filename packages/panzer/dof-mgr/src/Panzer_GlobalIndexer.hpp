@@ -43,6 +43,7 @@
 #ifndef __Panzer_GlobalIndexer_hpp__
 #define __Panzer_GlobalIndexer_hpp__
 
+#include <set>
 #include <vector>
 #include <string>
 #include <unordered_map> // a hash table for buildLocalIds()
@@ -377,8 +378,8 @@ public:
    { return edgeLIDMap_.at(f).at(nd); }
 	
    /* Get dof index of a given field */
-   virtual void getFieldIndex(const std::string& fd, std::vector<panzer::LocalOrdinal>& ldofs) const {;}
-   virtual void getFieldIndex_ElementBlock(const std::string& fd, const std::string& eb, std::vector<panzer::LocalOrdinal>& ldofs) const {;}
+   virtual void getFieldIndex(const std::string& fd, std::set<panzer::LocalOrdinal>& ldofs) const {;}
+   virtual void getFieldIndex_ElementBlock(const std::string& fd, const std::string& eb, std::set<panzer::LocalOrdinal>& ldofs) const {;}
 
 protected:
 	

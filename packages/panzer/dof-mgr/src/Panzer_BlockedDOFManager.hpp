@@ -495,9 +495,9 @@ public:
    virtual int getElementBlockGIDCount(const std::size_t & blockIndex) const;
 	
    /* Get dof index of a given field */
-  virtual void getFieldIndex(const std::string& fd, std::vector<panzer::LocalOrdinal>& ldofs) const override
+  virtual void getFieldIndex(const std::string& fd, std::set<panzer::LocalOrdinal>& ldofs) const override
   {}
-  virtual void getFieldIndex_ElementBlock(const std::string& fd, const std::string& eb, std::vector<panzer::LocalOrdinal>& ldofs) const override
+  virtual void getFieldIndex_ElementBlock(const std::string& fd, const std::string& eb, std::set<panzer::LocalOrdinal>& ldofs) const override
   {}
 
 protected:
