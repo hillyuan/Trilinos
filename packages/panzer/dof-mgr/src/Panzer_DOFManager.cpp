@@ -1457,7 +1457,7 @@ void DOFManager::buildDofsInfo()
 				if( itr_find != lid_defined.end() ) continue;  // emblaced already!
 				lid_defined.emplace(lid);
 				auto& ndgid = elementalNodes[i];
-				std::cout << "ele:" << ele << "," << fd1 << ", " << i << ", " << ndgid << ", " << gid << ", " << lid << std::endl;
+			//	std::cout << "ele:" << ele << "," << fd1 << ", " << i << ", " << ndgid << ", " << gid << ", " << lid << std::endl;
 				LidTuple_nd.emplace_back( std::make_tuple(fd1, ndgid, lid) );
 				GidTuple_nd.emplace_back( std::make_tuple(fd1, ndgid, gid) );
 			}
@@ -1475,6 +1475,9 @@ void DOFManager::buildDofsInfo()
 			
 				auto gid = GIDs[offsets[0]];
 				auto lid = LIDs[offsets[0]];
+				auto itr_find = lid_defined.find(lid);
+				if( itr_find != lid_defined.end() ) continue;  // emblaced already!
+				lid_defined.emplace(lid);
 				auto& ndgid = edgeGIDs[i];
 				LidTuple_ed.emplace_back( std::make_tuple(fd1, ndgid, lid) );
 				GidTuple_ed.emplace_back( std::make_tuple(fd1, ndgid, gid) );
@@ -1494,6 +1497,9 @@ void DOFManager::buildDofsInfo()
 			
 				auto gid = GIDs[offsets[0]];
 				auto lid = LIDs[offsets[0]];
+				auto itr_find = lid_defined.find(lid);
+				if( itr_find != lid_defined.end() ) continue;  // emblaced already!
+				lid_defined.emplace(lid);
 				auto& ndgid = faceGIDs[i];
 				LidTuple_fc.emplace_back( std::make_tuple(fd1, ndgid, lid) );
 				GidTuple_fc.emplace_back( std::make_tuple(fd1, ndgid, gid) );
