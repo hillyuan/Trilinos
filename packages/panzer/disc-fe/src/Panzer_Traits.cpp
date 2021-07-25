@@ -48,3 +48,9 @@ panzer::Traits::PED::PED():
 {
   // This only exists to initialize GlobalEvaluationDataContainer
 }
+
+panzer::ComplexTraits::PED::PED():
+  gedc(new GlobalEvaluationDataContainer())
+{
+  // This only exists to initialize GlobalEvaluationDataContainer
+}
