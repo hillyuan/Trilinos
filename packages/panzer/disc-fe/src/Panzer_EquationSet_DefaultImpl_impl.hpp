@@ -73,7 +73,8 @@ EquationSet_DefaultImpl(const Teuchos::RCP<Teuchos::ParameterList>& params,
   m_input_params(params),
   m_default_integration_order(default_integration_order),
   m_cell_data(cell_data),
-  m_build_transient_support(build_transient_support)
+  m_build_transient_support(build_transient_support),
+  m_xdotdot_support(false)
 { 
   TEUCHOS_ASSERT(nonnull(m_input_params));
 
@@ -509,6 +510,39 @@ buildAndRegisterDOFProjectionsToIPEvaluators(PHX::FieldManager<panzer::Traits>& 
       continue; // its not required, quit the loop
 
     const std::string td_name = itr->second.timeDerivative.second;
+
+    ParameterList p;
+    p.set("Name", td_name);
+    p.set("Basis", fl.lookupLayout(itr->first)); 
+    p.set("IR", ir);
+
+    if(globalIndexer!=Teuchos::null) {
+      // build the offsets for this field
+      int fieldNum = globalIndexer->getFieldNum(itr->first);
+      RCP<const std::vector<int> > offsets = 
+          rcp(new std::vector<int>(globalIndexer->getGIDFieldOffsets(m_block_id,fieldNum)));
+      p.set("Jacobian Offsets Vector", offsets);
+    }
+    // else default to the slow DOF call
+
+    // set the orientiation field name explicitly if orientations are
+    // required for the basis
+    if(itr->second.basis->requiresOrientations())
+      p.set("Orientation Field Name", itr->first+" Orientation");
+    
+    RCP< PHX::Evaluator<panzer::Traits> > op = 
+      rcp(new panzer::DOF<EvalT,panzer::Traits>(p));
+    
+    this->template registerEvaluator<EvalT>(fm, op);
+  }
+	
+  // Second Time derivative of DOFs: Scalar value @ basis --> Scalar value @ IP 
+  for(typename std::map<std::string,DOFDescriptor>::const_iterator itr=m_provided_dofs_desc.begin();
+      itr!=m_provided_dofs_desc.end();++itr) {
+    // is td required for this variable
+    if(!itr->second.xdotdot.first) continue; // its not required, quit the loop
+
+    const std::string td_name = itr->second.xdotdot.second;
 
     ParameterList p;
     p.set("Name", td_name);
@@ -1005,6 +1039,27 @@ addDOFTimeDerivative(const std::string & dofName,
     desc.timeDerivative = std::make_pair(true,std::string("DXDT_")+dofName);
   else
     desc.timeDerivative = std::make_pair(true,dotName);
+}
+
+// ***********************************************************************
+template <typename EvalT>
+void panzer::EquationSet_DefaultImpl<EvalT>::
+addDOFDotDot(const std::string & dofName, const std::string & dotName)
+{
+  typename std::map<std::string,DOFDescriptor>::iterator itr = m_provided_dofs_desc.find(dofName);
+
+  TEUCHOS_TEST_FOR_EXCEPTION(itr==m_provided_dofs_desc.end(),std::runtime_error,
+                             "EquationSet_DefaultImpl::addDOFDotDot: DOF \"" << dofName << "\" has not been specified as a DOF "
+                             "by derived equation set \"" << this->getType() << "\".");
+
+  // allocate and populate a dof descriptor associated with the field "dofName"
+  DOFDescriptor & desc = m_provided_dofs_desc[dofName];
+  TEUCHOS_ASSERT(desc.dofName==dofName); // safety check
+
+  if (dotName == "")
+    desc.xdotdot = std::make_pair(true,std::string("D2XDT2_")+dofName);
+  else
+    desc.xdotdot = std::make_pair(true,dotName);
 }
 
 // ***********************************************************************

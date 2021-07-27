@@ -185,6 +185,8 @@ namespace panzer {
 
     //! Returns true if transient support should be enabled in the equation set
     bool buildTransientSupport() const;
+	bool suport_xdotdot() const 
+	{return m_xdotdot_support;}							  
 
     // The set of functions below are for use by derived classes to specify the 
     // provided degree of freedom (and associated residual name), in addition
@@ -227,8 +229,7 @@ namespace panzer {
       *                     the default is to add the prefix "GRAD_"
       *                     to the dofName for the name of the gradient field.
       */
-    void addDOFGrad(const std::string & dofName,
-                    const std::string & gradName = "");
+    void addDOFGrad(const std::string & dofName, const std::string & gradName = "");
 
     /** Alert the panzer library that a curl of particular a DOF is needed.
       *
@@ -238,8 +239,7 @@ namespace panzer {
       *                     the default is to add the prefix "CURL_"
       *                     to the dofName for the naem of the curl field.
       */
-    void addDOFCurl(const std::string & dofName,
-                    const std::string & curlName = "");
+    void addDOFCurl(const std::string & dofName, const std::string & curlName = "");
 
     /** Alert the panzer library that a div of particular a DOF is needed.
       *
@@ -249,8 +249,7 @@ namespace panzer {
       *                     the default is to add the prefix "DIV__"
       *                     to the dofName for the naem of the div field.
       */
-    void addDOFDiv(const std::string & dofName,
-                   const std::string & divName = "");
+    void addDOFDiv(const std::string & dofName, const std::string & divName = "");
 
     /** Alert the panzer library that a time derivative of particular a DOF is needed.
       *
@@ -260,8 +259,17 @@ namespace panzer {
       *                    the default is to add the prefix "DXDT_"
       *                    to the dofName for the name of the time derivative field.
       */
-    void addDOFTimeDerivative(const std::string & dofName,
-                              const std::string & dotName = "");
+    void addDOFTimeDerivative(const std::string & dofName, const std::string & dotName = "");
+
+	/** Alert the panzer library that a time derivative of particular a DOF is needed.
+      *
+      * \param[in] dofName (Required) Name of field to lookup in the unique global indexer. 
+      * \param[in] dotName (Optional) Name of the second time derivative field associated with
+      *                    this DOF.  If not supplied or an empty string used,
+      *                    the default is to add the prefix "D2XDT2_"
+      *                    to the dofName for the name of the time derivative field.
+      */
+	void addDOFDotDot(const std::string & dofName, const std::string & dotName = "");
 
     /** Alert the panzer to the fact that a set of DOFs coorespond to coordinates.
       * They may have to be handled differently.
@@ -352,7 +360,8 @@ namespace panzer {
         , grad(std::make_pair(false,""))
         , curl(std::make_pair(false,""))
         , div(std::make_pair(false,""))
-        , timeDerivative(std::make_pair(false,"")) {}
+        , timeDerivative(std::make_pair(false,""))
+		, xdotdot(std::make_pair(false,"")) {}
 
       std::string dofName;
       int num;
@@ -367,6 +376,7 @@ namespace panzer {
       std::pair<bool,std::string> curl;
       std::pair<bool,std::string> div;
       std::pair<bool,std::string> timeDerivative;
+	  std::pair<bool,std::string> xdotdot;
 
       void print(std::ostream & os) const {
         os << "DOF Desc = \"" << dofName << "\": "
@@ -376,7 +386,8 @@ namespace panzer {
            << "Grad = (" << grad.first << ", \"" << grad.second << "\"), "
            << "Curl = (" << curl.first << ", \"" << curl.second << "\"), "
            << "Div = (" << div.first << ", \"" << div.second << "\"), "
-           << "Time = (" << timeDerivative.first << ", \"" << timeDerivative.second << "\")";
+           << "Time = (" << timeDerivative.first << ", \"" << timeDerivative.second << "\"), "
+		   << "XDotDot = (" << xdotdot.first << ", \"" << xdotdot.second << "\")";
       }
     };
 
@@ -385,6 +396,9 @@ namespace panzer {
 
     // Tangent parameter names for setting up tangent fields
     std::vector<std::string> m_tangent_param_names;
+									  
+  protected:
+	void enable_xdotdot() { m_xdotdot_support = true; }
 
   private:
 
@@ -411,6 +425,7 @@ namespace panzer {
     int m_default_integration_order;
     const panzer::CellData m_cell_data;
     const bool m_build_transient_support;
+    bool m_xdotdot_support;
     
     //! Key is the dof name and the value is the corresponding basis
     std::vector<std::pair<std::string,Teuchos::RCP<panzer::PureBasis> > >  m_provided_dofs;

@@ -283,6 +283,8 @@ namespace panzer {
 	  
 	int getIntegrationOrder() const
 	{ return m_default_integration_order; }
+	  
+	bool isDotDOt() const;
 
   protected:
     void initialize(const Teuchos::RCP<Teuchos::ParameterList>& input_parameters,
