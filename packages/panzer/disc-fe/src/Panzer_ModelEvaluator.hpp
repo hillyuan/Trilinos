@@ -690,6 +690,7 @@ private: // data members
 
   Teuchos::RCP<panzer::GlobalData> global_data_;
   bool build_transient_support_;
+  bool build_dotdot_support_;
 
   // basic specific linear object objects
   Teuchos::RCP<const panzer::LinearObjFactory<panzer::Traits> > lof_;

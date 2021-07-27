@@ -353,6 +353,7 @@ panzer::ModelEvaluator<Scalar>::initializeNominalValues() const
   nomInArgs.set_x(x_nom);
   if(build_transient_support_) {
     nomInArgs.setSupports(MEB::IN_ARG_x_dot,true);
+	if( build_dotdot_support_ ) nomInArgs.setSupports(MEB::IN_ARG_x_dot_dot,true);
     nomInArgs.setSupports(MEB::IN_ARG_t,true);
     nomInArgs.setSupports(MEB::IN_ARG_alpha,true);
     nomInArgs.setSupports(MEB::IN_ARG_beta,true);
