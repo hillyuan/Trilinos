@@ -93,6 +93,20 @@ public:
                  const Teuchos::RCP<const Thyra::LinearOpWithSolveFactoryBase<Scalar> > & solverFactory,
                  const Teuchos::RCP<panzer::GlobalData>& global_data,
                  bool build_transient_support,double t_init);
+				 
+  ModelEvaluator(const Teuchos::RCP<panzer::FieldManagerBuilder>& fmb,
+                 const Teuchos::RCP<panzer::ResponseLibrary<panzer::Traits> >& rLibrary,
+                 const Teuchos::RCP<const panzer::LinearObjFactory<panzer::Traits> >& lof,
+                 const std::vector<Teuchos::RCP<Teuchos::Array<std::string> > >& p_names,
+                 const std::vector<Teuchos::RCP<Teuchos::Array<double> > >& p_values,
+                 const Teuchos::RCP<const Thyra::LinearOpWithSolveFactoryBase<Scalar> > & solverFactory,
+                 const Teuchos::RCP<panzer::GlobalData>& global_data,
+                 bool build_transient_support,bool build_xdotdot_support, double t_init);
+
+  ModelEvaluator(const Teuchos::RCP<const panzer::LinearObjFactory<panzer::Traits> >& lof,
+                 const Teuchos::RCP<const Thyra::LinearOpWithSolveFactoryBase<Scalar> > & solverFactory,
+                 const Teuchos::RCP<panzer::GlobalData>& global_data,
+                 bool build_transient_support,bool build_xdotdot_support,double t_init);
 
   /** \brief . */
   ModelEvaluator();
@@ -697,7 +711,7 @@ private: // data members
   mutable Teuchos::RCP<panzer::LinearObjContainer> ghostedContainer_;
   mutable Teuchos::RCP<ReadOnlyVector_GlobalEvaluationData> xContainer_;
   mutable Teuchos::RCP<ReadOnlyVector_GlobalEvaluationData> xdotContainer_;
-
+  mutable Teuchos::RCP<ReadOnlyVector_GlobalEvaluationData> xdotdotContainer_;
 
   Teuchos::RCP<const Thyra::LinearOpWithSolveFactoryBase<Scalar> > solverFactory_;
 
