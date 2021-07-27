@@ -61,7 +61,7 @@ checkCompatibility() const
    using Teuchos::RCP;
    using Teuchos::null;
 
-   bool x_matches=false, f_matches=false, dxdt_matches=false;
+   bool x_matches=false, f_matches=false, dxdt_matches=false, d2xdt2_matches=false;
 
    if(get_A()!=null) {
       RCP<const VectorSpaceBase<ScalarT> > range  = get_A()->range();   
@@ -76,6 +76,11 @@ checkCompatibility() const
          dxdt_matches = range->isCompatible(*get_dxdt()->space());
       else
          dxdt_matches = true; // nothing to compare
+	   
+	  if(get_d2xdt2()!=null)
+         d2xdt2_matches = range->isCompatible(*get_d2xdt2()->space());
+      else
+         dxdt_matches = true; // nothing to compare
 
       if(get_f()!=null)
          f_matches = range->isCompatible(*get_f()->space());
@@ -86,12 +91,14 @@ checkCompatibility() const
       f_matches = true; // nothing to compare f to
       x_matches = get_x()->space()->isCompatible(*get_dxdt()->space());  // dxdt and x are in the same space
       dxdt_matches = x_matches;
+	  d2xdt2_matches = true;
+	  if(get_d2xdt2()!=null) d2xdt2_matches = get_x()->space()->isCompatible(*get_d2xdt2()->space());
    }
    else {
-      f_matches = x_matches = dxdt_matches = true; // nothing to compare to
+      f_matches = x_matches = dxdt_matches = d2xdt2_matches = true; // nothing to compare to
    }
 
-   return x_matches && dxdt_matches && f_matches;
+   return x_matches && dxdt_matches && d2xdt2_matches && f_matches;
 }
 
 template <typename ScalarT,typename LocalOrdinalT,typename GlobalOrdinalT,typename NodeT>
@@ -106,6 +113,7 @@ initialize()
 
    if(get_x()!=Teuchos::null)    Thyra::assign<ScalarT>(x.ptr(),0.0);
    if(get_dxdt()!=Teuchos::null) Thyra::assign<ScalarT>(get_dxdt().ptr(),0.0);
+   if(get_d2xdt2()!=Teuchos::null) Thyra::assign<ScalarT>(get_d2xdt2().ptr(),0.0);
    if(get_f()!=Teuchos::null)    Thyra::assign<ScalarT>(get_f().ptr(),0.0);
    if(get_A()!=Teuchos::null) {
       RCP<PhysicallyBlockedLinearOpBase<ScalarT> > Amat 
@@ -182,6 +190,7 @@ clear()
 {
    set_x(Teuchos::null);
    set_dxdt(Teuchos::null);
+   set_d2xdt2(Teuchos::null);
    set_f(Teuchos::null);
    set_A(Teuchos::null);
 }

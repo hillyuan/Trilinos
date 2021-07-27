@@ -123,6 +123,9 @@ readVector(const std::string & identifier,LinearObjContainer & loc,int id) const
   case LinearObjContainer::DxDt:
     tloc.set_dxdt(ptr_tx);
     break;
+  case LinearObjContainer::D2xDt2:
+    tloc.set_d2xdt2(ptr_tx);
+    break;
   case LinearObjContainer::F:
     tloc.set_f(ptr_tx);
     break;
@@ -171,6 +174,9 @@ globalToGhostContainer(const LinearObjContainer & in,
   
    if ( !is_null(t_in.get_dxdt()) && !is_null(t_out.get_dxdt()) && ((mem & LOC::DxDt)==LOC::DxDt))
      globalToGhostTpetraVector(*t_in.get_dxdt(),*t_out.get_dxdt(),true);
+	
+   if ( !is_null(t_in.get_d2xdt2()) && !is_null(t_out.get_d2xdt2()) && ((mem & LOC::D2xDt2)==LOC::D2xDt2))
+     globalToGhostTpetraVector(*t_in.get_d2xdt2(),*t_out.get_d2xdt2(),true);
 
    if ( !is_null(t_in.get_f()) && !is_null(t_out.get_f()) && ((mem & LOC::F)==LOC::F))
       globalToGhostTpetraVector(*t_in.get_f(),*t_out.get_f(),false);
@@ -441,6 +447,9 @@ initializeContainer(int mem,TpetraLinearObjContainer<ScalarT,LocalOrdinalT,Globa
 
    if((mem & LOC::DxDt) == LOC::DxDt)
       loc.set_dxdt(getTpetraColVector());
+	
+   if((mem & LOC::D2xDt2) == LOC::D2xDt2)
+      loc.set_d2xdt2(getTpetraColVector());
     
    if((mem & LOC::F) == LOC::F)
       loc.set_f(getTpetraVector());
@@ -472,6 +481,9 @@ initializeGhostedContainer(int mem,TpetraLinearObjContainer<ScalarT,LocalOrdinal
 
    if((mem & LOC::DxDt) == LOC::DxDt)
       loc.set_dxdt(getGhostedTpetraColVector());
+	
+   if((mem & LOC::D2xDt2) == LOC::D2xDt2)
+      loc.set_d2xdt2(getGhostedTpetraColVector());
     
    if((mem & LOC::F) == LOC::F) {
       loc.set_f(getGhostedTpetraVector());

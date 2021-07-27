@@ -117,6 +117,9 @@ public:
 
    inline void set_dxdt(const Teuchos::RCP<Epetra_Vector> & in) { dxdt = in; } 
    inline const Teuchos::RCP<Epetra_Vector> get_dxdt() const { return dxdt; }
+   
+   inline void set_d2xdt2(const Teuchos::RCP<VectorType> & in) { d2xdt2 = in; } 
+   inline const Teuchos::RCP<VectorType> get_d2xdt2() const { return d2xdt2; }
 
    inline void set_f(const Teuchos::RCP<Epetra_Vector> & in) { f = in; } 
    inline const Teuchos::RCP<Epetra_Vector> get_f() const { return f; }
@@ -136,6 +139,11 @@ public:
    { dxdt = (in==Teuchos::null) ? Teuchos::null : Thyra::get_Epetra_Vector(*domainMap,in); }
    virtual Teuchos::RCP<Thyra::VectorBase<double> > get_dxdt_th() const 
    { return (dxdt==Teuchos::null) ? Teuchos::null : Thyra::create_Vector(dxdt,domainSpace); }
+   
+   virtual void set_d2xdt2_th(const Teuchos::RCP<Thyra::VectorBase<double> > & in)
+   { d2xdt2 = (in==Teuchos::null) ? Teuchos::null : Thyra::get_Epetra_Vector(*domainMap,in); }
+   virtual Teuchos::RCP<Thyra::VectorBase<double> > get_d2xdt2_th() const 
+   { return (d2xdt2==Teuchos::null) ? Teuchos::null : Thyra::create_Vector(d2xdt2,domainSpace); }
 
    virtual void set_f_th(const Teuchos::RCP<Thyra::VectorBase<double> > & in)
    { f = (in==Teuchos::null) ? Teuchos::null : Thyra::get_Epetra_Vector(*rangeMap,in); }
@@ -173,7 +181,7 @@ private:
    Teuchos::RCP<const Epetra_Map> rangeMap;
    Teuchos::RCP<const Thyra::VectorSpaceBase<double> > domainSpace;
    Teuchos::RCP<const Thyra::VectorSpaceBase<double> > rangeSpace;
-   Teuchos::RCP<Epetra_Vector> x, dxdt, f;
+   Teuchos::RCP<Epetra_Vector> x, dxdt, d2xdt2, f;
    Teuchos::RCP<Epetra_CrsMatrix> A;
 };
 
