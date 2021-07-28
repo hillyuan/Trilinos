@@ -269,8 +269,8 @@ buildAndRegisterGatherAndOrientationEvaluators(PHX::FieldManager<panzer::Traits>
   // Gather of time derivative terms: One evaluator for each unique basis
   for (BasisIterator basis_it = m_basis_to_dofs.begin(); basis_it != m_basis_to_dofs.end(); ++basis_it) {
 
-    RCP< std::vector<std::string> > t_dof_names = rcp(new std::vector<std::string>);   // time derivative indexer names
-    RCP< std::vector<std::string> > t_field_names = rcp(new std::vector<std::string>); // time derivative field names
+    RCP< std::vector<std::string> > t_dof_names = rcp(new std::vector<std::string>);    // time derivative indexer names
+    RCP< std::vector<std::string> > t_field_names = rcp(new std::vector<std::string>);  // time derivative field names
     RCP< std::vector< std::vector<std::string> > > tangent_field_names = rcp(new std::vector< std::vector<std::string> >); // tangent field names
 
     // determine which fields associated with this basis need time derivatives
@@ -292,6 +292,24 @@ buildAndRegisterGatherAndOrientationEvaluators(PHX::FieldManager<panzer::Traits>
           for (std::size_t j=0; j<m_tangent_param_names.size(); ++j) {
             const std::string tname =
               desc->second.timeDerivative.second + " SENSITIVITY " + m_tangent_param_names[j];
+            tfn.push_back(tname);
+          }
+          tangent_field_names->push_back(tfn);
+        }
+      }
+		
+	  // does this field need a second time derivative?
+      if(desc->second.xdotdot.first) {
+        // time derivative needed
+        t_dof_names->push_back(*dof_name);
+        t_field_names->push_back(desc->second.xdotdot.second);
+
+        // Set tangent field names (first dimension is DOF, second is parameter)
+        if (m_tangent_param_names.size() > 0) {
+          std::vector<std::string> tfn;
+          for (std::size_t j=0; j<m_tangent_param_names.size(); ++j) {
+            const std::string tname =
+              desc->second.xdotdot.second + " SENSITIVITY " + m_tangent_param_names[j];
             tfn.push_back(tname);
           }
           tangent_field_names->push_back(tfn);
