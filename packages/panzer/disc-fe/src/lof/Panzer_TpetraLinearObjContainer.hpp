@@ -289,6 +289,14 @@ public:
       }
    }
    
+   void applyConcentratedLoad( const std::map< panzer::LocalOrdinal, double >& indx ) override
+   {
+      for( auto itr: indx )
+      {
+         f->sumIntoLocalValue(itr.first, itr.second, false);
+      }
+   }
+   
    void writeMatrixMarket(const std::string& filename) const override
    {
 	  Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<ScalarT,LocalOrdinalT,GlobalOrdinalT,NodeT>>

@@ -67,6 +67,7 @@ public:
    virtual void evalDirichletResidual( const std::map< panzer::LocalOrdinal, double >& indx ) = 0;
    virtual void applyDirichletBoundaryCondition( const std::map< panzer::LocalOrdinal, double >& indx ) = 0;
    virtual void applyDirichletBoundaryCondition( const double&, const std::map< panzer::LocalOrdinal, double >& indx ) = 0;
+   virtual void applyConcentratedLoad( const std::map< panzer::LocalOrdinal, double >& indx ) = 0;
    
    virtual void writeMatrixMarket(const std::string& filename) const = 0;
 };

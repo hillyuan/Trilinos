@@ -109,6 +109,10 @@ public:
    void applyDirichletBoundaryCondition( const std::map< panzer::LocalOrdinal, double >& indx ) override;
    void applyDirichletBoundaryCondition( const double&, const std::map< panzer::LocalOrdinal, double >& indx ) override;
    void evalDirichletResidual( const std::map< panzer::LocalOrdinal, double >& indx ) override {;}
+   void applyConcentratedLoad( const std::map< panzer::LocalOrdinal, double >& indx ) override
+   {
+      TEUCHOS_ASSERT(false); // not yet implemented
+   }
 
    // Inherited from LinearObjContainer
    virtual void initialize();
