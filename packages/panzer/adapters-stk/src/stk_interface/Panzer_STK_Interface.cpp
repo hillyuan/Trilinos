@@ -1571,7 +1571,25 @@ void STK_Interface::getAllNodeSetsId(const std::string & nodesetName,std::vector
    }
 }
 	
+void STK_Interface::getAllNodeSetsId(const std::string & nodesetName,std::vector<panzer::GlobalOrdinal> & nodeIds) const
+{
+   stk::mesh::Part * nodePart = getNodeset(nodesetName);
+   TEUCHOS_TEST_FOR_EXCEPTION(nodePart==0,std::logic_error,
+                      "Unknown side set \"" << nodesetName << "\"");
 
+   stk::mesh::Selector nodeset = *nodePart;
+   stk::mesh::Selector ownedBlock = (metaData_->locally_owned_part() | metaData_->globally_shared_part()) & nodeset;
+
+   // grab nodes
+   std::vector<stk::mesh::Entity> nodes;
+   stk::mesh::get_selected_entities(ownedBlock,bulkData_->buckets(getNodeRank()),nodes);
+	
+   nodeIds.clear();
+   for( const auto n: nodes )
+   {
+	   nodeIds.emplace_back( bulkData_->identifier(n) );
+   }
+}
 
 void STK_Interface::getElementBlockNames(std::vector<std::string> & names) const
 {

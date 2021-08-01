@@ -43,6 +43,7 @@
 #ifndef __Panzer_GlobalIndexer_hpp__
 #define __Panzer_GlobalIndexer_hpp__
 
+#include <stdint.h>      // for uint64_t
 #include <set>
 #include <vector>
 #include <string>
@@ -320,7 +321,7 @@ public:
    * \param[in] global ids of a group of nodes
    * \param[out] gdofs  local index of nodal dof
    */
-   virtual void getNodesetsLocalIndex(int fieldnum, std::vector<panzer::GlobalOrdinal>& nodeset, std::vector<panzer::LocalOrdinal>& ldofs) const
+   virtual void getNodesetsLocalIndex(const int& fieldnum, const std::vector<panzer::GlobalOrdinal>& nodeset, std::vector<panzer::LocalOrdinal>& ldofs) const
    {
 	if( nodeLIDMap_.empty() ) return;
 	
@@ -334,7 +335,7 @@ public:
    }
 
    /* for stk::mesh::EntityId = uint64_t */
-   virtual void getNodesetsLocalIndex(int fieldnum, std::vector<std::uint64_t>& nodeset, std::vector<panzer::LocalOrdinal>& ldofs) const
+   virtual void getNodesetsLocalIndex(const int& fieldnum, const std::vector<uint64_t>& nodeset, std::vector<panzer::LocalOrdinal>& ldofs) const
    {
 	if( nodeLIDMap_.empty() ) return;
 	

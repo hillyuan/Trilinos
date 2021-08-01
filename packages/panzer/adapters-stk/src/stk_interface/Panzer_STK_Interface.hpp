@@ -114,6 +114,9 @@ public:
 
    struct SidesetException : public std::logic_error
    { SidesetException(const std::string & what) : std::logic_error(what) {} };
+	
+   struct NodesetException : public std::logic_error
+   { NodesetException(const std::string & what) : std::logic_error(what) {} };
 
    struct EdgeBlockException : public std::logic_error
    { EdgeBlockException(const std::string & what) : std::logic_error(what) {} };
@@ -469,6 +472,7 @@ public:
      */
    void getAllNodeSets(const std::string & nodesetName, std::vector<stk::mesh::Entity> & nodes) const;
    void getAllNodeSetsId(const std::string & nodesetName, std::vector<stk::mesh::EntityId> & nodeIds) const;
+   void getAllNodeSetsId(const std::string & nodesetName, std::vector<panzer::GlobalOrdinal> & nodeIds) const;
 
 
    /**
