@@ -121,7 +121,7 @@ void Piro::NOXSolver<Scalar>::evalModelImpl(
   //For Analysis problems we typically do not want to write the solution at each NOX solver.
   //Instead we write at every "write interval" iterations of optimization solver.
   //If write_interval == -1, we print after every successful NOX solver
-  //If write_inteval == 0 we ever print.
+  //If write_inteval == 0 we never print.
   //This relies on the fact that sensitivities are always called by ROL at each iteration to asses whether the solver is converged
   //TODO: when write_interval>1, at the moment there is no guarantee that the final iteration of the optimization (i.e. the converged solution) gets printed
 
@@ -147,8 +147,6 @@ void Piro::NOXSolver<Scalar>::evalModelImpl(
   // Find the solution of the implicit underlying model
   Thyra::SolveStatus<Scalar> solve_status;
   const Thyra::SolveCriteria<Scalar> solve_criteria;
-
-  Teuchos::ParameterList analysisParams;
 
   if(solveState)
   {
@@ -201,7 +199,7 @@ void Piro::NOXSolver<Scalar>::evalModelImpl(
   const RCP<const Thyra::VectorBase<Scalar> > finalSolution = solver->get_current_x();
   modelInArgs.set_x(finalSolution);
 
-  this->evalConvergedModelResponsesAndSensitivities(modelInArgs, outArgs, analysisParams);
+  this->evalConvergedModelResponsesAndSensitivities(modelInArgs, outArgs, *appParams);
   
   bool computeReducedHessian = false;
   for (int g_index=0; g_index<this->num_g(); ++g_index) {
@@ -214,7 +212,7 @@ void Piro::NOXSolver<Scalar>::evalModelImpl(
   }
 
   if(computeReducedHessian == true)   
-    this->evalReducedHessian(modelInArgs, outArgs);
+    this->evalReducedHessian(modelInArgs, outArgs, *appParams);
 
   if (Teuchos::nonnull(this->observer) && observeFinalSolution) {
     this->observer->observeSolution(*finalSolution);

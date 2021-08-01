@@ -416,6 +416,7 @@ namespace MueLu {
 
     for (i = 0; i < Ntotal*DofsPerNode; i++)
       valptr[i]= LayerId[i/DofsPerNode];
+    valptr=ArrayRCP<LO>();
 
     RCP< const Import> importer;
     importer = Amat->getCrsGraph()->getImporter();
@@ -428,9 +429,12 @@ namespace MueLu {
     for (i = 0; i < Ntotal*DofsPerNode+Nghost; i++) Layerdofs[i]= valptr[i];
     valptr= localdtemp->getDataNonConst(0);
     for (i = 0; i < Ntotal*DofsPerNode;        i++) valptr[i]= i%DofsPerNode;
+    valptr=ArrayRCP<LO>();
     dtemp->doImport(*localdtemp, *(importer), Xpetra::INSERT);
+
     valptr= dtemp->getDataNonConst(0);
     for (i = 0; i < Ntotal*DofsPerNode+Nghost; i++) Col2Dof[i]= valptr[i];
+    valptr=ArrayRCP<LO>();
 
     if (Ntotal != 0) {
       NLayers   = LayerId[0];
@@ -814,12 +818,12 @@ namespace MueLu {
       if (nnz != 0) vals = ArrayView<Scalar>(const_cast<Scalar*>(vals1.getRawPtr()), nnz);
 
       LO largestIndex = -1;
-      Scalar largestValue = 0.0;
+      Scalar largestValue = ZERO;
       /* find largest value in row and change that one to a 1 while the others are set to 0 */
 
       LO rowDof = i%BlkSize;
       for (size_t j =0; j < nnz; j++) {
-        if (Teuchos::ScalarTraits<SC>::magnitude(vals[ j ]) > Teuchos::ScalarTraits<SC>::magnitude(largestValue)) {
+        if (Teuchos::ScalarTraits<SC>::magnitude(vals[ j ]) >= Teuchos::ScalarTraits<SC>::magnitude(largestValue)) {
           if ( inds[j]%BlkSize == rowDof ) {
             largestValue = vals[j]; 
             largestIndex = (int) j;
@@ -828,8 +832,10 @@ namespace MueLu {
         vals[j] = ZERO;
       }
       if (largestIndex != -1) vals[largestIndex] = ONE; 
-      else 
+      else
         TEUCHOS_TEST_FOR_EXCEPTION(nnz > 0, Exceptions::RuntimeError, "no nonzero column associated with a proper dof within node.");
+
+      if (Teuchos::ScalarTraits<SC>::magnitude(largestValue) == Teuchos::ScalarTraits<SC>::magnitude(ZERO)) vals[largestIndex] = ZERO;
     }
   }
 
