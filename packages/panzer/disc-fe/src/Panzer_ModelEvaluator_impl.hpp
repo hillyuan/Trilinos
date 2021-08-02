@@ -475,7 +475,10 @@ panzer::ModelEvaluator<Scalar>::initializeNominalValues() const
   nomInArgs.set_x(x_nom);
   if(build_transient_support_) {
     nomInArgs.setSupports(MEB::IN_ARG_x_dot,true);
-	if( build_dotdot_support_ ) nomInArgs.setSupports(MEB::IN_ARG_x_dot_dot,true);
+	if( build_dotdot_support_ ) {
+		nomInArgs.setSupports(MEB::IN_ARG_x_dot_dot,true);
+		nomInArgs.setSupports(MEB::IN_ARG_W_x_dot_dot_coeff,true);
+	}
     nomInArgs.setSupports(MEB::IN_ARG_t,true);
     nomInArgs.setSupports(MEB::IN_ARG_alpha,true);
     nomInArgs.setSupports(MEB::IN_ARG_beta,true);
@@ -1361,8 +1364,8 @@ evalModel_D2fDx2(const Thyra::ModelEvaluatorBase::InArgs<Scalar> & inArgs,
   // vector.  If this RCP is null, then we are doing a steady-state
   // fill.
   bool is_transient = false;
-  if (inArgs.supports(MEB::IN_ARG_x_dot ))
-    is_transient = !Teuchos::is_null(inArgs.get_x_dot());
+  if (inArgs.supports(MEB::IN_ARG_x_dot ) || inArgs.supports(MEB::IN_ARG_x_dot_dot ))
+    is_transient = !Teuchos::is_null(inArgs.get_x_dot()) || !Teuchos::is_null(inArgs.get_x_dot_dot()) ;
 
   // Make sure construction built in transient support
   TEUCHOS_TEST_FOR_EXCEPTION(is_transient && !build_transient_support_, std::runtime_error,
@@ -1462,8 +1465,8 @@ evalModel_D2fDxDp(int pIndex,
   // vector.  If this RCP is null, then we are doing a steady-state
   // fill.
   bool is_transient = false;
-  if (inArgs.supports(MEB::IN_ARG_x_dot ))
-    is_transient = !Teuchos::is_null(inArgs.get_x_dot());
+  if (inArgs.supports(MEB::IN_ARG_x_dot ) || inArgs.supports(MEB::IN_ARG_x_dot_dot ))
+    is_transient = !Teuchos::is_null(inArgs.get_x_dot()) || !Teuchos::is_null(inArgs.get_x_dot_dot()) ;
 
   // Make sure construction built in transient support
   TEUCHOS_TEST_FOR_EXCEPTION(is_transient && !build_transient_support_, std::runtime_error,
