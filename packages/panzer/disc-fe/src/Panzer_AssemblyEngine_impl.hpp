@@ -104,6 +104,7 @@ evaluate(const panzer::AssemblyEngineInArgs& in, const EvaluationFlags flags)
     {
       PANZER_FUNC_TIME_MONITOR_DIFF("panzer::AssemblyEngine::evaluate_neumannbcs("+PHX::print<EvalT>()+")",eval_neumannbcs);
       this->evaluateNeumannBCs(in);
+      this->evaluateNeumannCondition(in);
     }
 
     {
@@ -430,6 +431,24 @@ evaluateDirichletCondition(const panzer::AssemblyEngineInArgs& in)
 
   pfm->template preEvaluate<EvalT>(ped);
   workset.pivot_dirichlet = in.pivot_dirichlet;
+  pfm->template evaluateFields<EvalT>(workset);
+  pfm->template postEvaluate<EvalT>(NULL);
+}
+
+//===========================================================================
+template <typename EvalT>
+void panzer::AssemblyEngine<EvalT>::
+evaluateNeumannCondition(const panzer::AssemblyEngineInArgs& in)
+{
+  panzer::Workset workset;
+  panzer::Traits::PED ped;
+  ped.gedc->addDataObject("Ghosted Container",in.ghostedContainer_);
+  in.fillGlobalEvaluationDataContainer(*(ped.gedc));
+	
+  const std::shared_ptr< PHX::FieldManager<panzer::Traits> > pfm = m_field_manager_builder->getNeumannFieldManager();
+  if( pfm == nullptr ) return;
+
+  pfm->template preEvaluate<EvalT>(ped);
   pfm->template evaluateFields<EvalT>(workset);
   pfm->template postEvaluate<EvalT>(NULL);
 }
