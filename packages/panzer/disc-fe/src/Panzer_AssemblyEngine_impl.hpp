@@ -446,11 +446,11 @@ evaluateNeumannCondition(const panzer::AssemblyEngineInArgs& in)
   in.fillGlobalEvaluationDataContainer(*(ped.gedc));
 	
   const std::shared_ptr< PHX::FieldManager<panzer::Traits> > pfm = m_field_manager_builder->getNeumannFieldManager();
-  if( pfm == nullptr ) return;
-
-  pfm->template preEvaluate<EvalT>(ped);
-  pfm->template evaluateFields<EvalT>(workset);
-  pfm->template postEvaluate<EvalT>(NULL);
+  if( pfm ) {
+  	pfm->template preEvaluate<EvalT>(ped);
+  	pfm->template evaluateFields<EvalT>(workset);
+  	pfm->template postEvaluate<EvalT>(NULL);
+  } 
 }
 
 #endif
