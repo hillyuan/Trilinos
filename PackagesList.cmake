@@ -131,7 +131,7 @@ TRIBITS_REPOSITORY_DEFINE_PACKAGES(
   Stokhos               packages/stokhos                  PT
   ROL                   packages/rol                      PT
   Piro                  packages/piro                     PT
-  Panzer                packages/panzer                   PT
+  Panzer                external/Panzer                   PT # Panzer                packages/panzer                   PT
   CTrilinos             packages/CTrilinos                ST # Switched to ST to speed up checkin testing
   PyTrilinos            packages/PyTrilinos               ST
   WebTrilinos           packages/WebTrilinos              EX # Should be ST
