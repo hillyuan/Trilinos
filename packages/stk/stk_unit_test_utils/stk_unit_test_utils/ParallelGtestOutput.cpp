@@ -2,14 +2,14 @@
 // clang-format off
 #include "ParallelGtestOutput.hpp"
 #include <gtest/gtest.h>            // for TestInfo, UnitTest, etc
-#include <gtest/gtest-message.h>
+//#include <gtest/gtest-message.h>
 #include <stdarg.h>                 // for va_end, va_list, va_start
 #include <stdio.h>                  // for printf, vprintf, fflush, NULL, etc
 #include <stk_util/parallel/Parallel.hpp>
 #include <stk_util/parallel/ParallelVectorConcat.hpp>
 #include <stk_util/util/SortAndUnique.hpp>
 #include <string>                   // for string
-#include "gtest/gtest-test-part.h"  // for TestPartResult
+//#include "gtest/gtest-test-part.h"  // for TestPartResult
 
 #ifdef STK_HAS_MPI
 

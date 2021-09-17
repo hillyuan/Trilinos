@@ -6,7 +6,7 @@
 #include <ostream>                         // for operator<<
 #include <string>                          // for string, operator<<
 #include <vector>                          // for vector
-#include "gtest/gtest-message.h"           // for Message
+//#include "gtest/gtest-message.h"           // for Message
 #include "stk_io/DatabasePurpose.hpp"
 #include "stk_io/StkMeshIoBroker.hpp"      // for StkMeshIoBroker
 #include "stk_mesh/base/BulkData.hpp"      // for BulkData
