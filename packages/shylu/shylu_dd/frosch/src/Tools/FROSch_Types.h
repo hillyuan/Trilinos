@@ -1,9 +1,8 @@
-// @HEADER
+//@HEADER
+// ************************************************************************
 //
-// ***********************************************************************
-//
-//        MueLu: A package for multigrid based preconditioning
-//                  Copyright 2012 Sandia Corporation
+//               ShyLU: Hybrid preconditioner package
+//                 Copyright 2012 Sandia Corporation
 //
 // Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,
 // the U.S. Government retains certain rights in this software.
@@ -35,47 +34,41 @@
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
-// Questions? Contact
-//                    Jonathan Hu       (jhu@sandia.gov)
-//                    Andrey Prokopenko (aprokop@sandia.gov)
-//                    Ray Tuminaro      (rstumin@sandia.gov)
+// Questions? Contact Alexander Heinlein (alexander.heinlein@uni-koeln.de)
 //
-// ***********************************************************************
-//
-// @HEADER
+// ************************************************************************
+//@HEADER
 
-#ifndef MUELU_USEDEFAULTTYPES_HPP
-#define MUELU_USEDEFAULTTYPES_HPP
+#ifndef _FROSCH_TYPES_H
+#define _FROSCH_TYPES_H
 
-#include <Kokkos_DefaultNode.hpp>
-#include "MueLu_config.hpp"
-
-#ifdef HAVE_MUELU_TPETRA
-#include <Tpetra_Details_DefaultTypes.hpp>
-#endif
-
-namespace MueLu
-{
-
-#ifdef HAVE_MUELU_TPETRA
-    typedef Tpetra::Details::DefaultTypes::scalar_type DefaultScalar;
-#else
-    typedef double DefaultScalar;
-#endif
+#include <ShyLU_DDFROSch_config.h>
 
 
+namespace FROSch {
 
-  typedef int DefaultLocalOrdinal;
+    using namespace std;
+    using namespace Teuchos;
+    using namespace Xpetra;
 
-  #if defined HAVE_MUELU_DEFAULT_GO_LONG
-  typedef long DefaultGlobalOrdinal;
-  #elif defined HAVE_MUELU_DEFAULT_GO_LONGLONG
-  typedef long long DefaultGlobalOrdinal;
-  #else
-  typedef int DefaultGlobalOrdinal;
-  #endif
+    #if defined HAVE_XPETRA_EPETRA || defined HAVE_TPETRA_INT_INT
+    typedef int DefaultGlobalOrdinal;
+    #elif !defined HAVE_TPETRA_INT_LONG_LONG
+    typedef long DefaultGlobalOrdinal;
+    #else
+    typedef long long DefaultGlobalOrdinal;
+    #endif
 
-  typedef KokkosClassic::DefaultNode::DefaultNodeType DefaultNode;
+    enum DofOrdering {NodeWise=0,DimensionWise=1,Custom=2};
+
+    enum class NullSpaceType
+    {
+      Laplace = 0,
+      Elasticity = 1
+    };
+
+    enum Verbosity {None=0,All=1};
+
 }
 
 #endif
