@@ -58,10 +58,8 @@
 
 #include "MueLu_Level_fwd.hpp"
 #include "MueLu_ThresholdAFilterFactory_fwd.hpp"
+#include "MueLu_RAPFactory_fwd.hpp"
 #include "MueLu_Utilities_fwd.hpp"
-#ifdef HAVE_MUELU_KOKKOS_REFACTOR
-#include "MueLu_Utilities_kokkos_fwd.hpp"
-#endif
 
 
 namespace MueLu {
@@ -89,17 +87,26 @@ namespace MueLu {
     static void detectBoundaryConditionsSM(RCP<Matrix> & SM_Matrix,
                                            RCP<Matrix> & D0_Matrix,
                                            magnitudeType rowSumTol,
-#ifdef HAVE_MUELU_KOKKOS_REFACTOR
                                            bool useKokkos_,
                                            Kokkos::View<bool*, typename Node::device_type> & BCrowsKokkos,
                                            Kokkos::View<bool*, typename Node::device_type> & BCcolsKokkos,
                                            Kokkos::View<bool*, typename Node::device_type> & BCdomainKokkos,
-#endif
                                            int & BCedges,
                                            int & BCnodes,
                                            Teuchos::ArrayRCP<bool> & BCrows,
                                            Teuchos::ArrayRCP<bool> & BCcols,
                                            Teuchos::ArrayRCP<bool> & BCdomain,
+                                           bool & allEdgesBoundary,
+                                           bool & allNodesBoundary);
+
+    static void detectBoundaryConditionsSM(RCP<Matrix> & SM_Matrix,
+                                           RCP<Matrix> & D0_Matrix,
+                                           magnitudeType rowSumTol,
+                                           Kokkos::View<bool*, typename Node::device_type> & BCrowsKokkos,
+                                           Kokkos::View<bool*, typename Node::device_type> & BCcolsKokkos,
+                                           Kokkos::View<bool*, typename Node::device_type> & BCdomainKokkos,
+                                           int & BCedges,
+                                           int & BCnodes,
                                            bool & allEdgesBoundary,
                                            bool & allNodesBoundary);
         
@@ -120,9 +127,12 @@ namespace MueLu {
     //! Sets matvec params on a matrix
     static void setMatvecParams(Matrix& A, RCP<ParameterList> matvecParams);
 
+
+    // Performs an RAP
+    static RCP<Xpetra::Matrix<Scalar,LocalOrdinal,GlobalOrdinal,Node> >
+    PtAPWrapper(RCP<Matrix>& A,RCP<Matrix>& P, Teuchos::ParameterList &params, std::string & label);
+
   };
-
-
 
 } // namespace
 
