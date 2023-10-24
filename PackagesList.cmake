@@ -135,7 +135,7 @@ TRIBITS_REPOSITORY_DEFINE_PACKAGES(
   Piro                  packages/piro                     PT
   SGM                   packages/sgm                      ST
   UMR                   packages/umr                      ST
-  Panzer                external/Panzer                   PT # Panzer                packages/panzer                   PT
+  Panzer                packages/panzer                   PT # Panzer                packages/panzer                   PT
   CTrilinos             packages/CTrilinos                ST # Switched to ST to speed up checkin testing
   PyTrilinos            packages/PyTrilinos               ST
   WebTrilinos           packages/WebTrilinos              EX # Should be ST
