@@ -1,6 +1,6 @@
 #pragma once
 /*
- * Copyright(C) 1999-2023 National Technology & Engineering Solutions
+ * Copyright(C) 1999-2024 National Technology & Engineering Solutions
  * of Sandia, LLC (NTESS).  Under the terms of Contract DE-NA0003525 with
  * NTESS, the U.S. Government retains certain rights in this software.
  *
@@ -17,6 +17,8 @@ namespace Ioss {
     double              minimum_time{0.0};
     double              maximum_time{0.0};
     double              delay{0.0};
+    double              time_scale{1.0};
+    double              time_offset{0.0};
 
     double rel_tolerance{};
     double abs_tolerance{};

@@ -18,7 +18,7 @@ namespace { // (anonymous)
 
 // Values of command-line arguments.
 struct CmdLineArgs {
-  CmdLineArgs ():blockSize(-1),numIters(10),numRepeats(1),tol(1e-12),nx(172),ny(-1),nz(-1),mx(1),my(1),mz(1),sublinesPerLine(1),sublinesPerLineSchur(1),useStackedTimer(false),overlapCommAndComp(false){}
+  CmdLineArgs ():blockSize(-1),numIters(10),numRepeats(1),tol(1e-12),nx(172),ny(-1),nz(-1),mx(1),my(1),mz(1),sublinesPerLine(1),sublinesPerLineSchur(1),useStackedTimer(false),usePointMatrix(false),overlapCommAndComp(false){}
 
   std::string mapFilename;
   std::string matrixFilename;
@@ -37,6 +37,7 @@ struct CmdLineArgs {
   int sublinesPerLine;
   int sublinesPerLineSchur;
   bool useStackedTimer;
+  bool usePointMatrix;
   bool overlapCommAndComp;
   std::string problemName;
   std::string matrixType;
@@ -68,6 +69,8 @@ getCmdLineArgs (CmdLineArgs& args, int argc, char* argv[])
   cmdp.setOption ("sublinesPerLine", &args.sublinesPerLine, "If using inline meshing, number of sublines per mesh x line. If set to -1 the block Jacobi algorithm is used.");
   cmdp.setOption ("withStackedTimer", "withoutStackedTimer", &args.useStackedTimer,
       "Whether to run with a StackedTimer and print the timer tree at the end (and try to output Watchr report)");
+  cmdp.setOption ("withPointMatrix", "withoutPointMatrix", &args.usePointMatrix,
+      "Whether to run with a point matrix");
   cmdp.setOption ("withOverlapCommAndComp", "withoutOverlapCommAndComp", &args.overlapCommAndComp,
 		  "Whether to run with overlapCommAndComp)");
   cmdp.setOption("problemName", &args.problemName, "Human-readable problem name for Watchr plot");
@@ -279,7 +282,6 @@ main (int argc, char* argv[])
   using std::cerr;
   using std::endl;
   typedef Tpetra::CrsMatrix<> crs_matrix_type;
-  typedef Tpetra::BlockCrsMatrix<> block_crs_matrix_type;
   typedef Tpetra::Map<> map_type;
   typedef Tpetra::MultiVector<> MV;
   typedef Tpetra::RowMatrix<> row_matrix_type;
@@ -316,6 +318,8 @@ main (int argc, char* argv[])
   RCP<Time> precSetupTime = Teuchos::TimeMonitor::getNewTimer ("Preconditioner setup");
   RCP<Time> precComputeTime = Teuchos::TimeMonitor::getNewTimer ("Preconditioner compute");
   RCP<Time> solveTime = Teuchos::TimeMonitor::getNewTimer ("Solve");
+  RCP<Time> normTime = Teuchos::TimeMonitor::getNewTimer ("Norm");
+  RCP<Time> warmupMatrixApplyTime = Teuchos::TimeMonitor::getNewTimer ("Preposition of the matrix on device");
   if(!args.useStackedTimer)
   {
     totalTime = Teuchos::TimeMonitor::getNewTimer ("Total");
@@ -358,11 +362,17 @@ main (int argc, char* argv[])
 
   // Read sparse matrix A from Matrix Market file.
   RCP<crs_matrix_type> A;
-  RCP<block_crs_matrix_type> Ablock;
+  RCP<row_matrix_type> Ablock;
   RCP<MV> B,X;
   RCP<IV> line_info;
 #if defined(HAVE_IFPACK2_XPETRA)
   if(args.matrixFilename == "") {
+    RCP<Time> matrixCreationTime = Teuchos::TimeMonitor::getNewTimer ("Create inline matrix");
+    Teuchos::TimeMonitor matrixCreationTimeMon (*matrixCreationTime);
+    if (args.usePointMatrix) {
+      std::string msg = "usePointMatrix with inline matrix is not yet implemented";
+      throw std::runtime_error(msg);      
+    }
     // matrix
     Teuchos::ParameterList plist;
     if(args.matrixType == "") {
@@ -447,6 +457,8 @@ main (int argc, char* argv[])
   else
 #endif 
     {
+      RCP<Time> matrixReadingTime = Teuchos::TimeMonitor::getNewTimer ("Reading matrix input files");
+      Teuchos::TimeMonitor matrixReadingTimeMon (*matrixReadingTime);
       // Read map
       if(rank0) std::cout<<"Reading map file..."<<std::endl;
       RCP<const map_type> point_map = reader_type::readMapFile(args.mapFilename, comm);
@@ -490,7 +502,11 @@ main (int argc, char* argv[])
       
       // Convert Matrix to Block
       if(rank0) std::cout<<"Converting A from point to block..."<<std::endl;
-      Ablock = Tpetra::convertToBlockCrsMatrix<SC,LO,GO,NO>(*A, args.blockSize);
+      {
+        RCP<Time> matrixConversionTime = Teuchos::TimeMonitor::getNewTimer ("Matrix conversion");
+        Teuchos::TimeMonitor matrixConversionTimeMon (*matrixConversionTime);
+        Ablock = Tpetra::convertToBlockCrsMatrix<SC,LO,GO,NO>(*A, args.blockSize);
+      }
 
 
       // Read line information vector
@@ -515,12 +531,6 @@ main (int argc, char* argv[])
     size_t numRows = Ablock->getRowMap()->getGlobalNumElements();
     std::cout<<"Block Matrix has "<<numDomains<<" domains and "<<numRows
              << " rows with an implied block size of "<< ((double)numDomains / (double)numRows)<<std::endl;
-  }
-
-  if(args.useStackedTimer)
-  {
-    stackedTimer = rcp(new StackedTimer("BlockTriDiagonalSolver"));
-    Teuchos::TimeMonitor::setStackedTimer(stackedTimer);
   }
 
   // Initial Guess
@@ -565,8 +575,16 @@ main (int argc, char* argv[])
 
   // Preposition the matrix on device by letting a matvec ensure a transfer
   {
+    Teuchos::TimeMonitor warmupMatrixApplyTimeMon (*warmupMatrixApplyTime);
+
     RCP<MV> temp = rcp(new MV(Ablock->getRangeMap(),1));
     Ablock->apply(*X,*temp);
+  }
+
+  if(args.useStackedTimer)
+  {
+    stackedTimer = rcp(new StackedTimer("BlockTriDiagonalSolver"));
+    Teuchos::TimeMonitor::setStackedTimer(stackedTimer);
   }
 
   // Create Ifpack2 preconditioner.
@@ -575,7 +593,10 @@ main (int argc, char* argv[])
 
   {
     Teuchos::TimeMonitor precSetupTimeMon (*precSetupTime);
-    precond = rcp(new BTDC(Ablock,parts,args.sublinesPerLineSchur,args.overlapCommAndComp));
+    if(args.usePointMatrix)
+      precond = rcp(new BTDC(A,parts,args.sublinesPerLineSchur,args.overlapCommAndComp, false, args.blockSize));
+    else
+      precond = rcp(new BTDC(Ablock,parts,args.sublinesPerLineSchur,args.overlapCommAndComp));
 
     if(rank0) std::cout<<"Initializing preconditioner..."<<std::endl;
     precond->initialize ();
@@ -616,9 +637,12 @@ main (int argc, char* argv[])
       std::cout<<"  Norm0 = "<<norm0<<" NormF = "<<normF<<std::endl;
     }
 
-
-    X->norm2(normx);
-    B->norm2(normb);
+    {
+      Teuchos::TimeMonitor normTimeMon (*normTime);
+      X->norm2(normx);
+      B->norm2(normb);
+      Kokkos::DefaultExecutionSpace().fence();
+    }
     if(rank0) {
       std::cout<<"Final norm X = "<<normx[0]<<" norm B = "<<normb[0]<<std::endl;
     }

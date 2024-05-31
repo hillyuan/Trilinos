@@ -64,6 +64,13 @@
 #include "Teuchos_TimeMonitor.hpp"
 #endif
 
+/** \example epetra/example/RCG/RCGEpetraExFile.cpp
+    This is an example of how to use the Belos::RCGSolMgr solver manager in Epetra.
+*/
+/** \example tpetra/example/RCG/RCGTpetraExFile.cpp
+    This is an example of how to use the Belos::RCGSolMgr solver manager in Tpetra.
+*/
+
 /*! \class Belos::RCGSolMgr
 \brief Implementation of the RCG (Recycling Conjugate Gradient) iterative linear solver.
 \ingroup belos_solver_framework
@@ -1747,6 +1754,15 @@ ReturnType RCGSolMgr<ScalarType,MV,OP,true>::solve() {
             TEUCHOS_TEST_FOR_EXCEPTION(true,std::logic_error,
                                "Belos::RCGSolMgr::solve(): Invalid return from RCGIter::iterate().");
           }
+        }
+        catch (const StatusTestNaNError& e) {
+          // A NaN was detected in the solver.  Set the solution to zero and return unconverged.
+          achievedTol_ = MT::one();
+          Teuchos::RCP<MV> X = problem_->getLHS();
+          MVT::MvInit( *X, SCT::zero() );
+          printer_->stream(Warnings) << "Belos::RCGSolMgr::solve(): Warning! NaN has been detected!" 
+                                     << std::endl;
+          return Unconverged;
         }
         catch (const std::exception &e) {
           printer_->stream(Errors) << "Error! Caught std::exception in RCGIter::iterate() at iteration "

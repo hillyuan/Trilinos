@@ -70,10 +70,13 @@
 #endif // defined(HAVE_TEUCHOSCORE_CXX11)
 #include <algorithm>
 
-/** \example BlockCG/BlockCGEpetraExFile.cpp
-    This is an example of how to use the Belos::BlockCGSolMgr solver manager.
+/** \example epetra/example/BlockCG/BlockCGEpetraExFile.cpp
+    This is an example of how to use the Belos::BlockCGSolMgr solver manager in Epetra.
 */
-/** \example BlockCG/BlockPrecCGEpetraExFile.cpp
+/** \example tpetra/example/BlockCG/BlockCGTpetraExFile.cpp
+    This is an example of how to use the Belos::BlockCGSolMgr solver manager in Tpetra.
+*/
+/** \example epetra/example/BlockCG/BlockPrecCGEpetraExFile.cpp
     This is an example of how to use the Belos::BlockCGSolMgr solver manager with an Ifpack preconditioner.
 */
 
@@ -623,8 +626,9 @@ setParameters (const Teuchos::RCP<Teuchos::ParameterList> &params)
   // Create orthogonalization manager if we need to.
   if (ortho_ == Teuchos::null || changedOrthoType) {
     Belos::OrthoManagerFactory<ScalarType, MV, OP> factory;
-    Teuchos::RCP<Teuchos::ParameterList> paramsOrtho;   // can be null
+    Teuchos::RCP<Teuchos::ParameterList> paramsOrtho;   
     if (orthoType_=="DGKS" && orthoKappa_ > 0) {
+      paramsOrtho = Teuchos::rcp(new Teuchos::ParameterList());
       paramsOrtho->set ("depTol", orthoKappa_ );
     }
 
@@ -1014,6 +1018,15 @@ ReturnType BlockCGSolMgr<ScalarType,MV,OP,true>::solve() {
               "the maximum iteration count test passed.  Please report this bug "
               "to the Belos developers.");
           }
+        }
+        catch (const StatusTestNaNError& e) {
+          // A NaN was detected in the solver.  Set the solution to zero and return unconverged.
+          achievedTol_ = MT::one();
+          Teuchos::RCP<MV> X = problem_->getLHS();
+          MVT::MvInit( *X, SCT::zero() );
+          printer_->stream(Warnings) << "Belos::BlockCGSolMgr::solve(): Warning! NaN has been detected!" 
+                                     << std::endl;
+          return Unconverged;
         }
         catch (const std::exception &e) {
           std::ostream& err = printer_->stream (Errors);

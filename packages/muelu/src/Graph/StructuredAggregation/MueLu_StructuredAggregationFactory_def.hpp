@@ -51,7 +51,7 @@
 
 #include "MueLu_AggregationStructuredAlgorithm.hpp"
 #include "MueLu_Level.hpp"
-#include "MueLu_GraphBase.hpp"
+#include "MueLu_LWGraph.hpp"
 #include "MueLu_Aggregates.hpp"
 #include "MueLu_MasterList.hpp"
 #include "MueLu_Monitor.hpp"
@@ -167,12 +167,12 @@ void StructuredAggregationFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   bDefinitionPhase_ = false;  // definition phase is finished, now all aggregation algorithm information is fixed
 
   // General problem informations are gathered from data stored in the problem matix.
-  RCP<const GraphBase> graph = Get<RCP<GraphBase> >(currentLevel, "Graph");
-  RCP<const Map> fineMap     = graph->GetDomainMap();
-  const int myRank           = fineMap->getComm()->getRank();
-  const int numRanks         = fineMap->getComm()->getSize();
-  const GO minGlobalIndex    = fineMap->getMinGlobalIndex();
-  const LO dofsPerNode       = Get<LO>(currentLevel, "DofsPerNode");
+  RCP<const LWGraph> graph = Get<RCP<LWGraph> >(currentLevel, "Graph");
+  RCP<const Map> fineMap   = graph->GetDomainMap();
+  const int myRank         = fineMap->getComm()->getRank();
+  const int numRanks       = fineMap->getComm()->getSize();
+  const GO minGlobalIndex  = fineMap->getMinGlobalIndex();
+  const LO dofsPerNode     = Get<LO>(currentLevel, "DofsPerNode");
 
   // Since we want to operate on nodes and not dof, we need to modify the rowMap in order to
   // obtain a nodeMap.
@@ -311,11 +311,13 @@ void StructuredAggregationFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     aggregates->SetIndexManager(geoData);
     aggregates->AggregatesCrossProcessors(coupled);
     aggregates->SetNumAggregates(geoData->getNumLocalCoarseNodes());
-    std::vector<unsigned> aggStat(geoData->getNumLocalFineNodes(), READY);
+    using AggStatHostType = typename AggregationAlgorithmBase<LocalOrdinal, GlobalOrdinal, Node>::AggStatHostType;
+    AggStatHostType aggStat(Kokkos::ViewAllocateWithoutInitializing("aggregation status"), geoData->getNumLocalFineNodes());
+    Kokkos::deep_copy(aggStat, READY);
     LO numNonAggregatedNodes = geoData->getNumLocalFineNodes();
 
-    myStructuredAlgorithm->BuildAggregates(pL, *graph, *aggregates, aggStat,
-                                           numNonAggregatedNodes);
+    myStructuredAlgorithm->BuildAggregatesNonKokkos(pL, *graph, *aggregates, aggStat,
+                                                    numNonAggregatedNodes);
 
     TEUCHOS_TEST_FOR_EXCEPTION(numNonAggregatedNodes, Exceptions::RuntimeError,
                                "MueLu::StructuredAggregationFactory::Build: Leftover nodes found! Error!");
@@ -327,8 +329,8 @@ void StructuredAggregationFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     // Create the graph of the prolongator
     *out << "Compute CrsGraph" << std::endl;
     RCP<CrsGraph> myGraph;
-    myStructuredAlgorithm->BuildGraph(*graph, geoData, dofsPerNode, myGraph,
-                                      coarseCoordinatesFineMap, coarseCoordinatesMap);
+    myStructuredAlgorithm->BuildGraphOnHost(*graph, geoData, dofsPerNode, myGraph,
+                                            coarseCoordinatesFineMap, coarseCoordinatesMap);
     Set(currentLevel, "prolongatorGraph", myGraph);
   }
 

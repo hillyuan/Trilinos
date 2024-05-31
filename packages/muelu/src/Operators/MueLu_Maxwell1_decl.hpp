@@ -196,10 +196,10 @@ class Maxwell1 : public VerboseObject, public Xpetra::Operator<Scalar, LocalOrdi
   virtual ~Maxwell1() {}
 
   //! Returns the Xpetra::Map object associated with the domain of this operator.
-  Teuchos::RCP<const Map> getDomainMap() const;
+  const Teuchos::RCP<const Map> getDomainMap() const;
 
   //! Returns the Xpetra::Map object associated with the range of this operator.
-  Teuchos::RCP<const Map> getRangeMap() const;
+  const Teuchos::RCP<const Map> getRangeMap() const;
 
   //! Returns Jacobian matrix SM
   const Teuchos::RCP<Matrix>& getJacobian() const {
@@ -295,7 +295,7 @@ class Maxwell1 : public VerboseObject, public Xpetra::Operator<Scalar, LocalOrdi
   Teuchos::RCP<Matrix> SM_Matrix_, D0_Matrix_, Kn_Matrix_, GmhdA_Matrix_;
 
   //! Vectors for BCs
-  Kokkos::View<bool*, typename Node::device_type> BCrowsKokkos_, BCcolsKokkos_, BCdomainKokkos_;
+  Kokkos::View<bool*, typename Node::device_type::memory_space> BCrowsKokkos_, BCcolsKokkos_, BCdomainKokkos_;
   int BCedges_, BCnodes_;
   Teuchos::ArrayRCP<bool> BCrows_, BCcols_, BCdomain_;
   //! Nullspace

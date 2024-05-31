@@ -38,7 +38,6 @@
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint16_t
 #include <algorithm>                    // for max
-#include <functional>                   // for less, equal_to
 #include <iostream>                     // for operator<<, basic_ostream, etc
 #include <list>                         // for list
 #include <map>                          // for map, map<>::value_compare
@@ -312,8 +311,8 @@ public:
    *    StateNM3 <- StateNM2
    *  </PRE>
    */
-  void update_field_data_states();
-  void update_field_data_states(FieldBase *field);
+  void update_field_data_states(bool rotateNgpFieldViews = false);
+  void update_field_data_states(FieldBase *field, bool rotateNgpFieldViews = false);
 
   /** \brief  Copy field data from src entity to Dest entity
    *           - Fields that exist on the src that don't exist on the dest will
@@ -870,6 +869,18 @@ public:
   unsigned get_initial_bucket_capacity() const { return m_bucket_repository.get_initial_bucket_capacity(); }
   unsigned get_maximum_bucket_capacity() const { return m_bucket_repository.get_maximum_bucket_capacity(); }
 
+  virtual bool does_entity_have_orphan_protection(stk::mesh::Entity entity) const
+  {
+      bool hasOrphanProtection = false;
+      if (entity_rank(entity) == stk::topology::NODE_RANK && m_closure_count[entity.local_offset()] >= BulkData::orphaned_node_marking)
+      {
+          hasOrphanProtection = true;
+      }
+      return hasOrphanProtection;
+  }
+
+  bool is_mesh_consistency_check_on() const { return m_runConsistencyCheck; }
+
 protected: //functions
   BulkData(std::shared_ptr<MetaData> mesh_meta_data,
            ParallelMachine parallel,
@@ -1295,16 +1306,6 @@ private:
       const bool isOwned = bucket(entity).owned();
       const bool isCreatedState = (stk::mesh::Created == state(entity));
       return isNode && isNotConnected && isCreatedState && isOwned;
-  }
-
-  virtual bool does_entity_have_orphan_protection(stk::mesh::Entity entity) const
-  {
-      bool hasOrphanProtection = false;
-      if (entity_rank(entity) == stk::topology::NODE_RANK && m_closure_count[entity.local_offset()] >= BulkData::orphaned_node_marking)
-      {
-          hasOrphanProtection = true;
-      }
-      return hasOrphanProtection;
   }
 
   // Only to be called from add_node_sharing
@@ -2155,11 +2156,11 @@ BulkData::internal_add_node_sharing_called() const
 inline Bucket &
 BulkData::bucket(Entity entity) const
 {
-#ifndef NDEBUG
-  entity_getter_debug_check(entity);
-#endif
+  Bucket* bptr = bucket_ptr(entity);
 
-  return *mesh_index(entity).bucket;
+  STK_ThrowAssertMsg(bptr != nullptr, "BulkData::bucket error, invalid bucket (nullptr) for entity with local_offset()="<<entity.local_offset());
+
+  return *bptr;
 }
 
 inline Bucket *
@@ -2432,13 +2433,6 @@ EntityLess::operator()( const EntityProc & lhs, const EntityKey & rhs) const
 {
   const EntityKey lhs_key = m_mesh->entity_key(lhs.first);
   return lhs_key < rhs ;
-}
-
-inline EntityLess&
-EntityLess::operator=(const EntityLess& rhs)
-{
-  m_mesh = rhs.m_mesh;
-  return *this;
 }
 
 

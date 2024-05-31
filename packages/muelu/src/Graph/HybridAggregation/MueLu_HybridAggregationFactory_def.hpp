@@ -72,7 +72,7 @@
 
 // Shared
 #include "MueLu_Level.hpp"
-#include "MueLu_GraphBase.hpp"
+#include "MueLu_LWGraph.hpp"
 #include "MueLu_Aggregates.hpp"
 #include "MueLu_MasterList.hpp"
 #include "MueLu_Monitor.hpp"
@@ -89,14 +89,13 @@ RCP<const ParameterList> HybridAggregationFactory<LocalOrdinal, GlobalOrdinal, N
     GetValidParameterList() const {
   RCP<ParameterList> validParamList = rcp(new ParameterList());
 
-  typedef Teuchos::StringToIntegralParameterEntryValidator<int> validatorType;
 #define SET_VALID_ENTRY(name) validParamList->setEntry(name, MasterList::getEntry(name))
   // From UncoupledAggregationFactory
   SET_VALID_ENTRY("aggregation: max agg size");
   SET_VALID_ENTRY("aggregation: min agg size");
   SET_VALID_ENTRY("aggregation: max selected neighbors");
   SET_VALID_ENTRY("aggregation: ordering");
-  validParamList->getEntry("aggregation: ordering").setValidator(rcp(new validatorType(Teuchos::tuple<std::string>("natural", "graph", "random"), "aggregation: ordering")));
+  validParamList->getEntry("aggregation: ordering").setValidator(rcp(new Teuchos::StringValidator(Teuchos::tuple<std::string>("natural", "graph", "random"))));
   SET_VALID_ENTRY("aggregation: enable phase 1");
   SET_VALID_ENTRY("aggregation: enable phase 2a");
   SET_VALID_ENTRY("aggregation: enable phase 2b");
@@ -253,10 +252,10 @@ void HybridAggregationFactory<LocalOrdinal, GlobalOrdinal, Node>::
   RCP<const FactoryBase> graphFact = GetFactory("Graph");
 
   // General problem informations are gathered from data stored in the problem matix.
-  RCP<const GraphBase> graph = Get<RCP<GraphBase> >(currentLevel, "Graph");
-  RCP<const Map> fineMap     = graph->GetDomainMap();
-  const int myRank           = fineMap->getComm()->getRank();
-  const int numRanks         = fineMap->getComm()->getSize();
+  RCP<const LWGraph> graph = Get<RCP<LWGraph> >(currentLevel, "Graph");
+  RCP<const Map> fineMap   = graph->GetDomainMap();
+  const int myRank         = fineMap->getComm()->getRank();
+  const int numRanks       = fineMap->getComm()->getSize();
 
   out->setProcRankAndSize(graph->GetImportMap()->getComm()->getRank(),
                           graph->GetImportMap()->getComm()->getSize());
@@ -266,8 +265,10 @@ void HybridAggregationFactory<LocalOrdinal, GlobalOrdinal, Node>::
   aggregates->setObjectLabel("HB");
 
   // construct aggStat information
-  const LO numRows = graph->GetNodeNumVertices();
-  std::vector<unsigned> aggStat(numRows, READY);
+  const LO numRows      = graph->GetNodeNumVertices();
+  using AggStatHostType = typename AggregationAlgorithmBase<LocalOrdinal, GlobalOrdinal, Node>::AggStatHostType;
+  AggStatHostType aggStat(Kokkos::ViewAllocateWithoutInitializing("aggregation status"), numRows);
+  Kokkos::deep_copy(aggStat, READY);
 
   // Get aggregation type for region
   std::string regionType;
@@ -369,11 +370,10 @@ void HybridAggregationFactory<LocalOrdinal, GlobalOrdinal, Node>::
 
     *out << "Treat Dirichlet BC" << std::endl;
     // Dirichlet boundary
-    ArrayRCP<const bool> dirichletBoundaryMap = graph->GetBoundaryNodeMap();
-    if (dirichletBoundaryMap != Teuchos::null)
-      for (LO i = 0; i < numRows; i++)
-        if (dirichletBoundaryMap[i] == true)
-          aggStat[i] = BOUNDARY;
+    auto dirichletBoundaryMap = graph->GetBoundaryNodeMap();
+    for (LO i = 0; i < numRows; i++)
+      if (dirichletBoundaryMap[i] == true)
+        aggStat[i] = BOUNDARY;
 
     // OnePt aggregation
     std::string mapOnePtName = pL.get<std::string>("OnePt aggregate map name");
@@ -414,7 +414,7 @@ void HybridAggregationFactory<LocalOrdinal, GlobalOrdinal, Node>::
     *out << regionType << " | Executing phase " << a << std::endl;
 
     int oldRank = algos_[a]->SetProcRankVerbose(this->GetProcRankVerbose());
-    algos_[a]->BuildAggregates(pL, *graph, *aggregates, aggStat, numNonAggregatedNodes);
+    algos_[a]->BuildAggregatesNonKokkos(pL, *graph, *aggregates, aggStat, numNonAggregatedNodes);
     algos_[a]->SetProcRankVerbose(oldRank);
     *out << regionType << " | Done Executing phase " << a << std::endl;
   }
@@ -433,7 +433,7 @@ void HybridAggregationFactory<LocalOrdinal, GlobalOrdinal, Node>::
 template <class LocalOrdinal, class GlobalOrdinal, class Node>
 void HybridAggregationFactory<LocalOrdinal, GlobalOrdinal, Node>::
     BuildInterfaceAggregates(Level& currentLevel, RCP<Aggregates> aggregates,
-                             std::vector<unsigned>& aggStat, LO& numNonAggregatedNodes,
+                             typename AggregationAlgorithmBase<LocalOrdinal, GlobalOrdinal, Node>::AggStatHostType& aggStat, LO& numNonAggregatedNodes,
                              Array<LO> coarseRate) const {
   FactoryMonitor m(*this, "BuildInterfaceAggregates", currentLevel);
 

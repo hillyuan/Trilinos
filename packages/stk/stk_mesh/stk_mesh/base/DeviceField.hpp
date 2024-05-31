@@ -55,6 +55,8 @@
 namespace stk {
 namespace mesh {
 
+constexpr unsigned NUM_COMPONENTS_INDEX = 0;
+constexpr unsigned FIRST_DIMENSION_INDEX = 1;
 constexpr unsigned INVALID_ORDINAL = 9999999;
 
 template<typename T, template <typename> class NgpDebugger> class DeviceField;
@@ -67,6 +69,7 @@ namespace impl {
     return std::lround(size_requested*OVERALLOCATION_FACTOR);
   }
 
+  template <typename T> const FieldDataDeviceViewType<T> get_device_data(const DeviceField<T>& deviceField);
   template <typename T> FieldDataDeviceViewType<T> get_device_data(DeviceField<T>&);
 }
 
@@ -75,9 +78,9 @@ class DeviceField : public NgpFieldBase
 {
 private:
   using StkDebugger = typename NgpDebugger<T>::StkFieldSyncDebuggerType;
-  using ExecSpace = stk::ngp::ExecSpace;
 
  public:
+  using ExecSpace = stk::ngp::ExecSpace;
   using value_type = T;
 
   KOKKOS_FUNCTION
@@ -245,7 +248,7 @@ private:
   unsigned get_component_stride() const
   {
     unsigned stride = 1;
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#ifdef STK_USE_DEVICE_MESH
     stride = bucketCapacity;
 #endif
     return stride;
@@ -254,7 +257,38 @@ private:
   KOKKOS_FUNCTION
   unsigned get_num_components_per_entity(const FastMeshIndex& entityIndex) const {
     const unsigned bucketId = entityIndex.bucket_id;
-    return deviceAllFieldsBucketsNumComponentsPerEntity[bucketId];
+    return deviceAllFieldsBucketsLayoutPerEntity(bucketId, NUM_COMPONENTS_INDEX);
+  }
+
+  KOKKOS_FUNCTION
+  unsigned get_extent0_per_entity(const FastMeshIndex& entityIndex) const {
+    const unsigned bucketId = entityIndex.bucket_id;
+    return deviceAllFieldsBucketsLayoutPerEntity(bucketId, FIRST_DIMENSION_INDEX);
+  }
+
+  KOKKOS_FUNCTION
+  unsigned get_extent1_per_entity(const FastMeshIndex& entityIndex) const {
+    const unsigned bucketId = entityIndex.bucket_id;
+    const unsigned numScalars = deviceAllFieldsBucketsLayoutPerEntity(bucketId, NUM_COMPONENTS_INDEX);
+    const unsigned firstDimension = deviceAllFieldsBucketsLayoutPerEntity(bucketId, FIRST_DIMENSION_INDEX);
+    return (numScalars != 0) ? numScalars / firstDimension : 0;
+  }
+
+  KOKKOS_FUNCTION
+  unsigned get_extent_per_entity(const FastMeshIndex& entityIndex, unsigned dimension) const {
+    const unsigned bucketId = entityIndex.bucket_id;
+    if (dimension == 0) {
+      return deviceAllFieldsBucketsLayoutPerEntity(bucketId, FIRST_DIMENSION_INDEX);
+    }
+    else if (dimension == 1) {
+      const unsigned numScalars = deviceAllFieldsBucketsLayoutPerEntity(bucketId, NUM_COMPONENTS_INDEX);
+      const unsigned firstDimension = deviceAllFieldsBucketsLayoutPerEntity(bucketId, FIRST_DIMENSION_INDEX);
+      return (numScalars != 0) ? numScalars / firstDimension : 0;
+    }
+    else {
+      const unsigned numScalars = deviceAllFieldsBucketsLayoutPerEntity(bucketId, NUM_COMPONENTS_INDEX);
+      return (numScalars != 0) ? 1 : 0;
+    }
   }
 
   unsigned debug_get_bucket_offset(unsigned bucketOrdinal) const override {
@@ -277,13 +311,14 @@ private:
     return deviceData(deviceSelectedBucketOffset(index.bucket_id), ORDER_INDICES(index.bucket_ord, component));
   }
 
-  template <typename MeshIndex> KOKKOS_FUNCTION
+#ifndef STK_HIDE_DEPRECATED_CODE // Delete after May 2024
+  template <typename MeshIndex> STK_DEPRECATED KOKKOS_FUNCTION
   T& get(MeshIndex index, int component,
          const char * fileName = DEVICE_DEBUG_FILE_NAME, int lineNumber = DEVICE_DEBUG_LINE_NUMBER) const
   {
-    fieldSyncDebugger.device_stale_access_check(this, index, component, fileName, lineNumber);
     return deviceData(deviceSelectedBucketOffset(index.bucket->bucket_id()), ORDER_INDICES(index.bucketOrd, component));
   }
+#endif
 
   KOKKOS_FUNCTION
   T& operator()(const FastMeshIndex& index, int component,
@@ -293,13 +328,14 @@ private:
     return deviceData(deviceSelectedBucketOffset(index.bucket_id), ORDER_INDICES(index.bucket_ord, component));
   }
 
-  template <typename MeshIndex> KOKKOS_FUNCTION
+#ifndef STK_HIDE_DEPRECATED_CODE // Delete after May 2024
+  template <typename MeshIndex> STK_DEPRECATED KOKKOS_FUNCTION
   T& operator()(const MeshIndex& index, int component,
                 const char * fileName = DEVICE_DEBUG_FILE_NAME, int lineNumber = DEVICE_DEBUG_LINE_NUMBER) const
   {
-    fieldSyncDebugger.device_stale_access_check(this, index, component, fileName, lineNumber);
     return deviceData(deviceSelectedBucketOffset(index.bucket->bucket_id()), ORDER_INDICES(index.bucketOrd, component));
   }
+#endif
 
   KOKKOS_FUNCTION
   EntityFieldData<T> operator()(const FastMeshIndex& index,
@@ -332,9 +368,13 @@ private:
 
   FieldState state() const { return hostField->state(); }
 
-  void rotate_multistate_data() override
+  const FieldBase* get_field_base() const { return hostField; }
+
+#ifndef STK_HIDE_DEPRECATED_CODE // Delete after May 2024
+  STK_DEPRECATED void rotate_multistate_data() override
   {
   }
+#endif
 
   void update_bucket_pointer_view() override
   {
@@ -342,6 +382,13 @@ private:
     auto hostFieldEntityRank = hostField->entity_rank();
     const BucketVector& buckets = hostBulk->get_buckets(hostFieldEntityRank, selector);
     construct_field_buckets_pointer_view(buckets);
+  }
+
+  void swap_field_views(NgpFieldBase *other) override
+  {
+    DeviceField<T,NgpDebugger>* deviceFieldT = dynamic_cast<DeviceField<T,NgpDebugger>*>(other);
+    STK_ThrowRequireMsg(deviceFieldT != nullptr, "DeviceField::swap_field_views called with class that can't dynamic_cast to DeviceField<T,NgpDebugger>");
+    swap_views(deviceData, deviceFieldT->deviceData);
   }
 
   KOKKOS_FUNCTION
@@ -417,7 +464,7 @@ private:
    maxNumScalarsPerEntity = hostField->max_size();
 
    construct_field_buckets_pointer_view(buckets);
-   construct_all_fields_buckets_num_components_per_entity_view(allBuckets);
+   construct_all_fields_buckets_data_layout_per_entity_view(allBuckets);
    construct_field_buckets_num_components_per_entity_view(buckets);
    construct_bucket_sizes_view(buckets);
    construct_new_index_view(allBuckets);
@@ -485,20 +532,37 @@ private:
     if (buckets.size() > deviceView.extent(0)) {
       deviceView = ViewType(Kokkos::ViewAllocateWithoutInitializing(hostField->name() + suffix), impl::allocation_size(buckets.size()));
       if (hostView.extent(0) != deviceView.extent(0)) {
+#if defined STK_USE_DEVICE_MESH && !defined(STK_ENABLE_GPU)
+        hostView = Kokkos::create_mirror(deviceView);
+#else
         hostView = Kokkos::create_mirror_view(deviceView);
+#endif
       }
     }
   }
 
-  void construct_all_fields_buckets_num_components_per_entity_view(const BucketVector & allBuckets)
+  template<typename ViewType>
+  void construct_2d_bucket_view(const BucketVector & buckets, const std::string& suffix, unsigned secondExtent,
+                                ViewType& deviceView)
   {
-    construct_bucket_views(allBuckets, "_numComponentsPerEntity", hostAllFieldsBucketsNumComponentsPerEntity, deviceAllFieldsBucketsNumComponentsPerEntity);
+    if ((buckets.size() > deviceView.extent(0)) || (secondExtent != deviceView.extent(1))) {
+      deviceView = ViewType(Kokkos::ViewAllocateWithoutInitializing(hostField->name() + suffix),
+                            impl::allocation_size(buckets.size()), secondExtent);
+    }
+  }
+
+  void construct_all_fields_buckets_data_layout_per_entity_view(const BucketVector & allBuckets)
+  {
+    construct_2d_bucket_view(allBuckets, "_layoutPerEntity", 2, deviceAllFieldsBucketsLayoutPerEntity);
+    typename Unsigned2dViewType::HostMirror hostAllFieldsBucketsLayoutPerEntity =
+        Kokkos::create_mirror_view(deviceAllFieldsBucketsLayoutPerEntity);
 
     for (Bucket * bucket : allBuckets) {
-      hostAllFieldsBucketsNumComponentsPerEntity[bucket->bucket_id()] = field_scalars_per_entity(*hostField, *bucket);
+      hostAllFieldsBucketsLayoutPerEntity(bucket->bucket_id(), NUM_COMPONENTS_INDEX)  = field_scalars_per_entity(*hostField, *bucket);
+      hostAllFieldsBucketsLayoutPerEntity(bucket->bucket_id(), FIRST_DIMENSION_INDEX) = field_extent0_per_entity(*hostField, *bucket);
     }
 
-    Kokkos::deep_copy(get_execution_space(), deviceAllFieldsBucketsNumComponentsPerEntity, hostAllFieldsBucketsNumComponentsPerEntity);
+    Kokkos::deep_copy(get_execution_space(), deviceAllFieldsBucketsLayoutPerEntity, hostAllFieldsBucketsLayoutPerEntity);
   }
 
   void construct_field_buckets_num_components_per_entity_view(const BucketVector & buckets)
@@ -719,6 +783,7 @@ private:
   }
 
   friend NgpDebugger<T>;
+  friend const FieldDataDeviceViewType<T> impl::get_device_data<T>(const DeviceField<T>&);
   friend FieldDataDeviceViewType<T> impl::get_device_data<T>(DeviceField<T>&);
 
   FieldDataDeviceViewType<T> deviceData;
@@ -730,8 +795,7 @@ private:
   UnsignedViewType deviceSelectedBucketOffset;
   typename UnsignedViewType::HostMirror newHostSelectedBucketOffset;
   UnsignedViewType newDeviceSelectedBucketOffset;
-  typename UnsignedViewType::HostMirror hostAllFieldsBucketsNumComponentsPerEntity;
-  UnsignedViewType deviceAllFieldsBucketsNumComponentsPerEntity;
+  Unsigned2dViewType deviceAllFieldsBucketsLayoutPerEntity;
 
   EntityRank rank;
   unsigned ordinal;
@@ -754,6 +818,12 @@ private:
 namespace impl {
 
 //not for public consumption. calling this will void your warranty.
+template<typename T>
+const FieldDataDeviceViewType<T> get_device_data(const DeviceField<T>& deviceField)
+{
+  return deviceField.deviceData;
+}
+
 template<typename T>
 FieldDataDeviceViewType<T> get_device_data(DeviceField<T>& deviceField)
 {

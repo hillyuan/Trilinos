@@ -102,6 +102,7 @@ correctVirtualNormals(PHX::MDField<Scalar,Cell,IP,Dim> normals,
                       const shards::CellTopology & cell_topology,
                       const SubcellConnectivity & face_connectivity)
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::correctVirtualNormals()",corr_virt_norms);
 
   // What we want is for the adjoining face of the virtual cell to have normals that are the negated real cell's normals.
   // we correct the normals here:
@@ -169,6 +170,7 @@ correctVirtualRotationMatrices(PHX::MDField<Scalar,Cell,IP,Dim,Dim> rotation_mat
                                const shards::CellTopology & cell_topology,
                                const SubcellConnectivity & face_connectivity)
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::correctVirtualRotationMatrices()",corr_virt_rotmat);
 
   // What we want is for the adjoining face of the virtual cell to have normals that are the negated real cell's normals.
   // we correct the normals here:
@@ -216,6 +218,7 @@ void
 applyBasePermutation(PHX::MDField<Scalar,IP> field,
                      PHX::MDField<const int,Cell,IP> permutations)
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::applyBasePermutation(rank 1)",app_base_perm_r1);
   MDFieldArrayFactory af("",true);
 
   const int num_ip = field.extent(0);
@@ -235,6 +238,7 @@ void
 applyBasePermutation(PHX::MDField<Scalar,IP,Dim> field,
                      PHX::MDField<const int,Cell,IP> permutations)
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::applyBasePermutation(rank 2)",app_base_perm_r2);
   MDFieldArrayFactory af("",true);
 
   const int num_ip = field.extent(0);
@@ -256,6 +260,7 @@ void
 applyPermutation(PHX::MDField<Scalar,Cell,IP> field,
                  PHX::MDField<const int,Cell,IP> permutations)
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::applyPermutation(rank 2)",app_perm_r2);
   MDFieldArrayFactory af("",true);
 
   const int num_cells = field.extent(0);
@@ -276,6 +281,7 @@ void
 applyPermutation(PHX::MDField<Scalar,Cell,IP,Dim> field,
                  PHX::MDField<const int,Cell,IP> permutations)
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::applyPermutation(rank 3)",app_perm_r3);
   MDFieldArrayFactory af("",true);
 
   const int num_cells = field.extent(0);
@@ -298,6 +304,7 @@ void
 applyPermutation(PHX::MDField<Scalar,Cell,IP,Dim,Dim> field,
                  PHX::MDField<const int,Cell,IP> permutations)
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::applyPermutation(rank 4)",app_perm_r4);
   MDFieldArrayFactory af("",true);
 
   const int num_cells = field.extent(0);
@@ -327,6 +334,8 @@ generatePermutations(const int num_cells,
                      PHX::MDField<const Scalar,Cell,IP,Dim> coords,
                      PHX::MDField<const Scalar,Cell,IP,Dim> other_coords)
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::generatePermutations()",gen_perms);
+
   const int num_ip = coords.extent(1);
   const int num_dim = coords.extent(2);
 
@@ -380,6 +389,7 @@ generateSurfacePermutations(const int num_cells,
                             PHX::MDField<const Scalar,Cell,IP,Dim,Dim> surface_rotation_matrices)
 
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::generateSurfacePermutations()",gen_surf_perms);
 
   // The challenge for this call is handling wedge-based periodic boundaries
   // We need to make sure that we can align points along faces that are rotated with respect to one another.
@@ -565,10 +575,9 @@ generateSurfacePermutations(const int num_cells,
 #undef PANZER_CROSS
 
   return permutation;
-
 }
 
-}
+} // end anonymous namespace
 
 //template<typename DataType>
 //using UnmanagedDynRankView = Kokkos::DynRankView<DataType,typename PHX::DevLayout<DataType>::type,PHX::Device,Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
@@ -617,6 +626,8 @@ template <typename Scalar>
 void IntegrationValues2<Scalar>::
 setupArrays(const Teuchos::RCP<const panzer::IntegrationRule>& ir)
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::setupArrays()",setup_arrays);
+
   MDFieldArrayFactory af(prefix_,alloc_arrays_);
 
   typedef panzer::IntegrationDescriptor ID;
@@ -668,7 +679,6 @@ setupArrays(const Teuchos::RCP<const panzer::IntegrationRule>& ir)
   surface_normals = af.template buildStaticArray<Scalar,Cell,IP,Dim>("surface_normals",num_cells, num_ip,num_space_dim);
 
   surface_rotation_matrices = af.template buildStaticArray<Scalar,Cell,IP,Dim,Dim>("surface_rotation_matrices",num_cells, num_ip,3,3);
-
 }
 
 
@@ -682,6 +692,7 @@ evaluateValues(const PHX::MDField<Scalar,Cell,NODE,Dim> & in_node_coordinates,
                const Teuchos::RCP<const SubcellConnectivity> & face_connectivity,
                const int num_virtual_cells)
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::evaluateValues(with virtual cells)",eval_vals_with_virts);
 
   setup(int_rule, in_node_coordinates, in_num_cells);
 
@@ -692,7 +703,6 @@ evaluateValues(const PHX::MDField<Scalar,Cell,NODE,Dim> & in_node_coordinates,
 
   // Evaluate everything once permutations are generated
   evaluateEverything();
-
 }
 
 template <typename Scalar>
@@ -702,6 +712,7 @@ evaluateValues(const PHX::MDField<Scalar,Cell,NODE,Dim>& in_node_coordinates,
                const PHX::MDField<Scalar,Cell,IP,Dim>& other_ip_coordinates,
                const int in_num_cells)
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::evaluateValues(no virtual cells)",eval_vals_no_virts);
 
   setup(int_rule, in_node_coordinates, in_num_cells);
 
@@ -710,7 +721,6 @@ evaluateValues(const PHX::MDField<Scalar,Cell,NODE,Dim>& in_node_coordinates,
 
   // Evaluate everything once permutations are generated
   evaluateEverything();
-
 }
 
 template <typename Scalar>
@@ -719,6 +729,8 @@ IntegrationValues2<Scalar>::
 setupPermutations(const Teuchos::RCP<const SubcellConnectivity> & face_connectivity,
                   const int num_virtual_cells)
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::setupPermutations(connectivity)",setup_perms_conn);
+
   TEUCHOS_ASSERT(not int_rule->isSide());
   TEUCHOS_ASSERT(face_connectivity != Teuchos::null);
   TEUCHOS_TEST_FOR_EXCEPT_MSG(int_rule->getType() != panzer::IntegrationDescriptor::SURFACE,
@@ -738,6 +750,7 @@ void
 IntegrationValues2<Scalar>::
 setupPermutations(const PHX::MDField<Scalar,Cell,IP,Dim> & other_ip_coordinates)
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::setupPermutations(other_coords)",setup_perms_coords);
   resetArrays();
   requires_permutation_ = false;
   permutations_ = generatePermutations<Scalar>(num_evaluate_cells_, getCubaturePoints(false,true), other_ip_coordinates);
@@ -752,6 +765,7 @@ setup(const Teuchos::RCP<const panzer::IntegrationRule>& ir,
       const PHX::MDField<Scalar,Cell,NODE,Dim> & cell_node_coordinates,
       const int num_cells)
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::setup()",setup);
 
   // Clear arrays just in case we are rebuilding this object
   resetArrays();
@@ -789,9 +803,11 @@ getUniformCubaturePointsRef(const bool cache,
                             const bool force,
                             const bool apply_permutation) const
 {
-
   if(cub_points_evaluated_ and not force)
     return cub_points;
+
+  // Only log time if values computed (i.e. don't log if values are already cached)
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::getUniformCubaturePointsRef()",get_uniform_cub_pts_ref);
 
   Intrepid2::CellTools<PHX::Device::execution_space> cell_tools;
   MDFieldArrayFactory af(prefix_,true);
@@ -845,9 +861,11 @@ getUniformSideCubaturePointsRef(const bool cache,
                                 const bool force,
                                 const bool apply_permutation) const
 {
-
   if(side_cub_points_evaluated_ and not force)
     return side_cub_points;
+
+  // Only log time if values computed (i.e. don't log if values are already cached)
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::getUniformSideCubaturePointsRef()",get_uniform_side_cub_pts_ref);
 
   MDFieldArrayFactory af(prefix_,true);
 
@@ -895,9 +913,11 @@ getUniformCubatureWeightsRef(const bool cache,
                              const bool force,
                              const bool apply_permutation) const
 {
-
   if(cub_weights_evaluated_ and not force)
     return cub_weights;
+
+  // Only log time if values computed (i.e. don't log if values are already cached)
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::getUniformCubatureWeightRef()",get_uniform_cub_weights_ref);
 
   MDFieldArrayFactory af(prefix_,true);
 
@@ -953,24 +973,52 @@ getJacobian(const bool cache,
   if(jac_evaluated_ and not force)
     return jac;
 
+  // Only log time if values computed (i.e. don't log if values are already cached)
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::getJacobian()",get_jacobian);
+
   Intrepid2::CellTools<PHX::Device::execution_space> cell_tools;
   MDFieldArrayFactory af(prefix_,true);
 
   int num_space_dim = int_rule->topology->getDimension();
   int num_ip = int_rule->num_points;
 
-  // Don't forget that since we are not caching this, we have to make sure the managed view remains alive while we use the non-const wrapper
-  auto const_ref_coord = getCubaturePointsRef(false,force);
-  auto ref_coord = PHX::getNonConstDynRankViewFromConstMDField(const_ref_coord);
-  auto node_coord = PHX::getNonConstDynRankViewFromConstMDField(getNodeCoordinates());
+  using ID=panzer::IntegrationDescriptor;
+  const bool is_cv = (int_rule->getType() == ID::CV_VOLUME) or (int_rule->getType() == ID::CV_SIDE) or (int_rule->getType() == ID::CV_BOUNDARY);
+  const bool is_surface = int_rule->getType() == ID::SURFACE;
+
   auto aux = af.template buildStaticArray<Scalar,Cell,IP,Dim,Dim>("jac",num_cells_, num_ip, num_space_dim,num_space_dim);
 
-  const auto cell_range = std::make_pair(0,num_evaluate_cells_);
-  auto s_ref_coord  = Kokkos::subview(ref_coord,     cell_range,Kokkos::ALL(),Kokkos::ALL());
-  auto s_node_coord = Kokkos::subview(node_coord,    cell_range,Kokkos::ALL(),Kokkos::ALL());
-  auto s_jac        = Kokkos::subview(aux.get_view(),cell_range,Kokkos::ALL(),Kokkos::ALL(),Kokkos::ALL());
+  if(is_cv or is_surface){
 
-  cell_tools.setJacobian(s_jac, s_ref_coord, s_node_coord,*(int_rule->topology));
+    // Don't forget that since we are not caching this, we have to make sure the managed view remains alive while we use the non-const wrapper
+    auto const_ref_coord = getCubaturePointsRef(false,force);
+    auto ref_coord = PHX::getNonConstDynRankViewFromConstMDField(const_ref_coord);
+    auto node_coord = PHX::getNonConstDynRankViewFromConstMDField(getNodeCoordinates());
+    
+    const auto cell_range = std::make_pair(0,num_evaluate_cells_);
+    auto s_ref_coord  = Kokkos::subview(ref_coord,     cell_range,Kokkos::ALL(),Kokkos::ALL());
+    auto s_node_coord = Kokkos::subview(node_coord,    cell_range,Kokkos::ALL(),Kokkos::ALL());
+    auto s_jac        = Kokkos::subview(aux.get_view(),cell_range,Kokkos::ALL(),Kokkos::ALL(),Kokkos::ALL());
+
+    cell_tools.setJacobian(s_jac, s_ref_coord, s_node_coord,*(int_rule->topology));
+
+  } else {
+
+    // Don't forget that since we are not caching this, we have to make sure the managed view remains alive while we use the non-const wrapper
+    auto const_ref_coord = getUniformCubaturePointsRef(false,force,false);
+    auto ref_coord = PHX::getNonConstDynRankViewFromConstMDField(const_ref_coord);
+    auto node_coord = PHX::getNonConstDynRankViewFromConstMDField(getNodeCoordinates());
+    
+    const auto cell_range = std::make_pair(0,num_evaluate_cells_);
+    auto s_node_coord = Kokkos::subview(node_coord,    cell_range,Kokkos::ALL(),Kokkos::ALL());
+    auto s_jac        = Kokkos::subview(aux.get_view(),cell_range,Kokkos::ALL(),Kokkos::ALL(),Kokkos::ALL());
+
+    cell_tools.setJacobian(s_jac, ref_coord, s_node_coord,*(int_rule->topology));
+
+    if(requires_permutation_)
+      applyPermutation(aux, permutations_);
+
+  }
 
   PHX::Device::execution_space().fence();
 
@@ -980,7 +1028,6 @@ getJacobian(const bool cache,
   }
 
   return aux;
-
 }
 
 template <typename Scalar>
@@ -989,9 +1036,11 @@ IntegrationValues2<Scalar>::
 getJacobianInverse(const bool cache,
                    const bool force) const
 {
-
   if(jac_inv_evaluated_ and not force)
     return jac_inv;
+
+  // Only log time if values computed (i.e. don't log if values are already cached)
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::getJacobianInverse()",get_jacobian_inv);
 
   Intrepid2::CellTools<PHX::Device::execution_space> cell_tools;
   MDFieldArrayFactory af(prefix_,true);
@@ -1016,7 +1065,6 @@ getJacobianInverse(const bool cache,
   }
 
   return aux;
-
 }
 
 template <typename Scalar>
@@ -1025,9 +1073,11 @@ IntegrationValues2<Scalar>::
 getJacobianDeterminant(const bool cache,
                        const bool force) const
 {
-
   if(jac_det_evaluated_ and not force)
     return jac_det;
+
+  // Only log time if values computed (i.e. don't log if values are already cached)
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::getJacobianDeterminant()",get_jacobian_det);
 
   Intrepid2::CellTools<PHX::Device::execution_space> cell_tools;
   MDFieldArrayFactory af(prefix_,true);
@@ -1051,7 +1101,6 @@ getJacobianDeterminant(const bool cache,
   }
 
   return aux;
-
 }
 
 template <typename Scalar>
@@ -1060,9 +1109,11 @@ IntegrationValues2<Scalar>::
 getWeightedMeasure(const bool cache,
                    const bool force) const
 {
-
   if(weighted_measure_evaluated_ and not force)
     return weighted_measure;
+
+  // Only log time if values computed (i.e. don't log if values are already cached)
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::getWeightedMeasure()",get_wt_meas);
 
   MDFieldArrayFactory af(prefix_,true);
 
@@ -1218,7 +1269,6 @@ getWeightedMeasure(const bool cache,
   }
 
   return aux;
-
 }
 
 template <typename Scalar>
@@ -1227,9 +1277,11 @@ IntegrationValues2<Scalar>::
 getWeightedNormals(const bool cache,
                    const bool force) const
 {
-
   if(weighted_normals_evaluated_ and not force)
     return weighted_normals;
+
+  // Only log time if values computed (i.e. don't log if values are already cached)
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::getWeightedNormals()",get_wt_normals);
 
   MDFieldArrayFactory af(prefix_,true);
 
@@ -1264,7 +1316,6 @@ getWeightedNormals(const bool cache,
   }
 
   return aux;
-
 }
 
 template <typename Scalar>
@@ -1273,9 +1324,11 @@ IntegrationValues2<Scalar>::
 getSurfaceNormals(const bool cache,
                   const bool force) const
 {
-
   if(surface_normals_evaluated_ and not force)
     return surface_normals;
+
+  // Only log time if values computed (i.e. don't log if values are already cached)
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::getSurfaceNormals()",get_surf_normals);
 
   TEUCHOS_TEST_FOR_EXCEPT_MSG(int_rule->isSide(),
                               "IntegrationValues2::getSurfaceNormals : This call doesn't work with sides (only surfaces).");
@@ -1389,9 +1442,11 @@ IntegrationValues2<Scalar>::
 getSurfaceRotationMatrices(const bool cache,
                            const bool force) const
 {
-
   if(surface_rotation_matrices_evaluated_ and not force)
     return surface_rotation_matrices;
+
+  // Only log time if values computed (i.e. don't log if values are already cached)
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::getSurfaceRotationMatrices()",get_surf_rot_mat);
 
   MDFieldArrayFactory af(prefix_,true);
 
@@ -1448,9 +1503,11 @@ IntegrationValues2<Scalar>::
 getCovarientMatrix(const bool cache,
                    const bool force) const
 {
-
   if(covarient_evaluated_ and not force)
     return covarient;
+
+  // Only log time if values computed (i.e. don't log if values are already cached)
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::getCovariantMatrix()",get_cov_mat);
 
   MDFieldArrayFactory af(prefix_,true);
 
@@ -1480,7 +1537,6 @@ getCovarientMatrix(const bool cache,
   }
 
   return aux;
-
 }
 
 template <typename Scalar>
@@ -1489,9 +1545,11 @@ IntegrationValues2<Scalar>::
 getContravarientMatrix(const bool cache,
                        const bool force) const
 {
-
   if(contravarient_evaluated_ and not force)
     return contravarient;
+
+  // Only log time if values computed (i.e. don't log if values are already cached)
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::getContravarientMatrix()",get_contra_mat);
 
   MDFieldArrayFactory af(prefix_,true);
 
@@ -1514,7 +1572,6 @@ getContravarientMatrix(const bool cache,
   }
 
   return aux;
-
 }
 
 template <typename Scalar>
@@ -1523,9 +1580,11 @@ IntegrationValues2<Scalar>::
 getNormContravarientMatrix(const bool cache,
                            const bool force) const
 {
-
   if(norm_contravarient_evaluated_ and not force)
     return norm_contravarient;
+
+  // Only log time if values computed (i.e. don't log if values are already cached)
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::getNormContravarientMatrix()",get_norm_contr_mat);
 
   MDFieldArrayFactory af(prefix_,true);
 
@@ -1554,7 +1613,6 @@ getNormContravarientMatrix(const bool cache,
   }
 
   return aux;
-
 }
 
 template <typename Scalar>
@@ -1563,9 +1621,11 @@ IntegrationValues2<Scalar>::
 getCubaturePoints(const bool cache,
                   const bool force) const
 {
-
   if(ip_coordinates_evaluated_ and not force)
     return ip_coordinates;
+
+  // Only log time if values computed (i.e. don't log if values are already cached)
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::getCubaturePoints()",get_cub_pts);
 
   MDFieldArrayFactory af(prefix_,true);
 
@@ -1576,6 +1636,7 @@ getCubaturePoints(const bool cache,
 
   using ID=panzer::IntegrationDescriptor;
   const bool is_cv = (int_rule->getType() == ID::CV_VOLUME) or (int_rule->getType() == ID::CV_SIDE) or (int_rule->getType() == ID::CV_BOUNDARY);
+  const bool is_surface = int_rule->getType() == ID::SURFACE;
 
   auto node_coord = PHX::getNonConstDynRankViewFromConstMDField(getNodeCoordinates());
 
@@ -1597,7 +1658,7 @@ getCubaturePoints(const bool cache,
       intrepid_cubature->getCubature(s_cub_points,scratch.get_view(),s_node_coord);
     }
 
-  } else {
+  } else if(is_surface){
 
     // Don't forget that since we are not caching this, we have to make sure the managed view remains alive while we use the non-const wrapper
     auto const_ref_coord = getCubaturePointsRef(false,force);
@@ -1610,6 +1671,22 @@ getCubaturePoints(const bool cache,
 
     Intrepid2::CellTools<PHX::Device::execution_space> cell_tools;
     cell_tools.mapToPhysicalFrame(s_coord, s_ref_coord, s_node_coord, *(int_rule->topology));
+  
+  } else {
+
+    // Don't forget that since we are not caching this, we have to make sure the managed view remains alive while we use the non-const wrapper
+    auto const_ref_coord = getUniformCubaturePointsRef(false,force,false);
+    auto ref_coord = PHX::getNonConstDynRankViewFromConstMDField(const_ref_coord);
+
+    const auto cell_range = std::make_pair(0,num_evaluate_cells_);
+    auto s_coord      = Kokkos::subview(aux.get_view(),cell_range,Kokkos::ALL(),Kokkos::ALL());
+    auto s_node_coord = Kokkos::subview(node_coord,    cell_range,Kokkos::ALL(),Kokkos::ALL());
+
+    Intrepid2::CellTools<PHX::Device::execution_space> cell_tools;
+    cell_tools.mapToPhysicalFrame(s_coord, ref_coord, s_node_coord, *(int_rule->topology));
+
+    if(requires_permutation_)
+      applyPermutation(aux, permutations_);
 
   }
 
@@ -1621,7 +1698,6 @@ getCubaturePoints(const bool cache,
   }
 
   return aux;
-
 }
 
 
@@ -1631,9 +1707,11 @@ IntegrationValues2<Scalar>::
 getCubaturePointsRef(const bool cache,
                      const bool force) const
 {
-
   if(ref_ip_coordinates_evaluated_)
     return ref_ip_coordinates;
+
+  // Only log time if values computed (i.e. don't log if values are already cached)
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::getCubaturePointsRef()",get_cub_pts_ref);
 
   using ID=panzer::IntegrationDescriptor;
   const bool is_surface = int_rule->getType() == ID::SURFACE;
@@ -1743,7 +1821,6 @@ getCubaturePointsRef(const bool cache,
   }
 
   return aux;
-
 }
 
 template <typename Scalar>
@@ -1751,6 +1828,7 @@ void
 IntegrationValues2<Scalar>::
 evaluateEverything()
 {
+  PANZER_FUNC_TIME_MONITOR_DIFF("panzer::integrationValues2::evaluateEverything()",eval_everything);
 
   using ID=panzer::IntegrationDescriptor;
   const bool is_surface = int_rule->getType() == ID::SURFACE;
@@ -1795,7 +1873,6 @@ evaluateEverything()
     getCovarientMatrix(true,true);
     getNormContravarientMatrix(true,true);
   }
-
 }
 
 #define INTEGRATION_VALUES2_INSTANTIATION(SCALAR) \

@@ -197,7 +197,16 @@ UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   const auto rowMap = A.getRowMap();
   auto diag         = Xpetra::VectorFactory<Scalar, LocalOrdinal, GlobalOrdinal, Node>::Build(rowMap, true);
 
-  A.getLocalDiagCopy(*diag);
+  const CrsMatrixWrap* crsOp = dynamic_cast<const CrsMatrixWrap*>(&A);
+  if ((crsOp != NULL) && (rowMap->lib() == Xpetra::UseTpetra)) {
+    using local_vector_type = typename Vector::dual_view_type::t_dev_um;
+    using device_type       = typename CrsGraph::device_type;
+    Kokkos::View<size_t*, device_type> offsets("offsets", rowMap->getLocalNumElements());
+    crsOp->getCrsGraph()->getLocalDiagOffsets(offsets);
+    crsOp->getCrsMatrix()->getLocalDiagCopy(*diag, offsets);
+  } else {
+    A.getLocalDiagCopy(*diag);
+  }
 
   return diag;
 }
@@ -621,24 +630,10 @@ template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 RCP<Xpetra::Vector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
 UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     GetMatrixOverlappedDiagonal(const Matrix& A) {
-  // FIXME_KOKKOS
   RCP<const Map> rowMap = A.getRowMap(), colMap = A.getColMap();
-  RCP<Vector> localDiag = VectorFactory::Build(rowMap);
-
-  const CrsMatrixWrap* crsOp = dynamic_cast<const CrsMatrixWrap*>(&A);
-  if ((crsOp != NULL) && (rowMap->lib() == Xpetra::UseTpetra)) {
-    Teuchos::ArrayRCP<size_t> offsets;
-    crsOp->getLocalDiagOffsets(offsets);
-    crsOp->getLocalDiagCopy(*localDiag, offsets());
-  } else {
-    auto localDiagVals  = localDiag->getDeviceLocalView(Xpetra::Access::ReadWrite);
-    const auto diagVals = GetMatrixDiagonal(A)->getDeviceLocalView(Xpetra::Access::ReadOnly);
-    Kokkos::deep_copy(localDiagVals, diagVals);
-  }
-
-  RCP<Vector> diagonal = VectorFactory::Build(colMap);
-  RCP<const Import> importer;
-  importer = A.getCrsGraph()->getImporter();
+  RCP<Vector> localDiag      = GetMatrixDiagonal(A);
+  RCP<Vector> diagonal       = VectorFactory::Build(colMap);
+  RCP<const Import> importer = A.getCrsGraph()->getImporter();
   if (importer == Teuchos::null) {
     importer = ImportFactory::Build(rowMap, colMap);
   }
@@ -920,16 +915,17 @@ UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   return boundaryNodes;
 }
 
-template <class SC, class LO, class GO, class NO>
-Kokkos::View<bool*, typename NO::device_type>
-UtilitiesBase<SC, LO, GO, NO>::
-    DetectDirichletRows_kokkos(const Xpetra::Matrix<SC, LO, GO, NO>& A,
-                               const typename Teuchos::ScalarTraits<SC>::magnitudeType& tol,
-                               const bool count_twos_as_dirichlet) {
+template <class SC, class LO, class GO, class NO, class memory_space>
+Kokkos::View<bool*, memory_space>
+DetectDirichletRows_kokkos(const Xpetra::Matrix<SC, LO, GO, NO>& A,
+                           const typename Teuchos::ScalarTraits<SC>::magnitudeType& tol,
+                           const bool count_twos_as_dirichlet) {
   using impl_scalar_type = typename Kokkos::ArithTraits<SC>::val_type;
   using ATS              = Kokkos::ArithTraits<impl_scalar_type>;
   using range_type       = Kokkos::RangePolicy<LO, typename NO::execution_space>;
   using helpers          = Xpetra::Helpers<SC, LO, GO, NO>;
+
+  Kokkos::View<bool*, typename NO::device_type::memory_space> boundaryNodes;
 
   if (helpers::isTpetraBlockCrs(A)) {
     const Tpetra::BlockCrsMatrix<SC, LO, GO, NO>& Am = helpers::Op2TpetraBlockCrs(A);
@@ -939,7 +935,7 @@ UtilitiesBase<SC, LO, GO, NO>::
     LO numBlockRows                                  = Am.getLocalNumRows();
     const LO stride                                  = Am.getBlockSize() * Am.getBlockSize();
 
-    Kokkos::View<bool*, typename NO::device_type> boundaryNodes(Kokkos::ViewAllocateWithoutInitializing("boundaryNodes"), numBlockRows);
+    boundaryNodes = Kokkos::View<bool*, typename NO::device_type::memory_space>(Kokkos::ViewAllocateWithoutInitializing("boundaryNodes"), numBlockRows);
 
     if (count_twos_as_dirichlet)
       throw Exceptions::RuntimeError("BlockCrs does not support counting twos as Dirichlet");
@@ -967,12 +963,10 @@ UtilitiesBase<SC, LO, GO, NO>::
               break;
           }
         });
-
-    return boundaryNodes;
   } else {
     auto localMatrix = A.getLocalMatrixDevice();
     LO numRows       = A.getLocalNumRows();
-    Kokkos::View<bool*, typename NO::device_type> boundaryNodes(Kokkos::ViewAllocateWithoutInitializing("boundaryNodes"), numRows);
+    boundaryNodes    = Kokkos::View<bool*, typename NO::device_type::memory_space>(Kokkos::ViewAllocateWithoutInitializing("boundaryNodes"), numRows);
 
     if (count_twos_as_dirichlet)
       Kokkos::parallel_for(
@@ -1010,8 +1004,35 @@ UtilitiesBase<SC, LO, GO, NO>::
                 break;
               }
           });
-    return boundaryNodes;
   }
+  if constexpr (std::is_same<memory_space, typename NO::device_type::memory_space>::value)
+    return boundaryNodes;
+  else {
+    Kokkos::View<bool*, memory_space> boundaryNodes2(Kokkos::ViewAllocateWithoutInitializing("boundaryNodes"), boundaryNodes.extent(0));
+    Kokkos::deep_copy(boundaryNodes2, boundaryNodes);
+    return boundaryNodes2;
+  }
+  // CAG: No idea why this is needed to avoid "warning: missing return statement at end of non-void function"
+  Kokkos::View<bool*, memory_space> dummy("dummy", 0);
+  return dummy;
+}
+
+template <class SC, class LO, class GO, class NO>
+Kokkos::View<bool*, typename NO::device_type::memory_space>
+UtilitiesBase<SC, LO, GO, NO>::
+    DetectDirichletRows_kokkos(const Xpetra::Matrix<SC, LO, GO, NO>& A,
+                               const typename Teuchos::ScalarTraits<SC>::magnitudeType& tol,
+                               const bool count_twos_as_dirichlet) {
+  return MueLu::DetectDirichletRows_kokkos<SC, LO, GO, NO, typename NO::device_type::memory_space>(A, tol, count_twos_as_dirichlet);
+}
+
+template <class SC, class LO, class GO, class NO>
+Kokkos::View<bool*, typename Kokkos::HostSpace>
+UtilitiesBase<SC, LO, GO, NO>::
+    DetectDirichletRows_kokkos_host(const Xpetra::Matrix<SC, LO, GO, NO>& A,
+                                    const typename Teuchos::ScalarTraits<SC>::magnitudeType& tol,
+                                    const bool count_twos_as_dirichlet) {
+  return MueLu::DetectDirichletRows_kokkos<SC, LO, GO, NO, typename Kokkos::HostSpace>(A, tol, count_twos_as_dirichlet);
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
@@ -1231,11 +1252,10 @@ void UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 }
 
 // Applies rowsum criterion
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-void UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-    ApplyRowSumCriterion(const Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
-                         const typename Teuchos::ScalarTraits<Scalar>::magnitudeType rowSumTol,
-                         Kokkos::View<bool*, typename Node::device_type>& dirichletRows) {
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node, class memory_space>
+void ApplyRowSumCriterion(const Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
+                          const typename Teuchos::ScalarTraits<Scalar>::magnitudeType rowSumTol,
+                          Kokkos::View<bool*, memory_space>& dirichletRows) {
   typedef Teuchos::ScalarTraits<Scalar> STS;
   RCP<const Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>> rowmap = A.getRowMap();
 
@@ -1261,6 +1281,77 @@ void UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
   }
 
   Kokkos::deep_copy(dirichletRows, dirichletRowsHost);
+}
+
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+void UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
+    ApplyRowSumCriterion(const Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
+                         const typename Teuchos::ScalarTraits<Scalar>::magnitudeType rowSumTol,
+                         Kokkos::View<bool*, typename Node::device_type::memory_space>& dirichletRows) {
+  MueLu::ApplyRowSumCriterion<Scalar, LocalOrdinal, GlobalOrdinal, Node, typename Node::device_type::memory_space>(A, rowSumTol, dirichletRows);
+}
+
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+void UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
+    ApplyRowSumCriterionHost(const Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
+                             const typename Teuchos::ScalarTraits<Scalar>::magnitudeType rowSumTol,
+                             Kokkos::View<bool*, Kokkos::HostSpace>& dirichletRows) {
+  MueLu::ApplyRowSumCriterion<Scalar, LocalOrdinal, GlobalOrdinal, Node, Kokkos::HostSpace>(A, rowSumTol, dirichletRows);
+}
+
+// Applies rowsum criterion
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node, class memory_space>
+void ApplyRowSumCriterion(const Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
+                          const Xpetra::Vector<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>& BlockNumber,
+                          const typename Teuchos::ScalarTraits<Scalar>::magnitudeType rowSumTol,
+                          Kokkos::View<bool*, memory_space>& dirichletRows) {
+  typedef Teuchos::ScalarTraits<Scalar> STS;
+  RCP<const Xpetra::Map<LocalOrdinal, GlobalOrdinal, Node>> rowmap = A.getRowMap();
+
+  TEUCHOS_TEST_FOR_EXCEPTION(!A.getColMap()->isSameAs(*BlockNumber.getMap()), std::runtime_error, "ApplyRowSumCriterion: BlockNumber must match's A's column map.");
+
+  auto dirichletRowsHost = Kokkos::create_mirror_view(dirichletRows);
+  Kokkos::deep_copy(dirichletRowsHost, dirichletRows);
+
+  Teuchos::ArrayRCP<const LocalOrdinal> block_id = BlockNumber.getData(0);
+  for (LocalOrdinal row = 0; row < Teuchos::as<LocalOrdinal>(rowmap->getLocalNumElements()); ++row) {
+    size_t nnz = A.getNumEntriesInLocalRow(row);
+    ArrayView<const LocalOrdinal> indices;
+    ArrayView<const Scalar> vals;
+    A.getLocalRowView(row, indices, vals);
+
+    Scalar rowsum  = STS::zero();
+    Scalar diagval = STS::zero();
+    for (LocalOrdinal colID = 0; colID < Teuchos::as<LocalOrdinal>(nnz); colID++) {
+      LocalOrdinal col = indices[colID];
+      if (row == col)
+        diagval = vals[colID];
+      if (block_id[row] == block_id[col])
+        rowsum += vals[colID];
+    }
+    if (STS::real(rowsum) > STS::magnitude(diagval) * rowSumTol)
+      dirichletRowsHost(row) = true;
+  }
+
+  Kokkos::deep_copy(dirichletRows, dirichletRowsHost);
+}
+
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+void UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
+    ApplyRowSumCriterion(const Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
+                         const Xpetra::Vector<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>& BlockNumber,
+                         const typename Teuchos::ScalarTraits<Scalar>::magnitudeType rowSumTol,
+                         Kokkos::View<bool*, typename Node::device_type::memory_space>& dirichletRows) {
+  MueLu::ApplyRowSumCriterion<Scalar, LocalOrdinal, GlobalOrdinal, Node, typename Node::device_type::memory_space>(A, BlockNumber, rowSumTol, dirichletRows);
+}
+
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+void UtilitiesBase<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
+    ApplyRowSumCriterionHost(const Xpetra::Matrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>& A,
+                             const Xpetra::Vector<LocalOrdinal, LocalOrdinal, GlobalOrdinal, Node>& BlockNumber,
+                             const typename Teuchos::ScalarTraits<Scalar>::magnitudeType rowSumTol,
+                             Kokkos::View<bool*, Kokkos::HostSpace>& dirichletRows) {
+  MueLu::ApplyRowSumCriterion<Scalar, LocalOrdinal, GlobalOrdinal, Node, Kokkos::HostSpace>(A, BlockNumber, rowSumTol, dirichletRows);
 }
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>

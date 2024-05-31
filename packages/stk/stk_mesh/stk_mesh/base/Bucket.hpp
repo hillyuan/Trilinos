@@ -200,7 +200,17 @@ public:
   bool member_all( const OrdinalVector & ) const ;
 
   /** \brief  Bucket is a subset of any of the given parts */
-  bool member_any( const PartVector & ) const ;
+  template<typename PARTVECTOR>
+  bool member_any(const PARTVECTOR & parts) const
+  {
+    for(const Part* part : parts) {
+      if (member(*part)) {
+        return true;
+      }
+    }
+    return false ;
+  }
+
   bool member_any( const OrdinalVector & ) const ;
 
   //--------------------------------
@@ -346,9 +356,12 @@ public:
     return get_connected_entities(offsetIntoBucket, stk::topology::ELEM_RANK);
   }
 
+#ifndef STK_HIDE_DEPRECATED_CODE // Delete after 2024/06/26
+  STK_DEPRECATED
   stk::mesh::Entity host_get_entity(unsigned offsetIntoBucket) const {
     return (*this)[offsetIntoBucket];
   }
+#endif
 
   void set_ngp_field_bucket_id(unsigned fieldOrdinal, unsigned ngpFieldBucketId);
   unsigned get_ngp_field_bucket_id(unsigned fieldOrdinal) const;

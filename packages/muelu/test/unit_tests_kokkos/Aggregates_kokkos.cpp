@@ -62,16 +62,16 @@
 
 #include "MueLu_Level.hpp"
 #include "MueLu_Aggregates.hpp"
-#include "MueLu_AggregationPhase1Algorithm_kokkos.hpp"
-#include "MueLu_AggregationPhase2aAlgorithm_kokkos.hpp"
-#include "MueLu_AggregationPhase2bAlgorithm_kokkos.hpp"
-#include "MueLu_AggregationPhase3Algorithm_kokkos.hpp"
+#include "MueLu_AggregationPhase1Algorithm.hpp"
+#include "MueLu_AggregationPhase2aAlgorithm.hpp"
+#include "MueLu_AggregationPhase2bAlgorithm.hpp"
+#include "MueLu_AggregationPhase3Algorithm.hpp"
 #include "MueLu_AmalgamationInfo.hpp"
 #include "MueLu_AmalgamationInfo.hpp"
 #include "MueLu_AmalgamationFactory.hpp"
 #include "MueLu_CoalesceDropFactory_kokkos.hpp"
 #include "MueLu_FactoryManagerBase.hpp"
-#include "MueLu_UncoupledAggregationFactory_kokkos.hpp"
+#include "MueLu_UncoupledAggregationFactory.hpp"
 
 //#include "MueLu_UseDefaultTypes.hpp"
 
@@ -118,8 +118,8 @@ void gimmeUncoupledAggregates(const Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrd
   auto coloringHandle = kh.get_distance2_graph_coloring_handle();
 
   // Create device views for graph rowptrs/colinds
-  typename graph_t::row_map_type aRowptrs = graph->getLocalLWGraph().getRowPtrs();
-  typename graph_t::entries_type aColinds = graph->getLocalLWGraph().getEntries();
+  typename graph_t::row_map_type aRowptrs = graph->getRowPtrs();
+  typename graph_t::entries_type aColinds = graph->getEntries();
 
   // run d2 graph coloring
   // graph is symmetric so row map/entries and col map/entries are the same
@@ -142,19 +142,19 @@ void gimmeUncoupledAggregates(const Teuchos::RCP<Xpetra::Matrix<Scalar, LocalOrd
   params.set<bool>("aggregation: phase3 avoid singletons", false);
 
   if (bPhase1) {
-    RCP<MueLu::AggregationAlgorithmBase_kokkos<LO, GO, NO>> phase1 = rcp(new AggregationPhase1Algorithm_kokkos(dropFact));
+    RCP<MueLu::AggregationAlgorithmBase<LO, GO, NO>> phase1 = rcp(new AggregationPhase1Algorithm(dropFact));
     phase1->BuildAggregates(params, *graph, *aggregates, aggStat, numNonAggregatedNodes);
   }
   if (bPhase2a) {
-    RCP<MueLu::AggregationAlgorithmBase_kokkos<LO, GO, NO>> phase2a = rcp(new AggregationPhase2aAlgorithm_kokkos(dropFact));
+    RCP<MueLu::AggregationAlgorithmBase<LO, GO, NO>> phase2a = rcp(new AggregationPhase2aAlgorithm(dropFact));
     phase2a->BuildAggregates(params, *graph, *aggregates, aggStat, numNonAggregatedNodes);
   }
   if (bPhase2b) {
-    RCP<MueLu::AggregationAlgorithmBase_kokkos<LO, GO, NO>> phase2b = rcp(new AggregationPhase2bAlgorithm_kokkos(dropFact));
+    RCP<MueLu::AggregationAlgorithmBase<LO, GO, NO>> phase2b = rcp(new AggregationPhase2bAlgorithm(dropFact));
     phase2b->BuildAggregates(params, *graph, *aggregates, aggStat, numNonAggregatedNodes);
   }
   if (bPhase3) {
-    RCP<MueLu::AggregationAlgorithmBase_kokkos<LO, GO, NO>> phase3 = rcp(new AggregationPhase3Algorithm_kokkos(dropFact));
+    RCP<MueLu::AggregationAlgorithmBase<LO, GO, NO>> phase3 = rcp(new AggregationPhase3Algorithm(dropFact));
     phase3->BuildAggregates(params, *graph, *aggregates, aggStat, numNonAggregatedNodes);
   }
   aggregates->AggregatesCrossProcessors(false);
@@ -191,7 +191,7 @@ LocalOrdinal checkAggregatesContiguous(MueLu::LWGraph_kokkos<LocalOrdinal, Globa
   auto vertex2AggId = aggregates.GetVertex2AggId()->getDeviceLocalView(Xpetra::Access::ReadOnly);
   auto aggSizes     = aggregates.ComputeAggregateSizes(true);
 
-  auto lclLWGraph = graph.getLocalLWGraph();
+  auto lclLWGraph = graph;
 
   Kokkos::View<LO*, device_type> discontiguousAggs("discontiguous aggregates",
                                                    aggregates.GetNumAggregates());
@@ -245,7 +245,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates_kokkos, JustUncoupledAggregationFac
   out << "version: " << MueLu::Version() << std::endl;
 
   // Setup aggregation factory (use default factory for graph)
-  RCP<UncoupledAggregationFactory_kokkos> aggFact = rcp(new UncoupledAggregationFactory_kokkos());
+  RCP<UncoupledAggregationFactory> aggFact = rcp(new UncoupledAggregationFactory());
   aggFact->SetOrdering("graph");
   TEST_EQUALITY(aggFact->GetOrdering() == "graph", true);
   aggFact->SetOrdering("natural");
@@ -298,7 +298,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates_kokkos, JustDist2UncoupledAggregati
   dropFact->SetFactory("UnAmalgamationInfo", amalgFact);
 
   // Setup aggregation factory (use default factory for graph)
-  RCP<UncoupledAggregationFactory_kokkos> aggFact = rcp(new UncoupledAggregationFactory_kokkos());
+  RCP<UncoupledAggregationFactory> aggFact = rcp(new UncoupledAggregationFactory());
   aggFact->SetFactory("Graph", dropFact);
   aggFact->SetParameter("aggregation: max agg size", Teuchos::ParameterEntry(3));
   aggFact->SetParameter("aggregation: min agg size", Teuchos::ParameterEntry(3));
@@ -340,7 +340,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates_kokkos, JustDist2PreserveUncoupledA
   dropFact->SetFactory("UnAmalgamationInfo", amalgFact);
 
   // Setup aggregation factory (use default factory for graph)
-  RCP<UncoupledAggregationFactory_kokkos> aggFact = rcp(new UncoupledAggregationFactory_kokkos());
+  RCP<UncoupledAggregationFactory> aggFact = rcp(new UncoupledAggregationFactory());
   aggFact->SetFactory("Graph", dropFact);
   aggFact->SetParameter("aggregation: max agg size", Teuchos::ParameterEntry(3));
   aggFact->SetParameter("aggregation: min agg size", Teuchos::ParameterEntry(3));
@@ -381,7 +381,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates_kokkos, JustOnePt2UncoupledAggregat
   dropFact->SetFactory("UnAmalgamationInfo", amalgFact);
 
   // Setup aggregation factory (use default factory for graph)
-  RCP<UncoupledAggregationFactory_kokkos> aggFact = rcp(new UncoupledAggregationFactory_kokkos());
+  RCP<UncoupledAggregationFactory> aggFact = rcp(new UncoupledAggregationFactory());
   aggFact->SetFactory("Graph", dropFact);
   aggFact->SetParameter("aggregation: max agg size", Teuchos::ParameterEntry(3));
   aggFact->SetParameter("aggregation: min agg size", Teuchos::ParameterEntry(3));
@@ -423,7 +423,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates_kokkos, JustDist2DeterUncoupledAggr
   dropFact->SetFactory("UnAmalgamationInfo", amalgFact);
 
   // Setup aggregation factory (use default factory for graph)
-  RCP<UncoupledAggregationFactory_kokkos> aggFact = rcp(new UncoupledAggregationFactory_kokkos());
+  RCP<UncoupledAggregationFactory> aggFact = rcp(new UncoupledAggregationFactory());
   aggFact->SetFactory("Graph", dropFact);
   aggFact->SetParameter("aggregation: max agg size", Teuchos::ParameterEntry(3));
   aggFact->SetParameter("aggregation: min agg size", Teuchos::ParameterEntry(3));
@@ -655,7 +655,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates_kokkos, AllowDroppingToCreateAdditi
   level.Request("Graph", dropFact.get());
 
   // Setup aggregation factory (use default factory for graph)
-  RCP<UncoupledAggregationFactory_kokkos> aggFact = rcp(new UncoupledAggregationFactory_kokkos());
+  RCP<UncoupledAggregationFactory> aggFact = rcp(new UncoupledAggregationFactory());
   aggFact->SetFactory("Graph", dropFact);
 
   level.Request("Aggregates", aggFact.get());
@@ -665,7 +665,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates_kokkos, AllowDroppingToCreateAdditi
   aggFact->Build(level);
   RCP<Aggregates> aggregates                                  = level.Get<RCP<Aggregates>>("Aggregates", aggFact.get());
   RCP<LWGraph_kokkos> graph                                   = level.Get<RCP<LWGraph_kokkos>>("Graph", dropFact.get());
-  Kokkos::View<const bool*, device_type> dirichletBoundaryMap = graph->getLocalLWGraph().GetBoundaryNodeMap();
+  Kokkos::View<const bool*, device_type> dirichletBoundaryMap = graph->GetBoundaryNodeMap();
   int numDirichletRows                                        = 0;
   using execution_space                                       = typename LWGraph_kokkos::execution_space;
   LO numRows                                                  = graph->GetNodeNumVertices();
@@ -695,7 +695,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates_kokkos, AllowDroppingToCreateAdditi
   level.Request("Graph", dropFact.get());
 
   // Setup aggregation factory (use default factory for graph)
-  aggFact = rcp(new UncoupledAggregationFactory_kokkos());
+  aggFact = rcp(new UncoupledAggregationFactory());
   aggFact->SetFactory("Graph", dropFact);
 
   level.Request("Aggregates", aggFact.get());
@@ -705,7 +705,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates_kokkos, AllowDroppingToCreateAdditi
   aggFact->Build(level);
   aggregates           = level.Get<RCP<Aggregates>>("Aggregates", aggFact.get());
   graph                = level.Get<RCP<LWGraph_kokkos>>("Graph", dropFact.get());
-  dirichletBoundaryMap = graph->getLocalLWGraph().GetBoundaryNodeMap();
+  dirichletBoundaryMap = graph->GetBoundaryNodeMap();
   numDirichletRows     = 0;
   Kokkos::parallel_reduce(
       "Count Dirichlet rows",
@@ -774,7 +774,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates_kokkos, GreedyDirichlet, Scalar, Lo
 
   RCP<CoalesceDropFactory_kokkos> dropFact;
   RCP<AmalgamationFactory> amalgFact;
-  RCP<UncoupledAggregationFactory_kokkos> aggFact;
+  RCP<UncoupledAggregationFactory> aggFact;
 
   amalgFact = rcp(new AmalgamationFactory());
   dropFact  = rcp(new CoalesceDropFactory_kokkos());
@@ -782,7 +782,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates_kokkos, GreedyDirichlet, Scalar, Lo
   dropFact->SetFactory("UnAmalgamationInfo", amalgFact);
 
   // Setup aggregation factory (use default factory for graph)
-  aggFact = rcp(new UncoupledAggregationFactory_kokkos());
+  aggFact = rcp(new UncoupledAggregationFactory());
   aggFact->SetFactory("Graph", dropFact);
 
   level.Request("Aggregates", aggFact.get());
@@ -812,7 +812,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates_kokkos, GreedyDirichlet, Scalar, Lo
   dropFact->SetFactory("UnAmalgamationInfo", amalgFact);
 
   // Setup aggregation factory (use default factory for graph)
-  aggFact = rcp(new UncoupledAggregationFactory_kokkos());
+  aggFact = rcp(new UncoupledAggregationFactory());
   aggFact->SetFactory("Graph", dropFact);
 
   levelGreedyAndNoPreserve.Request("Aggregates", aggFact.get());
@@ -843,7 +843,7 @@ TEUCHOS_UNIT_TEST_TEMPLATE_4_DECL(Aggregates_kokkos, GreedyDirichlet, Scalar, Lo
   dropFact->SetFactory("UnAmalgamationInfo", amalgFact);
 
   // Setup aggregation factory (use default factory for graph)
-  aggFact = rcp(new UncoupledAggregationFactory_kokkos());
+  aggFact = rcp(new UncoupledAggregationFactory());
   aggFact->SetFactory("Graph", dropFact);
   aggFact->SetParameter("aggregation: preserve Dirichlet points", Teuchos::ParameterEntry(true));
 

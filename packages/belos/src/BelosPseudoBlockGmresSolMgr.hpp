@@ -61,11 +61,14 @@
 #include "Teuchos_TimeMonitor.hpp"
 #endif
 
-/** \example BlockGmres/PseudoBlockGmresEpetraExFile.cpp
-    This is an example of how to use the Belos::PseudoBlockGmresSolMgr solver manager.
+/** \example epetra/example/BlockGmres/PseudoBlockGmresEpetraExFile.cpp
+    This is an example of how to use the Belos::PseudoBlockGmresSolMgr solver manager using Epetra.
 */
-/** \example BlockGmres/PseudoBlockPrecGmresEpetraExFile.cpp
+/** \example epetra/example/BlockGmres/PseudoBlockPrecGmresEpetraExFile.cpp
     This is an example of how to use the Belos::PseudoBlockGmresSolMgr solver manager with an Ifpack preconditioner.
+*/
+/** \example tpetra/example/BlockGmres/PseudoBlockGmresTpetraExFile.cpp
+    This is an example of how to use the Belos::PseudoBlockGmresSolMgr solver manager using Tpetra.
 */
 
 namespace Belos {
@@ -786,6 +789,7 @@ setParameters (const Teuchos::RCP<Teuchos::ParameterList>& params)
     Belos::OrthoManagerFactory<ScalarType, MV, OP> factory;
     Teuchos::RCP<Teuchos::ParameterList> paramsOrtho;   // can be null
     if (orthoType_=="DGKS" && orthoKappa_ > 0) {
+      paramsOrtho = Teuchos::rcp(new Teuchos::ParameterList());
       paramsOrtho->set ("depTol", orthoKappa_ );
     }
 
@@ -1468,6 +1472,15 @@ ReturnType PseudoBlockGmresSolMgr<ScalarType,MV,OP>::solve() {
           if (convTest_->getStatus() != Passed)
             isConverged = false;
           break;
+        }
+        catch (const StatusTestNaNError& e) {
+          // A NaN was detected in the solver.  Set the solution to zero and return unconverged.
+          achievedTol_ = MT::one();
+          Teuchos::RCP<MV> X = problem_->getLHS();
+          MVT::MvInit( *X, SCT::zero() );
+          printer_->stream(Warnings) << "Belos::PseudoBlockGmresSolMgr::solve(): Warning! NaN has been detected!" 
+                                     << std::endl;
+          return Unconverged;
         }
         catch (const std::exception &e) {
           printer_->stream(Errors) << "Error! Caught std::exception in PseudoBlockGmresIter::iterate() at iteration "

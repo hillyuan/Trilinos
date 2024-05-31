@@ -65,10 +65,13 @@
 #include "Teuchos_TimeMonitor.hpp"
 #endif
 
-/** \example BlockCG/PseudoBlockCGEpetraExFile.cpp
-    This is an example of how to use the Belos::PseudoBlockCGSolMgr solver manager.
+/** \example epetra/example/BlockCG/PseudoBlockCGEpetraExFile.cpp
+    This is an example of how to use the Belos::PseudoBlockCGSolMgr solver manager using Epetra.
 */
-/** \example BlockCG/PseudoBlockPrecCGEpetraExFile.cpp
+/** \example tpetra/example/BlockCG/PseudoBlockCGTpetraExFile.cpp
+    This is an example of how to use the Belos::PseudoBlockCGSolMgr solver manager using Tpetra.
+*/
+/** \example epetra/example/BlockCG/PseudoBlockPrecCGEpetraExFile.cpp
     This is an example of how to use the Belos::PseudoBlockCGSolMgr solver manager with an Ifpack preconditioner.
 */
 
@@ -919,6 +922,15 @@ ReturnType PseudoBlockCGSolMgr<ScalarType,MV,OP,true>::solve ()
             TEUCHOS_TEST_FOR_EXCEPTION(true,std::logic_error,
                                "Belos::PseudoBlockCGSolMgr::solve(): Invalid return from PseudoBlockCGIter::iterate().");
           }
+        }
+        catch (const StatusTestNaNError& e) {
+          // A NaN was detected in the solver.  Set the solution to zero and return unconverged.
+          achievedTol_ = MT::one();
+          Teuchos::RCP<MV> X = problem_->getLHS();
+          MVT::MvInit( *X, SCT::zero() );
+          printer_->stream(Warnings) << "Belos::PseudoBlockCGSolMgr::solve(): Warning! NaN has been detected!" 
+                                     << std::endl;
+          return Unconverged;
         }
         catch (const std::exception &e) {
           printer_->stream(Errors) << "Error! Caught std::exception in PseudoBlockCGIter::iterate() at iteration "

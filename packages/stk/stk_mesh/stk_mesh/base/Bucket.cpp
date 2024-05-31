@@ -183,7 +183,7 @@ void setup_connectivity(stk::topology bucket_topology,
 
 namespace impl {
 
-static const unsigned default_initial_bucket_capacity = 512;
+static const unsigned default_initial_bucket_capacity = 16;
 static const unsigned default_maximum_bucket_capacity = 512;
 
 struct OverwriteEntityFunctor
@@ -413,20 +413,6 @@ bool Bucket::member_all( const PartVector & parts ) const
     result_all = member(ord);
   }
   return result_all ;
-}
-
-bool Bucket::member_any( const PartVector & parts ) const
-{
-  const PartVector::const_iterator ip_end = parts.end();
-        PartVector::const_iterator ip     = parts.begin() ;
-
-  bool result_none = true ;
-
-  for ( ; result_none && ip_end != ip ; ++ip ) {
-    const unsigned ord = (*ip)->mesh_meta_data_ordinal();
-    result_none = !member(ord);
-  }
-  return ! result_none ;
 }
 
 bool Bucket::member_any( const OrdinalVector & parts ) const

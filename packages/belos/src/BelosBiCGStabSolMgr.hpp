@@ -62,10 +62,10 @@
 #include "Teuchos_TimeMonitor.hpp"
 #endif
 
-/** \example BiCGStab/BiCGStabExFile.cpp
+/** \example epetra/example/BiCGStab/BiCGStabExFile.cpp
     This is an example of how to use the Belos::BiCGStabSolMgr solver manager.
 */
-/** \example BiCGStab/PrecBiCGStabExFile.cpp
+/** \example epetra/example/BiCGStab/PrecBiCGStabExFile.cpp
     This is an example of how to use the Belos::BiCGStabSolMgr solver manager with an Ifpack preconditioner.
 */
 
@@ -781,6 +781,15 @@ ReturnType BiCGStabSolMgr<ScalarType,MV,OP>::solve ()
             TEUCHOS_TEST_FOR_EXCEPTION(true,std::logic_error,
                                "Belos::BiCGStabSolMgr::solve(): Invalid return from BiCGStabIter::iterate().");
           }
+        }
+        catch (const StatusTestNaNError& e) {
+          // A NaN was detected in the solver.  Set the solution to zero and return unconverged.
+          achievedTol_ = MT::one();
+          Teuchos::RCP<MV> X = problem_->getLHS();
+          MVT::MvInit( *X, SCT::zero() );
+          printer_->stream(Warnings) << "Belos::BiCGStabSolMgr::solve(): Warning! NaN has been detected!" 
+                                     << std::endl;
+          return Unconverged; 
         }
         catch (const std::exception &e) {
           printer_->stream(Errors) << "Error! Caught std::exception in BiCGStabIter::iterate() at iteration "

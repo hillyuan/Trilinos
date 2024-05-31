@@ -362,7 +362,8 @@ class BsrMatrix {
   typedef SizeType size_type;
 
   //! Type of a host-memory mirror of the sparse matrix.
-  typedef BsrMatrix<ScalarType, OrdinalType, host_mirror_space, MemoryTraits>
+  typedef BsrMatrix<ScalarType, OrdinalType, host_mirror_space, MemoryTraits,
+                    size_type>
       HostMirror;
   //! Type of the graph structure of the sparse matrix.
   typedef Kokkos::StaticCrsGraph<ordinal_type, Kokkos::LayoutLeft, device_type,
@@ -1108,6 +1109,10 @@ template <typename... P>
 struct is_bsr_matrix<BsrMatrix<P...>> : public std::true_type {};
 template <typename... P>
 struct is_bsr_matrix<const BsrMatrix<P...>> : public std::true_type {};
+
+/// \brief Equivalent to is_bsr_matrix<T>::value.
+template <typename T>
+inline constexpr bool is_bsr_matrix_v = is_bsr_matrix<T>::value;
 //----------------------------------------------------------------------------
 
 }  // namespace Experimental

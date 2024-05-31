@@ -85,10 +85,7 @@
 
 #include "MueLu_CoalesceDropFactory_kokkos.hpp"
 // #include "MueLu_CoordinatesTransferFactory_kokkos.hpp"
-// #include "MueLu_NullspaceFactory_kokkos.hpp"
-#include "MueLu_SaPFactory_kokkos.hpp"
 #include "MueLu_TentativePFactory_kokkos.hpp"
-#include "MueLu_UncoupledAggregationFactory_kokkos.hpp"
 
 #if defined(HAVE_MUELU_ISORROPIA) && defined(HAVE_MPI)
 #include "MueLu_IsorropiaInterface.hpp"
@@ -260,10 +257,7 @@ void MLParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::SetP
 
   // Uncoupled aggregation
   RCP<Factory> AggFact = Teuchos::null;
-  if (useKokkosRefactor) {
-    AggFact = rcp(new UncoupledAggregationFactory_kokkos());
-  } else
-    AggFact = rcp(new UncoupledAggregationFactory());
+  AggFact              = rcp(new UncoupledAggregationFactory());
 
   AggFact->SetFactory("Graph", dropFact);
   AggFact->SetFactory("DofsPerNode", dropFact);
@@ -295,11 +289,7 @@ void MLParameterListInterpreter<Scalar, LocalOrdinal, GlobalOrdinal, Node>::SetP
     RFact = rcp(new TransPFactory());
   } else if (agg_damping != 0.0 && bEnergyMinimization == false) {
     // smoothed aggregation (SA-AMG)
-    RCP<Factory> SaPFact;
-    if (useKokkosRefactor)
-      SaPFact = rcp(new SaPFactory_kokkos());
-    else
-      SaPFact = rcp(new SaPFactory());
+    RCP<Factory> SaPFact = rcp(new SaPFactory());
     SaPFact->SetParameter("sa: damping factor", ParameterEntry(agg_damping));
     PFact = SaPFact;
     RFact = rcp(new TransPFactory());

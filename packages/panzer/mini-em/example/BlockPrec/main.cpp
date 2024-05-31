@@ -103,6 +103,10 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
   bool use_stacked_timer;
   std::string test_name = "MiniEM 3D RefMaxwell";
 
+  // Figure of merit data for acceptance testing
+  bool print_fom;
+  size_t fom_num_cells;
+
   {
     // defaults for command-line options
     int x_elements=-1,y_elements=-1,z_elements=-1,basis_order=1;
@@ -116,6 +120,7 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
     std::string xml = "";
     solverType solverValues[5] = {AUGMENTATION, MUELU, ML, CG, GMRES};
     const char * solverNames[5] = {"Augmentation", "MueLu", "ML", "CG", "GMRES"};
+    bool truncateMueLuHierarchy = false;
     solverType solver = MUELU;
     int numTimeSteps = 1;
     double finalTime = -1.;
@@ -128,6 +133,7 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
     linearAlgebraType linAlgebra = linAlgTpetra;
     clp.setOption<linearAlgebraType>("linAlgebra",&linAlgebra,2,linAlgebraValues,linAlgebraNames);
     use_stacked_timer = true;
+    print_fom = true;
     clp.setOption("x-elements",&x_elements);
     clp.setOption("y-elements",&y_elements);
     clp.setOption("z-elements",&z_elements);
@@ -141,6 +147,7 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
     clp.setOption("inputFile",&input_file,"XML file with the problem definitions");
     clp.setOption("solverFile",&xml,"XML file with the solver params");
     clp.setOption<solverType>("solver",&solver,5,solverValues,solverNames,"Solver that is used");
+    clp.setOption("truncateMueLuHierarchy", "no-truncateMueLuHierarchy", &truncateMueLuHierarchy, "Truncate the MueLu hierarchy");
     clp.setOption("numTimeSteps",&numTimeSteps);
     clp.setOption("finalTime",&finalTime);
     clp.setOption("matrixFree","no-matrixFree",&matrixFree,"matrix-free operators");
@@ -148,6 +155,7 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
     clp.setOption("doSolveTimings","no-doSolveTimings",&doSolveTimings,"repeat the first solve \"numTimeSteps\" times");
     clp.setOption("stacked-timer","no-stacked-timer",&use_stacked_timer,"Run with or without stacked timer output");
     clp.setOption("test-name", &test_name, "Name of test (for Watchr output)");
+    clp.setOption("print-fom","no-print-fom",&print_fom,"print the figure of merit for acceptance testing");
 #ifdef HAVE_TEUCHOS_STACKTRACE
     bool stacktrace = false;
     clp.setOption("stacktrace", "nostacktrace", &stacktrace, "display stacktrace");
@@ -284,7 +292,7 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
         throw;
     }
 
-    RCP<Teuchos::ParameterList> lin_solver_pl = mini_em::getSolverParameters(linAlgebra, physics, solver, dim, comm, out, xml, basis_order);
+    RCP<Teuchos::ParameterList> lin_solver_pl = mini_em::getSolverParameters(linAlgebra, physics, solver, dim, comm, out, xml, basis_order, truncateMueLuHierarchy);
 
     if (lin_solver_pl->sublist("Preconditioner Types").isSublist("Teko") &&
         lin_solver_pl->sublist("Preconditioner Types").sublist("Teko").isSublist("Inverse Factory Library")) {
@@ -678,9 +686,11 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
               std::string responseName = elem.second;
               std::transform(responseName.begin(), responseName.end(), responseName.begin(), ::toupper);
               if ((responseName.find("ERROR") != std::string::npos) ||
-                  (responseName.find("NORM") != std::string::npos))
+                  (responseName.find("NORM") != std::string::npos)) {
                 strStream << elem.second << " = " << std::sqrt(Thyra::get_ele(*g,0)) << std::endl;
-              else
+                if (elem.second == "L2 Error E maxwell - analyticSolution")
+                  TEUCHOS_ASSERT_INEQUALITY(std::sqrt(Thyra::get_ele(*g,0)), <, 0.065);
+              } else
                 strStream << elem.second << " = " << Thyra::get_ele(*g,0) << std::endl;
             }
             (*out) << strStream.str();
@@ -701,6 +711,9 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
           }
         }
     }
+
+    // Collect FOM data before everything goes out of scope
+    fom_num_cells = mesh->getEntityCounts(dim);
   }
 
   // Output timer data
@@ -712,8 +725,28 @@ int main_(Teuchos::CommandLineProcessor &clp, int argc,char * argv[])
     auto xmlOut = stacked_timer->reportWatchrXML(test_name + ' ' + std::to_string(comm->getSize()) + " ranks", comm);
     if(xmlOut.length())
       std::cout << "\nAlso created Watchr performance report " << xmlOut << '\n';
-  } else
+
+    if ( print_fom && (comm->getRank() == 0) ) {
+      std::string fom_timer_name = "Mini-EM@Mini-EM: Total Time@Mini-EM: timestepper@Mini-EM: Advance Time Step@Stratimikos: BelosLOWS";
+      double fom_time = stacked_timer->getMpiAverageTime(fom_timer_name);
+      double fom_count = stacked_timer->getMpiAverageCount(fom_timer_name);
+
+      *out << "\n=================================\n";
+      *out << "FOM Calculation\n";
+      *out << "=================================\n";
+      *out << "  Number of cells = " << fom_num_cells << std::endl;
+      *out << "  Time for Belos Linear Solve = " << fom_time << " seconds" <<std::endl;
+      *out << "  Number of Time Steps (one linear solve per step) = " << fom_count << std::endl;
+      if (fom_time > 0.0)
+        *out << "  FOM ( num_cells * num_steps / solver_time / 1000) = "
+             << double(fom_num_cells) * fom_count / fom_time / 1000.0
+             << " k-cell-steps per second \n";
+      *out << "=================================\n\n";
+    }
+
+  } else {
     Teuchos::TimeMonitor::summarize(*out,false,true,false,Teuchos::Union,"",true);
+  }
 
   return EXIT_SUCCESS;
 }

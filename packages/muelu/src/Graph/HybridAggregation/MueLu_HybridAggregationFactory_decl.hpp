@@ -55,7 +55,7 @@
 #include "MueLu_AggregationAlgorithmBase.hpp"
 
 #include "MueLu_Level_fwd.hpp"
-#include "MueLu_GraphBase_fwd.hpp"
+#include "MueLu_LWGraph_fwd.hpp"
 #include "MueLu_Aggregates_fwd.hpp"
 #include "MueLu_Exceptions.hpp"
 
@@ -161,8 +161,10 @@ class HybridAggregationFactory : public SingleLevelFactoryBase {
   void Build(Level& currentLevel) const;
 
   /*! @brief Specifically build aggregates along interfaces */
-  void BuildInterfaceAggregates(Level& currentLevel, RCP<Aggregates> aggregates,
-                                std::vector<unsigned>& aggStat, LO& numNonAggregatedNodes,
+  void BuildInterfaceAggregates(Level& currentLevel,
+                                RCP<Aggregates> aggregates,
+                                typename AggregationAlgorithmBase<LocalOrdinal, GlobalOrdinal, Node>::AggStatHostType& aggStat,
+                                LO& numNonAggregatedNodes,
                                 Array<LO> coarseRate) const;
 
   //@}

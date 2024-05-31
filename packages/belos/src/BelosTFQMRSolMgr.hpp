@@ -62,8 +62,11 @@
 #include "Teuchos_TimeMonitor.hpp"
 #endif
 
-/** \example TFQMR/TFQMREpetraExFile.cpp
-    This is an example of how to use the Belos::TFQMRSolMgr solver manager.
+/** \example epetra/example/TFQMR/TFQMREpetraExFile.cpp
+    This is an example of how to use the Belos::TFQMRSolMgr solver manager using Epetra.
+*/
+/** \example tpetra/example/TFQMR/TFQMRTpetraExFile.cpp
+    This is an example of how to use the Belos::TFQMRSolMgr solver manager using Tpetra.
 */
 
 /*! \class Belos::TFQMRSolMgr
@@ -751,6 +754,15 @@ ReturnType TFQMRSolMgr<ScalarType,MV,OP>::solve() {
             TEUCHOS_TEST_FOR_EXCEPTION(true,std::logic_error,
                                "Belos::TFQMRSolMgr::solve(): Invalid return from TFQMRIter::iterate().");
           }
+        }
+        catch (const StatusTestNaNError& e) {
+          // A NaN was detected in the solver.  Set the solution to zero and return unconverged.
+          achievedTol_ = MT::one();
+          Teuchos::RCP<MV> X = problem_->getLHS();
+          MVT::MvInit( *X, SCT::zero() );
+          printer_->stream(Warnings) << "Belos::TFQMRSolMgr::solve(): Warning! NaN has been detected!" 
+                                     << std::endl;
+          return Unconverged; 
         }
         catch (const std::exception &e) {
           printer_->stream(Errors) << "Error! Caught std::exception in TFQMRIter::iterate() at iteration "

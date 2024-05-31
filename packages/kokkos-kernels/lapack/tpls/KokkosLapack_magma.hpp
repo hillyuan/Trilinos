@@ -16,13 +16,16 @@
 
 #ifndef KOKKOSLAPACK_MAGMA_HPP_
 #define KOKKOSLAPACK_MAGMA_HPP_
-// If LAPACK TPL is enabled, it is preferred over magma's LAPACK
+
 #ifdef KOKKOSKERNELS_ENABLE_TPL_MAGMA
 #include "magma_v2.h"
 
 namespace KokkosLapack {
 namespace Impl {
 
+// Declaration of the singleton for cusolver
+// this is the only header that needs to be
+// included when using cusolverDn.
 struct MagmaSingleton {
   MagmaSingleton();
 
@@ -30,6 +33,7 @@ struct MagmaSingleton {
 };
 
 }  // namespace Impl
-}  // namespace KokkosBlas
-#endif  // KOKKOSKERNELS_ENABLE_TPL_MAGMA
-#endif // KOKKOSLAPACK_MAGMA_HPP_
+}  // namespace KokkosLapack
+#endif
+
+#endif  // KOKKOSLAPACK_MAGMA_HPP_

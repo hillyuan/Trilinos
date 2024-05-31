@@ -67,6 +67,13 @@
 #  include <type_traits>
 #endif // defined(HAVE_TEUCHOSCORE_CXX11)
 
+/** \example epetra/example/PCPG/PCPGEpetraExFile.cpp
+    This is an example of how to use the Belos::PCPGSolMgr with an ML preconditioner.
+*/
+/** \example tpetra/example/PCPG/PCPGTpetraExFile.cpp
+    This is an example of how to use Belos::PCPGSolMgr with Tpetra.
+*/
+
 namespace Belos {
 
   //! @name PCPGSolMgr Exceptions
@@ -124,9 +131,6 @@ namespace Belos {
   /// One often sees PCPG in context with the FETI domain
   /// decomposition method.
   ///
-  /// \example PCPG/PCPGEpetraExFile.cpp
-  ///
-  /// The provided example uses PCPGSolMgr with an ML preconditioner.
 
   // Partial specialization for complex ScalarType.
   // This contains a trivial implementation.
@@ -616,6 +620,7 @@ void PCPGSolMgr<ScalarType,MV,OP,true>::setParameters( const Teuchos::RCP<Teucho
     Belos::OrthoManagerFactory<ScalarType, MV, OP> factory;
     Teuchos::RCP<Teuchos::ParameterList> paramsOrtho;   // can be null
     if (orthoType_=="DGKS" && orthoKappa_ > 0) {
+      paramsOrtho = Teuchos::rcp(new Teuchos::ParameterList());
       paramsOrtho->set ("depTol", orthoKappa_ );
     }
 
@@ -891,6 +896,15 @@ ReturnType PCPGSolMgr<ScalarType,MV,OP,true>::solve() {
                                "Belos::PCPGSolMgr::solve(): Invalid return from PCPGIter::iterate().");
           } // end if
         } // end try
+        catch (const StatusTestNaNError& e) {
+          // A NaN was detected in the solver.  Set the solution to zero and return unconverged.
+          achievedTol_ = MT::one();
+          Teuchos::RCP<MV> X = problem_->getLHS();
+          MVT::MvInit( *X, SCT::zero() );
+          printer_->stream(Warnings) << "Belos::PCPG::solve(): Warning! NaN has been detected!" 
+                                     << std::endl;
+          return Unconverged;
+        }
         catch (const std::exception &e) {
           printer_->stream(Errors) << "Error! Caught exception in PCPGIter::iterate() at iteration "
                                    << pcpg_iter->getNumIters() << std::endl

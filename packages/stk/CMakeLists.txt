@@ -34,6 +34,8 @@
 
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
+message("starting STK cmake configuration, CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
+
 IF(COMMAND TRIBITS_PACKAGE_DECL)
   SET(HAVE_STK_Trilinos ON)
   TRIBITS_PACKAGE_DECL(STK)
@@ -123,6 +125,31 @@ ELSE()
   ENDIF()
 ENDIF()
 
+find_package(ArborX QUIET)
+if(TARGET ArborX::ArborX)
+  MESSAGE("Found ArborX, making it available within stk")
+  SET(STK_HAS_ARBORX ON)
+else()
+  MESSAGE("Optional search library ArborX is not enabled.")
+endif()
+
+if(NOT HAVE_STK_Trilinos)
+  find_package(SEACAS)
+endif()
+
+if(SEACAS_ENABLE_SEACASIoss)
+  message("Enabling stk usage of SEACASIoss")
+  SET(STK_HAS_SEACAS_IOSS ON)
+endif()
+if(SEACAS_ENABLE_SEACASExodus)
+  message("Enabling stk usage of SEACASExodus")
+  SET(STK_HAS_SEACAS_EXODUS ON)
+endif()
+if(SEACAS_ENABLE_SEACASNemesis)
+  message("Enabling stk usage of SEACASNemesis")
+  SET(STK_HAS_SEACAS_NEMESIS ON)
+endif()
+
 if(NOT HAVE_STK_Trilinos)
   stk_process_enables()
 endif()
@@ -164,9 +191,6 @@ ELSE()
 ENDIF()
 
 MESSAGE("\nCMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
-MESSAGE("${PROJECT_NAME}_INSTALL_INCLUDE_DIR: ${${PROJECT_NAME}_INSTALL_INCLUDE_DIR}")
-MESSAGE("${PROJECT_NAME}_INSTALL_LIBDIR: ${${PROJECT_NAME}_INSTALL_LIBDIR}")
-MESSAGE("${PROJECT_NAME}_INSTALL_BINDIR: ${${PROJECT_NAME}_INSTALL_BINDIR}\n")
 
 STK_CONFIGURE_FILE(STK_Trilinos_config.h)
 

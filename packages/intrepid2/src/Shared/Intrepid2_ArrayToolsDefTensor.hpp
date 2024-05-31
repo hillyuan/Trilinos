@@ -693,7 +693,7 @@ namespace Intrepid2 {
                         leftInputViewType  leftInput_,
                         rightInputViewType rightInput_)
       : _output(output_), _leftInput(leftInput_), _rightInput(rightInput_),
-        _iend(output_.extent_int(output_.rank()-1)), _jend(rightInput_.extent_int(rightInputRank-1))
+        _iend(output_.extent_int(rank(output_)-1)), _jend(rightInput_.extent_int(rightInputRank-1))
     {}
     
     //  ****** hasField == true cases ******
@@ -943,10 +943,6 @@ namespace Intrepid2 {
     using FT23FF = FunctorArrayTools::F_matvecProduct<Output,Left,Right,2,3, false, false>;
     using FT22FF = FunctorArrayTools::F_matvecProduct<Output,Left,Right,2,2, false, false>;
 
-    typedef       Kokkos::DynRankView<outputValueType,    outputProperties...>      OutputViewType;
-    typedef const Kokkos::DynRankView<leftInputValueType, leftInputProperties...>   leftInputViewType;
-    typedef const Kokkos::DynRankView<rightInputValueType,rightInputProperties...>  rightInputViewType;
-    
     const ordinal_type l = leftInput.rank();
     const ordinal_type r = rightInput.rank();
     

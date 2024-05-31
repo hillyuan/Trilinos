@@ -78,10 +78,7 @@
 #include "MueLu_InverseApproximationFactory.hpp"
 
 #include "MueLu_CoalesceDropFactory_kokkos.hpp"
-#include "MueLu_NullspaceFactory_kokkos.hpp"
-#include "MueLu_SaPFactory_kokkos.hpp"
 #include "MueLu_TentativePFactory_kokkos.hpp"
-#include "MueLu_UncoupledAggregationFactory_kokkos.hpp"
 
 #include "MueLu_FactoryManager_decl.hpp"
 
@@ -132,21 +129,13 @@ const RCP<const FactoryBase> FactoryManager<Scalar, LocalOrdinal, GlobalOrdinal,
     if (varName == "Ptent") return MUELU_KOKKOS_FACTORY(varName, TentativePFactory, TentativePFactory_kokkos);
     if (varName == "P") {
       // GetFactory("Ptent"): we need to use the same factory instance for both "P" and "Nullspace"
-      RCP<Factory> factory;
-      if (useKokkos_)
-        factory = rcp(new SaPFactory_kokkos());
-      else
-        factory = rcp(new SaPFactory());
+      RCP<Factory> factory = rcp(new SaPFactory());
       factory->SetFactory("P", GetFactory("Ptent"));
       return SetAndReturnDefaultFactory(varName, factory);
     }
     if (varName == "Nullspace") {
       // GetFactory("Ptent"): we need to use the same factory instance for both "P" and "Nullspace"
-      RCP<Factory> factory;
-      if (useKokkos_)
-        factory = rcp(new NullspaceFactory_kokkos());
-      else
-        factory = rcp(new NullspaceFactory());
+      RCP<Factory> factory = rcp(new NullspaceFactory());
       factory->SetFactory("Nullspace", GetFactory("Ptent"));
       return SetAndReturnDefaultFactory(varName, factory);
     }
@@ -179,7 +168,7 @@ const RCP<const FactoryBase> FactoryManager<Scalar, LocalOrdinal, GlobalOrdinal,
 
     if (varName == "Graph") return MUELU_KOKKOS_FACTORY(varName, CoalesceDropFactory, CoalesceDropFactory_kokkos);
     if (varName == "UnAmalgamationInfo") return SetAndReturnDefaultFactory(varName, rcp(new AmalgamationFactory()));
-    if (varName == "Aggregates") return MUELU_KOKKOS_FACTORY(varName, UncoupledAggregationFactory, UncoupledAggregationFactory_kokkos);
+    if (varName == "Aggregates") return SetAndReturnDefaultFactory(varName, rcp(new UncoupledAggregationFactory()));
     if (varName == "AggregateQualities") return SetAndReturnDefaultFactory(varName, rcp(new AggregateQualityEstimateFactory()));
     if (varName == "CoarseMap") return SetAndReturnDefaultFactory(varName, rcp(new CoarseMapFactory()));
     if (varName == "DofsPerNode") return GetFactory("Graph");
